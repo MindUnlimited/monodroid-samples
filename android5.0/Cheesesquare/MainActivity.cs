@@ -16,7 +16,7 @@ using System.Collections.Generic;
 
 namespace Cheesesquare
 {
-    [Activity (Label = "Cheesesquare", MainLauncher = true)]
+    [Activity (Label = "MindSet", MainLauncher = true)]
     public class MainActivity : AppCompatActivity
     {        
         DrawerLayout drawerLayout;
@@ -74,9 +74,10 @@ namespace Cheesesquare
         void setupViewPager (Android.Support.V4.View.ViewPager viewPager) 
         {
             var adapter = new Adapter (SupportFragmentManager);
-            adapter.AddFragment (new CheeseListFragment (), "Category 1");
-            adapter.AddFragment (new CheeseListFragment (), "Category 2");
-            adapter.AddFragment (new CheeseListFragment (), "Category 3");
+            adapter.AddFragment (new CheeseListFragment (), "Friends");
+            adapter.AddFragment (new CheeseListFragment (), "Family");
+            adapter.AddFragment (new CheeseListFragment (), "Work");
+            adapter.AddFragment(new CheeseListFragment(), "Other");
             viewPager.Adapter = adapter;
         }
 

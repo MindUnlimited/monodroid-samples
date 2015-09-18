@@ -33,7 +33,7 @@ namespace Cheesesquare
         {
             recyclerView.SetLayoutManager (new LinearLayoutManager (recyclerView.Context));
             recyclerView.SetAdapter (new SimpleStringRecyclerViewAdapter (Activity,
-                getRandomSublist(Cheeses.CheeseList, 30)));
+                getRandomSublist(Cheeses.CheeseList, 25)));
         }
 
         List<String> getRandomSublist(string[] array, int amount) 
@@ -42,30 +42,26 @@ namespace Cheesesquare
             var random = new Random();
             while (list.Count < amount)
                 list.Add (array[random.Next (array.Length)]);
-            list.Add ("Old Amsterdam");
+            //list.Add ("Old Amsterdam");
             return list;
         }
 
         public class SimpleStringRecyclerViewAdapter : RecyclerView.Adapter 
         {
-            
-            TypedValue typedValue = new TypedValue ();
-            int background;
             List<String> values;
             Android.App.Activity parent;
 
             public class ViewHolder : RecyclerView.ViewHolder 
             {
-                public string BoundString { get; set; }
                 public View View { get;set; }
-                public ImageView ImageView { get; set; }
                 public TextView TextView { get; set; }
+                public ImageView ImageView { get; set; }
 
                 public ViewHolder (View view) : base (view) 
                 {
                     View = view;
-                    ImageView = view.FindViewById<ImageView> (Resource.Id.avatar);
-                    TextView = view.FindViewById<TextView> (Android.Resource.Id.Text1);
+                    TextView = view.FindViewById<TextView> (Resource.Id.textView);
+                    ImageView = view.FindViewById<ImageView>(Resource.Id.imageView);
                 }
 
                 public override string ToString () 
@@ -73,6 +69,8 @@ namespace Cheesesquare
                     return base.ToString () + " '" + TextView.Text;
                 }
             }
+
+
 
             public String GetValueAt (int position) 
             {
@@ -82,8 +80,7 @@ namespace Cheesesquare
             public SimpleStringRecyclerViewAdapter (Android.App.Activity context, List<String> items) 
             {
                 parent = context;
-                context.Theme.ResolveAttribute (Resource.Attribute.selectableItemBackground, typedValue, true);
-                background = typedValue.ResourceId;
+
                 values = items;
             }
 
@@ -91,8 +88,8 @@ namespace Cheesesquare
             {
                 
                 var view = LayoutInflater.From (parent.Context)
-                    .Inflate(Resource.Layout.list_item, parent, false);
-                view.SetBackgroundResource (background);
+                    .Inflate(Resource.Layout.item_card_view, parent, false);
+
                 return new ViewHolder(view);
             }
 
@@ -100,18 +97,8 @@ namespace Cheesesquare
             {
                 var h = holder as ViewHolder;
 
-                h.BoundString = values [position];
                 h.TextView.Text = values [position];
-
-                h.View.Click += (sender, e) => {
-                    var context = h.View.Context;
-                    var intent = new Intent (context, typeof (CheeseDetailActivity));
-                    intent.PutExtra (CheeseDetailActivity.EXTRA_NAME, h.BoundString);
-
-                    context.StartActivity(intent);
-                };
-                    
-                h.ImageView.SetImageDrawable (Cheeses.GetRandomCheeseDrawable (parent));
+                h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             }
                           
             public override int ItemCount {
