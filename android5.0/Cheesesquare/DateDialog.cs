@@ -20,6 +20,7 @@ namespace Cheesesquare
         public DateDialog(View view)
         {
             txtDate = (EditText)view;
+            //txtDate.ClearFocus();
         }
 
         public override Dialog OnCreateDialog(Bundle savedInstanceState)
@@ -29,6 +30,7 @@ namespace Cheesesquare
             var month = c.Get(CalendarField.Month);
             var day = c.Get(CalendarField.DayOfMonth);
             return new DatePickerDialog(Activity, this, year, month, day);
+
         }
 
         public void OnDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)

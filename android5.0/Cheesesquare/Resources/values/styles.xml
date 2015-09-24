@@ -35,4 +35,14 @@
         <item name="android:orientation">vertical</item>
     </style>
 
+    <style name="MyRatingBarStyle" parent="@android:style/Widget.RatingBar">
+      <item name="android:progressDrawable">@drawable/my_rating_bar_full</item>
+      <item name="android:minHeight">24dip</item>
+      <item name="android:maxHeight">24dip</item>
+    </style>
+  
+    <style name="TextAppearence.App.TextInputLayout" parent="@android:style/TextAppearance">
+      <item name="android:textColor">#FF4081</item>
+    </style>
+
 </resources>
