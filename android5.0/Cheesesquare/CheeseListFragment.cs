@@ -97,6 +97,14 @@ namespace Cheesesquare
             {
                 var h = holder as ViewHolder;
 
+                h.View.Click += (sender, e) => {
+                    var context = h.View.Context;
+                    var intent = new Intent(context, typeof(CheeseDetailActivity));
+                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, values[position]);
+
+                    context.StartActivity(intent);
+                };
+
                 h.TextView.Text = values [position];
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             }
