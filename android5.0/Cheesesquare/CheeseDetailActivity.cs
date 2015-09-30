@@ -7,6 +7,7 @@ using Android.Widget;
 using V7Toolbar = Android.Support.V7.Widget.Toolbar;
 using Android.Support.Design.Widget;
 using Android.App;
+using Android.Util;
 
 namespace Cheesesquare
 {
@@ -14,8 +15,15 @@ namespace Cheesesquare
     public class CheeseDetailActivity : AppCompatActivity
     {
         public const string EXTRA_NAME = "cheese_name";
+        private const string TAG = "CheeseActivity";
+
+        bool editmode;
+
+        LinearLayout titleDescriptionLayout;
         SeekBar progressSlider;
         TextView progressPercentText;
+        FloatingActionButton editFAB;
+        CollapsingToolbarLayout collapsingToolbar;
 
         protected override void OnCreate (Bundle savedInstanceState) 
         {
@@ -29,14 +37,48 @@ namespace Cheesesquare
             SetSupportActionBar (toolbar);
             SupportActionBar.SetDisplayHomeAsUpEnabled (true);
 
-            var collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
+            collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
             collapsingToolbar.SetTitle (cheeseName);
+
+            var title = FindViewById<EditText>(Resource.Id.txt_title);
+            title.SetText(cheeseName,TextView.BufferType.Editable);
+
+            titleDescriptionLayout = FindViewById<LinearLayout>(Resource.Id.title_description_layout);
 
             progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
             progressSlider.ProgressChanged += ProgressSlider_ProgressChanged;
 
+            editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
+            editFAB.Click += EditFAB_Click;
+
+            editmode = false;
+
             loadBackdrop();
+        }
+
+        private void EditFAB_Click(object sender, EventArgs e)
+        {
+            Log.Info(TAG, "edit fab clicked!");
+
+            if (editmode) // saving edit
+            {
+                editmode = false;
+                titleDescriptionLayout.Visibility = ViewStates.Gone;
+                editFAB.SetImageResource(Resource.Drawable.ic_mode_edit_white_24dp);
+
+                var title = FindViewById<EditText>(Resource.Id.txt_title);
+                collapsingToolbar.SetTitle(title.Text);
+            }
+            else // going into edit mode
+            {
+                editmode = true;
+                titleDescriptionLayout.Visibility = ViewStates.Visible;
+                editFAB.SetImageResource(Resource.Drawable.ic_done);
+                collapsingToolbar.SetTitle("");
+            }
+
+
         }
 
         private void ProgressSlider_ProgressChanged(object sender, SeekBar.ProgressChangedEventArgs e)

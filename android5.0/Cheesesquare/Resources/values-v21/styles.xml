@@ -27,9 +27,10 @@
     <item name="android:minHeight">24dip</item>
     <item name="android:maxHeight">24dip</item>
   </style>
-  
+
   <style name="TextAppearence.App.TextInputLayout" parent="@android:style/TextAppearance">
-      <item name="android:textColor">#FF4081</item>
+    <item name="android:textColor">#FF4081</item>
+    <item name="android:textSize">@dimen/material_text_subhead</item>
   </style>
 
 </resources>

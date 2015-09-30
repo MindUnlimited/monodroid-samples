@@ -43,6 +43,7 @@
   
     <style name="TextAppearence.App.TextInputLayout" parent="@android:style/TextAppearance">
       <item name="android:textColor">#FF4081</item>
+      <item name="android:textSize">@dimen/material_text_subhead</item>
     </style>
 
 </resources>
