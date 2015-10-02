@@ -8,6 +8,7 @@ using V7Toolbar = Android.Support.V7.Widget.Toolbar;
 using Android.Support.Design.Widget;
 using Android.App;
 using Android.Util;
+using Android.Content;
 
 namespace Cheesesquare
 {
@@ -19,6 +20,7 @@ namespace Cheesesquare
 
         bool editmode;
 
+        String cheeseName;
         LinearLayout titleDescriptionLayout;
         SeekBar progressSlider;
         TextView progressPercentText;
@@ -31,7 +33,7 @@ namespace Cheesesquare
 
             SetContentView(Resource.Layout.activity_detail);
 
-            var cheeseName = Intent.GetStringExtra (EXTRA_NAME);
+            cheeseName = Intent.GetStringExtra (EXTRA_NAME);
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar (toolbar);
@@ -61,24 +63,27 @@ namespace Cheesesquare
         {
             Log.Info(TAG, "edit fab clicked!");
 
-            if (editmode) // saving edit
-            {
-                editmode = false;
-                titleDescriptionLayout.Visibility = ViewStates.Gone;
-                editFAB.SetImageResource(Resource.Drawable.ic_mode_edit_white_24dp);
+            //if (editmode) // saving edit
+            //{
+            //    editmode = false;
+            //    titleDescriptionLayout.Visibility = ViewStates.Gone;
+            //    editFAB.SetImageResource(Resource.Drawable.ic_mode_edit_white_24dp);
 
-                var title = FindViewById<EditText>(Resource.Id.txt_title);
-                collapsingToolbar.SetTitle(title.Text);
-            }
-            else // going into edit mode
-            {
-                editmode = true;
-                titleDescriptionLayout.Visibility = ViewStates.Visible;
-                editFAB.SetImageResource(Resource.Drawable.ic_done);
-                collapsingToolbar.SetTitle("");
-            }
+            //    var title = FindViewById<EditText>(Resource.Id.txt_title);
+            //    collapsingToolbar.SetTitle(title.Text);
+            //}
+            //else // going into edit mode
+            //{
+            //    editmode = true;
+            //    titleDescriptionLayout.Visibility = ViewStates.Visible;
+            //    editFAB.SetImageResource(Resource.Drawable.ic_done);
+            //    collapsingToolbar.SetTitle("");
+            //}
 
 
+            var intent = new Intent(this, typeof(EditItemActivity));
+            intent.PutExtra(EditItemActivity.EXTRA_NAME, cheeseName);
+            StartActivity(intent);
         }
 
         private void ProgressSlider_ProgressChanged(object sender, SeekBar.ProgressChangedEventArgs e)
