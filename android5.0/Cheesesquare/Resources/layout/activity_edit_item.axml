@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:padding="0dp">
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
         android:layout_width="match_parent"
@@ -29,17 +30,20 @@
             android:id="@+id/edit_item_lin_layout"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_marginBottom="8dp">
         <!-- Title/Shared with/Importance-->
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp">
                 <RelativeLayout
-                    style="@style/Widget.CardContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="16dp">
                     <ImageView
                         android:id="@+id/assignment_image"
                         android:layout_width="wrap_content"
@@ -65,6 +69,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="16dp"
+                        android:paddingBottom="8dp"
                         android:src="@drawable/ic_event"
                         android:layout_alignParentLeft="true"
                         android:layout_below="@+id/assignment_image"
@@ -74,125 +79,138 @@
                         android:id="@+id/item_date"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:paddingBottom="8dp"
                         android:hint="Due date (optional)"
                         app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
                         android:layout_below="@+id/item_name"
                         android:layout_alignParentRight="true"
                         android:layout_toRightOf="@+id/date_icon"
                         android:background="@android:color/transparent" />
+                    <ImageView
+                        android:id="@+id/importance_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="16dp"
+                        android:src="@drawable/ic_star_border_black_24dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_below="@+id/date_icon"
+                        android:layout_alignBottom="@+id/item_ratingbar"
+                        android:tint="#A9A9A9" />
+                    <RatingBar
+                        android:id="@+id/item_ratingbar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/item_date"
+                        android:layout_toRightOf="@+id/importance_icon"
+                        android:numStars="5"
+                        android:rating="0"
+                        android:stepSize=".5"
+                        style="@style/MyRatingBarStyle" />
                 </RelativeLayout>
             </android.support.v7.widget.CardView>
-        <!-- Title/Shared with/Importance-->
+        <!-- Share task-->
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp">
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <ImageView
+                        android:id="@+id/add_user_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="16dp"
+                        android:paddingBottom="8dp"
+                        android:src="@drawable/ic_person_add_black_24dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignBottom="@+id/add_user_text"
+                        android:tint="#A9A9A9" />
+                    <EditText
+                        android:id="@+id/add_user_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
+                        android:paddingBottom="8dp"
+                        android:hint="Share task"
+                        app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
+                        android:layout_alignParentRight="true"
+                        android:layout_toRightOf="@+id/add_user_icon"
+                        android:background="@android:color/transparent" />
+                    <ImageView
+                        android:id="@+id/assigned_to_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="16dp"
+                        android:src="@drawable/ic_assignment_ind_black_24dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_below="@+id/add_user_icon"
+                        android:layout_alignBottom="@+id/assigned_to_text"
+                        android:tint="#A9A9A9" />
+                    <EditText
+                        android:id="@+id/assigned_to_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Assign task"
+                        app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
+                        android:layout_below="@+id/add_user_text"
+                        android:layout_alignParentRight="true"
+                        android:layout_toRightOf="@+id/assigned_to_icon"
+                        android:background="@android:color/transparent" />
+                </RelativeLayout>
             </android.support.v7.widget.CardView>
         <!-- Date/Time/Repeating-->
+        <!--
+      <android.support.v7.widget.CardView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_margin="8dp">
+        <LinearLayout
+            style="@style/Widget.CardContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+          <TextView
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:text="Info"
+              android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+        </LinearLayout>
+      </android.support.v7.widget.CardView>-->
+        <!-- Description (comment) -->
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginBottom="8dp">
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <ImageView
+                        android:id="@+id/insert_comment_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="16dp"
+                        android:src="@drawable/ic_insert_comment_black_24dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignBottom="@+id/add_user_text"
+                        android:tint="#A9A9A9" />
+                    <EditText
+                        android:id="@+id/insert_comment_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-        <!-- Description -->
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-        <!-- Description -->
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-        <!-- Description -->
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-        <!-- Description -->
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
-            </android.support.v7.widget.CardView>
-        <!-- Description -->
-            <android.support.v7.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/card_margin">
-                <LinearLayout
-                    style="@style/Widget.CardContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Info"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-                </LinearLayout>
+                        android:hint="Comment (optional)"
+                        app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
+                        android:layout_alignParentRight="true"
+                        android:layout_toRightOf="@+id/insert_comment_icon"
+                        android:background="@android:color/transparent" />
+                </RelativeLayout>
             </android.support.v7.widget.CardView>
         </LinearLayout>
     </ScrollView>

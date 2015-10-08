@@ -18,4 +18,5 @@
         android:id="@+id/recyclerview"
         android:background="#D1C4E9" 
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:paddingBottom="@dimen/card_margin"/>
