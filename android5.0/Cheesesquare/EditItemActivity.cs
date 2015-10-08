@@ -19,8 +19,11 @@ namespace Cheesesquare
     public class EditItemActivity : AppCompatActivity
     {
         private Android.Support.V7.Widget.Toolbar toolbar;
-        private EditText shareEditText;
+
+        EditText assignEditText;
+        EditText shareEditText;
         EditText txtDate;
+
         public const string EXTRA_NAME = "cheese_name";
         private readonly int PICK_CONTACT = 1;
 
@@ -35,9 +38,11 @@ namespace Cheesesquare
 
             toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.appbar_edit);
             toolbar.Title = cheeseName;
-            SetSupportActionBar(toolbar);
+            toolbar.SetNavigationIcon(Resource.Drawable.ic_clear_white_24dp);
 
-            
+            SetSupportActionBar(toolbar);
+            SupportActionBar.SetDisplayHomeAsUpEnabled(true);
+            SupportActionBar.SetDisplayShowHomeEnabled(true);
 
         }
 
@@ -48,17 +53,26 @@ namespace Cheesesquare
             txtDate.FocusChange += TxtDate_FocusChange;
 
             shareEditText = FindViewById<EditText>(Resource.Id.add_user_text);
-            shareEditText.FocusChange += ShareEditText_FocusChange;
+            shareEditText.FocusChange += shareAssign_FocusChange;
+
+            assignEditText = FindViewById<EditText>(Resource.Id.assigned_to_text);
+            assignEditText.FocusChange += shareAssign_FocusChange; ;
         }
 
-        private void ShareEditText_FocusChange(object sender, View.FocusChangeEventArgs e)
+        private void shareAssign_FocusChange(object sender, View.FocusChangeEventArgs e)
         {
             var editText = (EditText)sender;
+            Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
             if (e.HasFocus)
             {
-                Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
                 StartActivityForResult(intent, PICK_CONTACT);//PICK_CONTACT is private static final int, so declare in activity class
             }
+            else
+            {
+                SetResult(Result.Ok, intent);
+                FinishActivity(PICK_CONTACT);
+            }
+            
         }
 
         protected override void OnActivityResult(int requestCode, Result resultCode,

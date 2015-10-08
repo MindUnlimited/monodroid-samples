@@ -60,7 +60,7 @@ namespace Cheesesquare
                 public ViewHolder (View view) : base (view) 
                 {
                     View = view;
-                    TextView = view.FindViewById<TextView> (Resource.Id.textView);
+                    TextView = view.FindViewById<TextView> (Resource.Id.task_title);
                     ImageView = view.FindViewById<ImageView>(Resource.Id.imageView);
                 }
 
@@ -97,10 +97,31 @@ namespace Cheesesquare
             {
                 var h = holder as ViewHolder;
 
+
                 h.View.Click += (sender, e) => {
                     var context = h.View.Context;
                     var intent = new Intent(context, typeof(CheeseDetailActivity));
                     intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, values[position]);
+
+                    context.StartActivity(intent);
+                };
+
+                var titleSubTask1 = h.View.FindViewById<TextView>(Resource.Id.subTask1);
+                titleSubTask1.Click += (sender, e) =>
+                {
+                    var context = h.View.Context;
+                    var intent = new Intent(context, typeof(CheeseDetailActivity));
+                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+
+                    context.StartActivity(intent);
+                };
+
+                var titleSubTask2 = h.View.FindViewById<TextView>(Resource.Id.subTask2);
+                titleSubTask2.Click += (sender, e) =>
+                {
+                    var context = h.View.Context;
+                    var intent = new Intent(context, typeof(CheeseDetailActivity));
+                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
 
                     context.StartActivity(intent);
                 };

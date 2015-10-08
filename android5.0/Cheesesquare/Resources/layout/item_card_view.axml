@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cardview_task"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginLeft="@dimen/card_margin"
@@ -35,7 +36,7 @@
                     android:textAppearance="?android:attr/textAppearanceLarge"
                     android:textColor="#333333"
                     android:text="Caption"
-                    android:id="@+id/textView" />
+                    android:id="@+id/task_title" />
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -270,8 +271,7 @@
                     android:background="@android:color/transparent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
+                    android:layout_marginLeft="20dp"
                     android:tint="#565656"
                     android:src="@drawable/ic_check_black_24dp" />
                 <ImageButton
@@ -279,8 +279,7 @@
                     android:background="@android:color/transparent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
+                    android:layout_marginLeft="20dp"
                     android:tint="#565656"
                     android:src="@drawable/ic_person_add_black_24dp" />
                 <ImageButton
@@ -288,8 +287,7 @@
                     android:background="@android:color/transparent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
+                    android:layout_marginLeft="20dp"
                     android:tint="#565656"
                     android:src="@drawable/ic_delete_black_24dp" />
             <!--<TextView

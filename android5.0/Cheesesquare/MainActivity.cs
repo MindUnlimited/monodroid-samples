@@ -44,11 +44,14 @@ namespace Cheesesquare
                 setupViewPager(viewPager);
 
             var fab = FindViewById<FloatingActionButton> (Resource.Id.fab);
-            fab.Click += (sender, e) => {
-                Snackbar.Make (fab, "Here's a snackbar!", Snackbar.LengthLong).SetAction ("Action",
-                    new ClickListener (v => {
-                        Console.WriteLine ("Action handler");
-                    })).Show ();
+            fab.Click += (sender, e) =>
+            {
+                //Snackbar.Make (fab, "Here's a snackbar!", Snackbar.LengthLong).SetAction ("Action",
+                //    new ClickListener (v => {
+                //        Console.WriteLine ("Action handler");
+                //    })).Show ();
+                var intent = new Intent(this, typeof(EditItemActivity));
+                StartActivity(intent);
             };
 
             var tabLayout = FindViewById<TabLayout> (Resource.Id.tabs);
@@ -123,18 +126,18 @@ namespace Cheesesquare
 
     public class ClickListener : Java.Lang.Object, View.IOnClickListener
     {
-        public ClickListener (Action<View> handler)
+        public ClickListener(Action<View> handler)
         {
             Handler = handler;
         }
 
         public Action<View> Handler { get; set; }
 
-        public void OnClick (View v)
+        public void OnClick(View v)
         {
             var h = Handler;
             if (h != null)
-                h (v);
+                h(v);
         }
     }
 }

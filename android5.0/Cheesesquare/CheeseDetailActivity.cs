@@ -20,11 +20,13 @@ namespace Cheesesquare
 
         bool editmode;
 
+        TextView txtDate;
         String cheeseName;
         LinearLayout titleDescriptionLayout;
         SeekBar progressSlider;
         TextView progressPercentText;
         FloatingActionButton editFAB;
+        FloatingActionButton addItemFAB;
         CollapsingToolbarLayout collapsingToolbar;
 
         protected override void OnCreate (Bundle savedInstanceState) 
@@ -41,11 +43,11 @@ namespace Cheesesquare
 
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
             collapsingToolbar.SetTitle (cheeseName);
+                
+            //var title = FindViewById<EditText>(Resource.Id.txt_title);
+            //title.SetText(cheeseName,TextView.BufferType.Editable);
 
-            var title = FindViewById<EditText>(Resource.Id.txt_title);
-            title.SetText(cheeseName,TextView.BufferType.Editable);
-
-            titleDescriptionLayout = FindViewById<LinearLayout>(Resource.Id.title_description_layout);
+            //titleDescriptionLayout = FindViewById<LinearLayout>(Resource.Id.title_description_layout);
 
             progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
@@ -54,9 +56,79 @@ namespace Cheesesquare
             editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
             editFAB.Click += EditFAB_Click;
 
+            addItemFAB = FindViewById<FloatingActionButton>(Resource.Id.add_task_fab);
+            addItemFAB.Click += AddItemFAB_Click;
+
             editmode = false;
 
+            CardView card1 = FindViewById<CardView>(Resource.Id.detail_card_1);
+            card1.Click += (sender, e) => {
+                var context = card1.Context;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+
+                var taskTitle = card1.FindViewById<TextView>(Resource.Id.task_title);
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
+
+                context.StartActivity(intent);
+            };
+
+            var titleSubTask1 = card1.FindViewById<TextView>(Resource.Id.subTask1);
+            titleSubTask1.Click += (sender, e) =>
+            {
+                var context = this;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+
+                context.StartActivity(intent);
+            };
+            var titleSubTask2 = card1.FindViewById<TextView>(Resource.Id.subTask2);
+            titleSubTask2.Click += (sender, e) =>
+            {
+                var context = this;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
+
+                context.StartActivity(intent);
+            };
+
+            CardView card2 = FindViewById<CardView>(Resource.Id.detail_card_2);
+
+            card2.Click += (sender, e) => {
+                var context = card2.Context;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+
+                var taskTitle = card2.FindViewById<TextView>(Resource.Id.task_title);
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
+
+                context.StartActivity(intent);
+            };
+
+            var titleSubTask1c2 = card2.FindViewById<TextView>(Resource.Id.subTask1);
+            titleSubTask1c2.Click += (sender, e) =>
+            {
+                var context = this;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+
+                context.StartActivity(intent);
+            };
+            var titleSubTask2c2 = card2.FindViewById<TextView>(Resource.Id.subTask2);
+            titleSubTask2c2.Click += (sender, e) =>
+            {
+                var context = this;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
+
+                context.StartActivity(intent);
+            };
+
             loadBackdrop();
+        }
+
+        private void AddItemFAB_Click(object sender, EventArgs e)
+        {
+            var intent = new Intent(this, typeof(EditItemActivity));
+            StartActivity(intent);
         }
 
         private void EditFAB_Click(object sender, EventArgs e)
@@ -94,20 +166,9 @@ namespace Cheesesquare
         protected override void OnStart()
         {
             base.OnStart();
-            EditText txtDate = (EditText)FindViewById(Resource.Id.txtdate);
-            txtDate.FocusChange += TxtDate_FocusChange;
+            txtDate = (TextView)FindViewById(Resource.Id.txtdate);
         }
 
-        private void TxtDate_FocusChange(object sender, View.FocusChangeEventArgs e)
-        {
-            var editText = (EditText)sender;
-            if(e.HasFocus)
-            {
-                DateDialog dialog = new DateDialog((View)sender);
-                FragmentTransaction ft = FragmentManager.BeginTransaction();
-                dialog.Show(ft, "DatePicker");
-            }
-        }
 
         public override bool OnOptionsItemSelected (IMenuItem item) 
         {
