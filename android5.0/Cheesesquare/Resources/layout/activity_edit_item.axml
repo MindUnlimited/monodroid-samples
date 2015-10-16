@@ -29,8 +29,7 @@
             android:id="@+id/edit_item_lin_layout"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            android:layout_height="match_parent">
         <!-- Title/Shared with/Importance-->
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
@@ -117,28 +116,40 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:maxHeight="100dp"
                     android:orientation="vertical"
                     android:padding="16dp">
                     <ImageView
-                        android:id="@+id/add_user_icon"
+                        android:id="@+id/user_to_share_icon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="16dp"
                         android:paddingBottom="8dp"
                         android:src="@drawable/ic_person_add_black_24dp"
                         android:layout_alignParentLeft="true"
-                        android:layout_alignBottom="@+id/add_user_text"
+                        android:layout_alignBottom="@+id/user_to_share_name"
                         android:tint="#A9A9A9" />
                     <EditText
-                        android:id="@+id/add_user_text"
+                        android:id="@+id/user_to_share_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:paddingBottom="8dp"
                         android:hint="Share task"
                         app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
                         android:layout_alignParentRight="true"
-                        android:layout_toRightOf="@+id/add_user_icon"
+                        android:layout_toRightOf="@+id/user_to_share_icon"
                         android:background="@android:color/transparent" />
+                    <ListView
+                        android:id="@+id/user_to_share_listview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/user_to_share_name"
+                        android:layout_marginLeft="40dp"
+                        android:fastScrollEnabled="true"
+                        android:fastScrollAlwaysVisible="true"
+                        android:stackFromBottom="true"
+                        android:transcriptMode="alwaysScroll"
+                        android:divider="@null" />
                     <ImageView
                         android:id="@+id/assigned_to_icon"
                         android:layout_width="wrap_content"
@@ -146,19 +157,36 @@
                         android:layout_marginRight="16dp"
                         android:src="@drawable/ic_assignment_ind_black_24dp"
                         android:layout_alignParentLeft="true"
-                        android:layout_below="@+id/add_user_icon"
-                        android:layout_alignBottom="@+id/assigned_to_text"
+                        android:layout_below="@+id/user_to_share_listview"
+                        android:layout_alignBottom="@+id/assigned_to_name"
                         android:tint="#A9A9A9" />
-                    <EditText
-                        android:id="@+id/assigned_to_text"
+                    <LinearLayout
+                        android:id="@+id/assigned_to_thumb_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Assign task"
-                        app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
-                        android:layout_below="@+id/add_user_text"
-                        android:layout_alignParentRight="true"
+                        android:layout_below="@+id/user_to_share_listview"
                         android:layout_toRightOf="@+id/assigned_to_icon"
-                        android:background="@android:color/transparent" />
+                        android:orientation="horizontal"
+                        android:focusable="true"
+                        android:clickable="true">
+                        <ImageView
+                            android:id="@+id/assigned_to_thumb"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:visibility="gone"
+                            android:layout_marginRight="8dp"
+                            android:src="@drawable/ic_account_circle_black_24dp" />
+                        <EditText
+                            android:id="@+id/assigned_to_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:hint="Assign task"
+                            android:clickable="true"
+                            android:focusable="false"
+                            app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
+                            android:background="@android:color/transparent"
+                            android:inputType="textNoSuggestions" />
+                    </LinearLayout>
                 </RelativeLayout>
             </android.support.v7.widget.CardView>
         <!-- Date/Time/Repeating-->
