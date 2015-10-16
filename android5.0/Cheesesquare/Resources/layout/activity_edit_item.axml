@@ -1,37 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/main_content"
+    android:id="@+id/edit_item_coordinator"
+    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:focusableInTouchMode="true"
-    android:padding="0dp">
+    android:focusable="true"
+    android:focusableInTouchMode="true">
     <android.support.design.widget.AppBarLayout
-        android:id="@+id/appbar"
+        android:id="@+id/appbar_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:fitsSystemWindows="true">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <android.support.v7.widget.Toolbar
-            android:id="@+id/appbar_edit"
+            android:id="@+id/toolbar_edit"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            android:elevation="4dp"
-            android:fitsSystemWindows="true" />
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
     </android.support.design.widget.AppBarLayout>
     <ScrollView
+        android:id="@+id/ScrollView1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="fill_vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:fillViewport="true">
         <LinearLayout
             android:id="@+id/edit_item_lin_layout"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginBottom="8dp">
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
         <!-- Title/Shared with/Importance-->
             <android.support.v7.widget.CardView
                 android:layout_width="match_parent"
@@ -185,8 +184,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:layout_marginBottom="8dp">
+                android:layout_marginRight="8dp">
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -209,7 +207,54 @@
                         app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
                         android:layout_alignParentRight="true"
                         android:layout_toRightOf="@+id/insert_comment_icon"
-                        android:background="@android:color/transparent" />
+                        android:background="@android:color/transparent"
+                        android:maxLines="4"
+                        android:scrollbars="vertical" />
+                </RelativeLayout>
+            </android.support.v7.widget.CardView>
+        <!-- Add subtasks -->
+            <android.support.v7.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginBottom="8dp">
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <ImageView
+                        android:id="@+id/add_subtask_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="16dp"
+                        android:src="@drawable/ic_add_box_black_24dp"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignBottom="@+id/add_user_text"
+                        android:tint="#A9A9A9" />
+                    <EditText
+                        android:id="@+id/add_subtask_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="add subtask"
+                        app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
+                        android:layout_alignParentRight="true"
+                        android:layout_toRightOf="@+id/add_subtask_icon"
+                        android:background="@android:color/transparent"
+                        android:maxLines="1" />
+                    <ListView
+                        android:id="@+id/subtask_lists"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="40dp"
+                        android:layout_below="@+id/add_subtask_text"
+                        android:fastScrollEnabled="true"
+                        android:fastScrollAlwaysVisible="true"
+                        android:stackFromBottom="true"
+                        android:transcriptMode="alwaysScroll"
+                        android:divider="@null" />
                 </RelativeLayout>
             </android.support.v7.widget.CardView>
         </LinearLayout>

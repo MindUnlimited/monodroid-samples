@@ -20,12 +20,17 @@ namespace Cheesesquare
     {
         private Android.Support.V7.Widget.Toolbar toolbar;
 
-        EditText assignEditText;
-        EditText shareEditText;
-        EditText txtDate;
+
 
         public const string EXTRA_NAME = "cheese_name";
-        private readonly int PICK_CONTACT = 1;
+        private readonly int PICK_CONTACT = 99;
+        private EditText subtaskText;
+        private EditText assignEditText;
+        private EditText shareEditText;
+        private EditText txtDate;
+        private ListView subTaskListView;
+        private ArrayAdapter<String> subTaskArrayAdapter;
+        private List<String> subTaskList;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -35,8 +40,12 @@ namespace Cheesesquare
 
             // Create your application here
             SetContentView(Resource.Layout.activity_edit_item);
+            Window.SetSoftInputMode(SoftInput.AdjustResize);
+            Window.SetSoftInputMode(SoftInput.StateHidden);
 
-            toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.appbar_edit);
+            subTaskList = new List<string>();
+
+            toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar_edit);
             toolbar.Title = cheeseName;
             toolbar.SetNavigationIcon(Resource.Drawable.ic_clear_white_24dp);
 
@@ -44,11 +53,11 @@ namespace Cheesesquare
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
             SupportActionBar.SetDisplayShowHomeEnabled(true);
 
-        }
+            subTaskListView = FindViewById<ListView>(Resource.Id.subtask_lists);
+            subTaskArrayAdapter = new ArrayAdapter<String>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, subTaskList);
+            subTaskArrayAdapter.SetNotifyOnChange(true);
+            subTaskListView.Adapter = subTaskArrayAdapter;
 
-        protected override void OnStart()
-        {
-            base.OnStart();
             txtDate = (EditText)FindViewById(Resource.Id.item_date);
             txtDate.FocusChange += TxtDate_FocusChange;
 
@@ -57,6 +66,47 @@ namespace Cheesesquare
 
             assignEditText = FindViewById<EditText>(Resource.Id.assigned_to_text);
             assignEditText.FocusChange += shareAssign_FocusChange; ;
+
+            subtaskText = FindViewById<EditText>(Resource.Id.add_subtask_text);
+            //subtaskText.SetOnKeyListener(new subTaskKeyListener(subTaskArrayAdapter, subtaskText));
+            //subtaskText.KeyPress += SubtaskText_KeyPress;
+
+            subtaskText.KeyPress += (object sender, View.KeyEventArgs e) =>
+            {
+                e.Handled = false;
+                if (e.Event.Action == KeyEventActions.Down && e.KeyCode == Keycode.Enter)
+                {
+                    if (subtaskText.Text != "")
+                    {
+                        subTaskArrayAdapter.Add(subtaskText.Text);
+                        subTaskArrayAdapter.NotifyDataSetChanged();
+                        Log.Debug("EditItemActivity", subTaskArrayAdapter.Count.ToString());
+                        subtaskText.Text = "";
+                        e.Handled = true;
+                    }
+                    else // an immediate enter does nothing
+                    {
+                        e.Handled = true;
+                    }
+                }
+            };
+        }
+
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+
+
+        }
+
+        private void SubtaskText_KeyPress(object sender, View.KeyEventArgs e)
+        {
+            // If the event is a key-down event on the "enter" button
+            if ((e.Event.Action == KeyEventActions.Down) && (e.KeyCode == Keycode.Enter))
+            {
+                subTaskArrayAdapter.Add(subtaskText.Text);
+            }
         }
 
         private void shareAssign_FocusChange(object sender, View.FocusChangeEventArgs e)
@@ -65,19 +115,16 @@ namespace Cheesesquare
             Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
             if (e.HasFocus)
             {
+                
                 StartActivityForResult(intent, PICK_CONTACT);//PICK_CONTACT is private static final int, so declare in activity class
+                editText.ClearFocus();
             }
-            else
-            {
-                SetResult(Result.Ok, intent);
-                FinishActivity(PICK_CONTACT);
-            }
-            
         }
 
         protected override void OnActivityResult(int requestCode, Result resultCode,
         Intent intent)
         {
+            base.OnActivityResult(requestCode, resultCode, intent);
             if (requestCode == PICK_CONTACT)
             {
                 if (resultCode == Result.Ok)
@@ -105,11 +152,12 @@ namespace Cheesesquare
                     //    String name = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
 
                     Android.Net.Uri uri = intent.Data;
-                    String[] projection = { ContactsContract.CommonDataKinds.Phone.Number, ContactsContract.CommonDataKinds.StructuredName.DisplayName}; // PROBLEM OVER HERE?
+                    String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.}; // PROBLEM OVER HERE?
 
-                    var cursor = ContentResolver.Query(uri, projection,
+                    var cursor = ContentResolver.Query(uri, null,
                             null, null, null);
                     cursor.MoveToFirst();
+                    String[] names = cursor.GetColumnNames();
 
                     int numberColumnIndex = cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Phone.Number);
                     String number = cursor.GetString(numberColumnIndex);
@@ -131,10 +179,9 @@ namespace Cheesesquare
                 DateDialog dialog = new DateDialog((View)sender);
                 FragmentTransaction ft = FragmentManager.BeginTransaction();
                 dialog.Show(ft, "DatePicker");
+                editText.ClearFocus();
             }
         }
-
-
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
@@ -153,5 +200,6 @@ namespace Cheesesquare
             MenuInflater.Inflate(Resource.Menu.edit_toolbar_actions, menu);
             return true;
         }
+
     }
 }
