@@ -9,6 +9,7 @@ using Android.Support.Design.Widget;
 using Android.App;
 using Android.Util;
 using Android.Content;
+using Android.Support.V4.Widget;
 
 namespace Cheesesquare
 {
@@ -28,6 +29,7 @@ namespace Cheesesquare
         FloatingActionButton editFAB;
         FloatingActionButton addItemFAB;
         CollapsingToolbarLayout collapsingToolbar;
+        DrawerLayout drawerLayout;
 
         protected override void OnCreate (Bundle savedInstanceState) 
         {
@@ -36,6 +38,12 @@ namespace Cheesesquare
             SetContentView(Resource.Layout.activity_detail);
 
             cheeseName = Intent.GetStringExtra (EXTRA_NAME);
+
+            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
+
+            var navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
+            if (navigationView != null)
+                setupDrawerContent(navigationView);
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar (toolbar);
@@ -123,6 +131,15 @@ namespace Cheesesquare
             };
 
             loadBackdrop();
+        }
+
+
+        void setupDrawerContent(NavigationView navigationView)
+        {
+            navigationView.NavigationItemSelected += (sender, e) => {
+                //e.P0.SetChecked (true);
+                drawerLayout.CloseDrawers();
+            };
         }
 
         private void AddItemFAB_Click(object sender, EventArgs e)
