@@ -72,6 +72,7 @@
     <Compile Include="Cheeses.cs" />
     <Compile Include="CheeseListFragment.cs" />
     <Compile Include="CheeseDetailActivity.cs" />
+    <Compile Include="SelectContactsActivity.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -84,6 +85,7 @@
     <AndroidResource Include="Resources\layout\activity_edit_item.axml">
       <SubType>AndroidResource</SubType>
     </AndroidResource>
+    <AndroidResource Include="Resources\layout\activity_select_contacts.axml" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\values\Strings.xml" />
@@ -401,6 +403,9 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable-xxxhdpi\ic_account_circle_black_24dp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\contact_list_item.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>

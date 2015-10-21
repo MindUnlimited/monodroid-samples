@@ -13,11 +13,13 @@ using V4FragmentManager = Android.Support.V4.App.FragmentManager;
 using Android.Support.V4.Widget;
 using Android.Support.Design.Widget;
 using System.Collections.Generic;
+using Android.Support.V4.App;
+using Android.Util;
 
 namespace Cheesesquare
 {
-    [Activity (Label = "MindSet", MainLauncher = true)]
-    public class MainActivity : AppCompatActivity
+    [Activity (Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true)]
+    public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {        
         DrawerLayout drawerLayout;
                
@@ -26,6 +28,8 @@ namespace Cheesesquare
             base.OnCreate (savedInstanceState);
 
             SetContentView (Resource.Layout.activity_main);
+
+            Log.Debug("CheeseDetailAcitivity", this.ComponentName.ToString());
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar (toolbar);
@@ -86,10 +90,32 @@ namespace Cheesesquare
 
         void setupDrawerContent(NavigationView navigationView) 
         {
-            navigationView.NavigationItemSelected += (sender, e) => {
-                //e.P0.SetChecked (true);
-                drawerLayout.CloseDrawers ();
-            };
+            navigationView.SetNavigationItemSelectedListener(this);
+            //navigationView.NavigationItemSelected += (sender, e) => {
+            //    switch (e.MenuItem.ItemId)
+            //    {
+            //        case Android.Resource.Id.Home:
+            //            drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
+            //            break;
+            //    }
+            //    e.MenuItem.SetChecked(true);
+            //    //e.P0.SetChecked (true);
+            //    drawerLayout.CloseDrawers ();
+            //};
+        }
+
+        public bool OnNavigationItemSelected(IMenuItem menuItem)
+        {
+            switch (menuItem.ItemId)
+            {
+                case Resource.Id.nav_home:
+                    drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
+
+                    NavUtils.NavigateUpFromSameTask(this);
+                    return true;
+            }
+
+            return false;
         }
 
         class Adapter : Android.Support.V4.App.FragmentPagerAdapter 

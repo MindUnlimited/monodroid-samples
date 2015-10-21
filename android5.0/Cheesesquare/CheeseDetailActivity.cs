@@ -10,10 +10,12 @@ using Android.App;
 using Android.Util;
 using Android.Content;
 using Android.Support.V4.Widget;
+using Android.Support.V4.App;
 
 namespace Cheesesquare
 {
     [Activity (Label="Details")]
+    [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.cheesesquare.MainActivity")]
     public class CheeseDetailActivity : AppCompatActivity
     {
         public const string EXTRA_NAME = "cheese_name";
@@ -31,23 +33,32 @@ namespace Cheesesquare
         CollapsingToolbarLayout collapsingToolbar;
         DrawerLayout drawerLayout;
 
+
         protected override void OnCreate (Bundle savedInstanceState) 
         {
             base.OnCreate (savedInstanceState);
-
             SetContentView(Resource.Layout.activity_detail);
-
             cheeseName = Intent.GetStringExtra (EXTRA_NAME);
 
-            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
+            if (Parent == null)
+                Log.Debug("CheeseDetailAcitivity", "Parent not found");
 
-            var navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
-            if (navigationView != null)
-                setupDrawerContent(navigationView);
+            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_detail);
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar (toolbar);
-            SupportActionBar.SetDisplayHomeAsUpEnabled (true);
+
+            var navigationView = drawerLayout.FindViewById<NavigationView>(Resource.Id.nav_view_detail);
+            if (navigationView != null)
+                setupDrawerContent(navigationView);
+
+            //SupportActionBar.SetDisplayShowHomeEnabled(true);
+            //SupportActionBar.SetDisplayHomeAsUpEnabled(true);
+            //SupportActionBar.SetIcon(Resource.Drawable.ic_menu);
+            //SupportActionBar.SetHomeButtonEnabled(true);
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
+            SupportActionBar.SetDisplayHomeAsUpEnabled(true);
+
 
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
             collapsingToolbar.SetTitle (cheeseName);
@@ -137,9 +148,33 @@ namespace Cheesesquare
         void setupDrawerContent(NavigationView navigationView)
         {
             navigationView.NavigationItemSelected += (sender, e) => {
+                switch (e.MenuItem.ItemId)
+                {
+                    case Resource.Id.nav_home:
+                        NavUtils.NavigateUpFromSameTask(this);
+                        break;
+                }
                 //e.P0.SetChecked (true);
                 drawerLayout.CloseDrawers();
             };
+        }
+
+
+        public override bool OnCreateOptionsMenu(IMenu menu)
+        {
+            MenuInflater.Inflate(Resource.Menu.sample_actions, menu);
+            return true;
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            switch (item.ItemId)
+            {
+                case Android.Resource.Id.Home:
+                    drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
+                    return true;
+            }
+            return base.OnOptionsItemSelected(item);
         }
 
         private void AddItemFAB_Click(object sender, EventArgs e)
@@ -187,28 +222,12 @@ namespace Cheesesquare
         }
 
 
-        public override bool OnOptionsItemSelected (IMenuItem item) 
-        {
-            switch (item.ItemId) {
-            case Android.Resource.Id.Home:
-                Finish ();
-                return true;
-            }
-            return base.OnOptionsItemSelected (item);
-        }
-
         void loadBackdrop() 
         {            
             var imageView = FindViewById<ImageView> (Resource.Id.backdrop);
 
             var r = Cheeses.GetRandomCheeseBackground ();
             imageView.SetImageResource (r);
-        }
-            
-        public override bool OnCreateOptionsMenu(IMenu menu) 
-        {
-            MenuInflater.Inflate (Resource.Menu.sample_actions, menu);
-            return true;
         }
     }
 }

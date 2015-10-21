@@ -71,7 +71,7 @@ namespace Cheesesquare
             txtDate.FocusChange += TxtDate_FocusChange;
 
             shareEditText = FindViewById<EditText>(Resource.Id.user_to_share_name);
-            shareEditText.FocusChange += shareAssign_FocusChange;
+            shareEditText.FocusChange += share_FocusChange;
 
             shareListView = FindViewById<ListView>(Resource.Id.user_to_share_listview);
             shareArrayAdapter = new ArrayAdapter<String>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, shareList);
@@ -131,16 +131,20 @@ namespace Cheesesquare
             }
         }
 
-        private void shareAssign_FocusChange(object sender, View.FocusChangeEventArgs e)
+        private void share_FocusChange(object sender, View.FocusChangeEventArgs e)
         {
             var editText = (EditText)sender;
-            Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
-            if (e.HasFocus)
-            {
+
+            var intent = new Intent(this, typeof(SelectContactsActivity));
+            StartActivity(intent);
+
+            //Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
+            //if (e.HasFocus)
+            //{
                 
-                StartActivityForResult(intent, SHARE_CONTACT);//PICK_CONTACT is private static final int, so declare in activity class
-                editText.ClearFocus();
-            }
+            //    StartActivityForResult(intent, SHARE_CONTACT);//PICK_CONTACT is private static final int, so declare in activity class
+            //    editText.ClearFocus();
+            //}
         }
 
         protected override void OnActivityResult(int requestCode, Result resultCode,
@@ -160,7 +164,7 @@ namespace Cheesesquare
                         String photoUri = "", photoThumbnailUri = "", name = "";
                         try
                         {
-                            String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri }; // PROBLEM OVER HERE?
+                            String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri };
                             cursor = ContentResolver.Query(uri, projection,
                                 null, null, null);
                             cursor.MoveToFirst();
@@ -275,7 +279,7 @@ namespace Cheesesquare
 
                         try
                         {
-                            String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri }; // PROBLEM OVER HERE?
+                            String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri };
                             cursor = ContentResolver.Query(uri, projection,
                                 null, null, null);
                             cursor.MoveToFirst();
