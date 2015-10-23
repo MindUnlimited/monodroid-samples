@@ -17,12 +17,17 @@ using Android.Content.Res;
 using Android.Support.V4.Graphics.Drawable;
 using Android.Support.V7.App;
 using Android.Database;
+using Android.Support.V7.Widget;
 
 namespace Cheesesquare
 {
     [Activity(Label = "SelectContactsActivity")]
     public class SelectContactsActivity : AppCompatActivity
     {
+        private RecyclerView contactsRecyclerView;
+        private RecyclerView.Adapter recyclerAdapter;
+        private RecyclerView.LayoutManager recyclerLayoutManager;
+
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
@@ -30,26 +35,43 @@ namespace Cheesesquare
             // Create your application here
 
             SetContentView(Resource.Layout.activity_select_contacts);
-            ContactsAdapter contactsAdapter = new ContactsAdapter(this);
-            ListView contactsListView = FindViewById<ListView>(Resource.Id.ContactsListView);
-            contactsListView.Adapter = contactsAdapter;
+            //ContactsAdapter contactsAdapter = new ContactsAdapter(this);
+            //ListView contactsListView = FindViewById<ListView>(Resource.Id.ContactsListView);
+            //contactsListView.Adapter = contactsAdapter;
+
+
+            contactsRecyclerView = FindViewById<RecyclerView>(Resource.Id.contacts_recycler_view);
+
+            // use this setting to improve performance if you know that changes
+            // in content do not change the layout size of the RecyclerView
+            contactsRecyclerView.HasFixedSize = true;
+
+            // set the dividers between the items (contacts)
+            contactsRecyclerView.AddItemDecoration(new DividerItemDecoration(Application.Context, Resource.Drawable.line_divider));
+
+            // use a linear layout manager
+            recyclerLayoutManager = new LinearLayoutManager(this);
+            contactsRecyclerView.SetLayoutManager(recyclerLayoutManager);
+
+            // specify an adapter (see also next example)
+            recyclerAdapter = new ContactsRecyclerAdapter(this);
+            contactsRecyclerView.SetAdapter(recyclerAdapter);
+
+
+            FastScroller fastScroller = FindViewById<FastScroller>(Resource.Id.fastscroller);
+            fastScroller.SetRecyclerView(contactsRecyclerView);
         }
+
+
 
     }
 
-    public class ContactsAdapter : BaseAdapter
+    public class ContactsRecyclerAdapter : BaseRecyclerAdapter
     {
-        List<Contact> _contactList;
         Activity _activity;
+        List<Contact> _contactList;
 
-        public override int Count
-        {
-            get { return _contactList.Count; }
-        }
-
-
-
-        public ContactsAdapter(Activity activity)
+        public ContactsRecyclerAdapter(Activity activity)
         {
             _activity = activity;
             FillContacts();
@@ -63,12 +85,11 @@ namespace Cheesesquare
                 ContactsContract.Contacts.InterfaceConsts.Id,
                 ContactsContract.Contacts.InterfaceConsts.DisplayName,
                 ContactsContract.Contacts.InterfaceConsts.PhotoId
-            };
+                };
 
-            var cursor = _activity.ManagedQuery(uri, projection, null,
+            var cursor = Application.Context.ContentResolver.Query(uri, projection, null,
                 null, null);
 
-            //var cursor2 = Application.Context.ContentResolver.Query(uri, projection, null, null, null);
 
             _contactList = new List<Contact>();
 
@@ -89,36 +110,37 @@ namespace Cheesesquare
             }
         }
 
-        public override Java.Lang.Object GetItem(int position)
+        private Contact GetValueAt(int position)
         {
-            // could wrap a Contact in a Java.Lang.Object
-            // to return it here if needed
-            return null;
+            return _contactList[position];
         }
 
-        public override long GetItemId(int position)
+        public override int ItemCount
         {
-            return _contactList[position].Id;
-        }
-
-        public override View GetView(int position, View convertView, ViewGroup parent)
-        {
-            var view = convertView ?? _activity.LayoutInflater.Inflate(
-                Resource.Layout.contact_list_item, parent, false);
-            var contactName = view.FindViewById<TextView>(Resource.Id.ContactName);
-            var contactImage = view.FindViewById<ImageView>(Resource.Id.ContactImage);
-            contactName.Text = _contactList[position].DisplayName;
-
-            if (_contactList[position].PhotoId == null)
+            get
             {
-                contactImage = view.FindViewById<ImageView>(Resource.Id.ContactImage);
-                contactImage.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
-                contactImage.SetColorFilter(Color.ParseColor("#A9A9A9"));
+                return _contactList.Count;
+            }
+        }
+
+        public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
+        {
+            // - get element from your dataset at this position
+            // - replace the contents of the view with that element
+            var h = holder as ViewHolder;
+            var contact = GetValueAt(position);
+
+            h.TextView.Text = GetValueAt(position).DisplayName;
+
+            if (contact.PhotoId == null)
+            {
+                h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
             }
             else
             {
                 var contactUri = ContentUris.WithAppendedId(
-                    ContactsContract.Contacts.ContentUri, _contactList[position].Id);
+                    ContactsContract.Contacts.ContentUri, contact.Id);
                 var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
                     Contacts.Photos.ContentDirectory);
 
@@ -126,11 +148,22 @@ namespace Cheesesquare
                 var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
                 roundedThumbBitmap.Circular = true;
 
-                contactImage.SetImageDrawable(roundedThumbBitmap);
-
-                //contactImage.SetImageURI(contactPhotoUri);
+                h.ImageView.SetImageDrawable(roundedThumbBitmap);
             }
-            return view;
+
+        }
+
+        public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
+        {
+            var view = LayoutInflater.From(parent.Context)
+                .Inflate(Resource.Layout.contact_list_item, parent, false);
+
+            return new ViewHolder(view);
+        }
+
+        public override string GetTextToShowInBubble(int pos)
+        {
+            return _contactList[pos].DisplayName[0].ToString();
         }
 
         class Contact
@@ -138,6 +171,28 @@ namespace Cheesesquare
             public long Id { get; set; }
             public string DisplayName { get; set; }
             public string PhotoId { get; set; }
+        }
+
+
+
+    }
+
+    public class ViewHolder : RecyclerView.ViewHolder
+    {
+        public View View { get; set; }
+        public TextView TextView { get; set; }
+        public ImageView ImageView { get; set; }
+
+        public ViewHolder(View view) : base(view)
+        {
+            View = view;
+            TextView = view.FindViewById<TextView>(Resource.Id.ContactName);
+            ImageView = view.FindViewById<ImageView>(Resource.Id.ContactImage);
+        }
+
+        public override string ToString()
+        {
+            return base.ToString() + " '" + TextView.Text;
         }
     }
 }

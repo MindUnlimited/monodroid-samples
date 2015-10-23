@@ -66,6 +66,10 @@
   <ItemGroup>
     <Compile Include="DateDialog.cs" />
     <Compile Include="EditItemActivity.cs" />
+    <Compile Include="FastScroller Code\Adapters\BaseRecyclerAdapter.cs" />
+    <Compile Include="FastScroller Code\Adapters\LargeAdapter.cs" />
+    <Compile Include="FastScroller Code\DividerItemDecoration.cs" />
+    <Compile Include="FastScroller Code\FastScroller.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -86,6 +90,9 @@
       <SubType>AndroidResource</SubType>
     </AndroidResource>
     <AndroidResource Include="Resources\layout\activity_select_contacts.axml" />
+    <AndroidResource Include="Resources\layout\FastScroller.axml">
+      <SubType>AndroidResource</SubType>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\values\Strings.xml" />
@@ -406,6 +413,15 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\layout\contact_list_item.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\recycler_view_fast_scroller__bubble.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\recycler_view_fast_scroller__handle.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\line_divider.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
