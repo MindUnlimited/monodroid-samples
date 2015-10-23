@@ -49,15 +49,15 @@ namespace Cheesesquare
             // set the dividers between the items (contacts)
             contactsRecyclerView.AddItemDecoration(new DividerItemDecoration(Application.Context, Resource.Drawable.line_divider));
 
-            // use a linear layout manager
-            recyclerLayoutManager = new LinearLayoutManager(this);
-            contactsRecyclerView.SetLayoutManager(recyclerLayoutManager);
-
             // specify an adapter (see also next example)
             recyclerAdapter = new ContactsRecyclerAdapter(this);
             contactsRecyclerView.SetAdapter(recyclerAdapter);
 
+            // use a linear layout manager
+            recyclerLayoutManager = new LinearLayoutManager(this);
+            contactsRecyclerView.SetLayoutManager(recyclerLayoutManager);
 
+            // use a fast scroller
             FastScroller fastScroller = FindViewById<FastScroller>(Resource.Id.fastscroller);
             fastScroller.SetRecyclerView(contactsRecyclerView);
         }
@@ -75,6 +75,51 @@ namespace Cheesesquare
         {
             _activity = activity;
             FillContacts();
+            _contactList.Sort();
+
+            var groupThumb = getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_24dp), Application.Context.Resources.GetColor(Resource.Color.colorAccent));
+            _contactList.Insert(0, new Contact { DisplayName = "Group", PhotoThumb = groupThumb });
+        }
+
+        private Bitmap getCircleBitmap(Bitmap bitmap)
+        {
+            return getCircleBitmap(bitmap, Color.ParseColor("#A9A9A9")); // default is gray
+        }
+
+        private Bitmap getCircleBitmap(Bitmap bitmap, Color color)
+        {
+            //var imageView = _activity.FindViewById<ImageView>(Resource.Id.ContactImage);
+            //int width = imageView.Width;
+            //int height = imageView.Height;
+
+            var test = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_48dp);
+            int width = test.Width;
+            int height = test.Height;
+
+            Bitmap output = Bitmap.CreateBitmap(width,
+             height, Bitmap.Config.Argb8888);
+            Canvas canvas = new Canvas(output);
+
+            Paint paint = new Paint();
+            Rect rect = new Rect(0, 0, width, height);
+            RectF rectF = new RectF(rect);
+
+            paint.AntiAlias = true;
+            canvas.DrawARGB(0, 0, 0, 0);
+            paint.Color = color;
+            canvas.DrawOval(rectF, paint);
+
+            int cx = (width - bitmap.Width) >> 1; // same as (...) / 2
+            int cy = (height - bitmap.Height) >> 1;
+
+            paint.SetXfermode(new PorterDuffXfermode(PorterDuff.Mode.SrcOver));
+            //canvas.DrawBitmap(bitmap, matrix, paint);
+            //canvas.DrawBitmap(bitmap, rect, rect, paint);
+            canvas.DrawBitmap(bitmap, cx, cy, paint);
+
+            bitmap.Recycle();
+
+            return output;
         }
 
         void FillContacts()
@@ -84,7 +129,7 @@ namespace Cheesesquare
             string[] projection = {
                 ContactsContract.Contacts.InterfaceConsts.Id,
                 ContactsContract.Contacts.InterfaceConsts.DisplayName,
-                ContactsContract.Contacts.InterfaceConsts.PhotoId
+                ContactsContract.ContactsColumns.PhotoThumbnailUri
                 };
 
             var cursor = Application.Context.ContentResolver.Query(uri, projection, null,
@@ -92,22 +137,104 @@ namespace Cheesesquare
 
 
             _contactList = new List<Contact>();
+            var noThumb = getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
 
-            if (cursor.MoveToFirst())
+            try
             {
-                do
+                if (cursor.MoveToFirst())
                 {
-                    _contactList.Add(new Contact
+                    do
                     {
-                        Id = cursor.GetLong(
-                    cursor.GetColumnIndex(projection[0])),
-                        DisplayName = cursor.GetString(
-                    cursor.GetColumnIndex(projection[1])),
-                        PhotoId = cursor.GetString(
-                    cursor.GetColumnIndex(projection[2]))
-                    });
-                } while (cursor.MoveToNext());
+                        var Id = cursor.GetLong(
+                        cursor.GetColumnIndex(projection[0]));
+
+                        var PhotoId = cursor.GetString(
+                            cursor.GetColumnIndex(projection[2]));
+
+
+                        ICursor cursor_email = null;
+                        string email = "";
+                        try
+                        {
+                            cursor_email = Application.Context.ContentResolver.Query(ContactsContract.CommonDataKinds.Email.ContentUri, null, ContactsContract.CommonDataKinds.Email.InterfaceConsts.ContactId + "=?", new string[] { Id.ToString() }, null);
+                            int emailColumnIndex = cursor_email.GetColumnIndex(ContactsContract.CommonDataKinds.Email.Address);
+
+                            if (cursor_email.MoveToFirst())
+                            {
+                                email = cursor_email.GetString(emailColumnIndex);
+                                //Log.Verbose("EditItemActivity", "Got email: " + email);
+                            }
+                            else
+                            {
+                                Log.Warn("EditItemActivity", "No email found for this account");
+                            }
+                        }
+                        catch (Java.Lang.Exception e)
+                        {
+                            Log.Error("EditItemActivity", "Failed to get email data", e);
+                        }
+                        finally
+                        {
+                            if (cursor_email != null)
+                            {
+                                cursor_email.Close();
+                            }
+                            if (email.Length == 0)
+                            {
+                                //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No email for Selected Contact", Snackbar.LengthLong).Show();
+                                //Toast.MakeText(this, "No email for Selected Contact", ToastLength.Long).Show();
+                            }
+                        }
+
+                        Bitmap PhotoThumb = null;
+                        if (PhotoId == null)
+                        {
+                            //h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                            //h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
+
+                            PhotoThumb = noThumb;
+                        }
+                        else
+                        {
+                            //var contactUri = ContentUris.WithAppendedId(
+                            //    ContactsContract.Contacts.ContentUri, contact.Id);
+                            //var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
+                            //    Contacts.Photos.ContentDirectory);
+
+                            var contactPhotoUri = Android.Net.Uri.Parse(PhotoId);
+                            Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(Application.Context.ContentResolver, contactPhotoUri); //.getBitmap(this.getContentResolver(), imageUri);
+                            //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
+                            //roundedThumbBitmap.Circular = true;
+
+                            PhotoThumb = thumbBitmap;
+                        }
+
+
+                        if (email != null && email.Length > 0)
+                            _contactList.Add(new Contact
+                            {
+                                Id = Id,
+                                Email = email,
+                                DisplayName = cursor.GetString(
+                            cursor.GetColumnIndex(projection[1])),
+                                PhotoId = PhotoId,
+                                PhotoThumb = PhotoThumb
+                            });
+                    } while (cursor.MoveToNext());
+                }
             }
+            catch (Java.Lang.Exception e)
+            {
+                Log.Error("EditItemActivity", "Failed to get email data", e);
+            }
+            finally
+            {
+                if (cursor != null)
+                {
+                    cursor.Close();
+                }
+            }
+
         }
 
         private Contact GetValueAt(int position)
@@ -128,29 +255,20 @@ namespace Cheesesquare
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
             var h = holder as ViewHolder;
-            var contact = GetValueAt(position);
+            var contact = GetValueAt(h.AdapterPosition);
 
-            h.TextView.Text = GetValueAt(position).DisplayName;
+            h.TextView.Text = contact.DisplayName;
 
-            if (contact.PhotoId == null)
-            {
-                h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
-                h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
-            }
-            else
-            {
-                var contactUri = ContentUris.WithAppendedId(
-                    ContactsContract.Contacts.ContentUri, contact.Id);
-                var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
-                    Contacts.Photos.ContentDirectory);
+            var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, contact.PhotoThumb);
+            roundedThumbBitmap.Circular = true;
+            h.ImageView.SetImageDrawable(roundedThumbBitmap);
 
-                Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(Application.Context.ContentResolver, contactPhotoUri); //.getBitmap(this.getContentResolver(), imageUri);
-                var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
-                roundedThumbBitmap.Circular = true;
-
-                h.ImageView.SetImageDrawable(roundedThumbBitmap);
-            }
-
+            
+            //h.View.Click += (sender, e) =>
+            //{
+            //    Log.Debug("SelectContactsActivity", contact.ToString());
+            //    h.View.SetBackgroundColor(Color.Aqua);
+            //};
         }
 
         public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
@@ -163,14 +281,38 @@ namespace Cheesesquare
 
         public override string GetTextToShowInBubble(int pos)
         {
-            return _contactList[pos].DisplayName[0].ToString();
+            if (_contactList[pos].DisplayName != null)
+                return _contactList[pos].DisplayName.ToUpper()[0].ToString();
+            return "";
         }
 
-        class Contact
+        class Contact : IComparable<Contact>
         {
             public long Id { get; set; }
             public string DisplayName { get; set; }
             public string PhotoId { get; set; }
+            public Bitmap PhotoThumb { get; set; }
+            public string Email { get; set; }
+
+            public int CompareTo(Contact other)
+            {
+                if (this.DisplayName != null && other.DisplayName != null)
+                {
+                    if (DisplayName.ToUpper()[0] < other.DisplayName.ToUpper()[0])
+                        return -1;
+                    if (DisplayName.ToUpper()[0] == other.DisplayName.ToUpper()[0])
+                        return 0;
+                    if (DisplayName.ToUpper()[0] > other.DisplayName.ToUpper()[0])
+                        return 1;
+                }
+                return -1;
+
+            }
+
+            public override string ToString()
+            {
+                return System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
+            }
         }
 
 
@@ -189,6 +331,13 @@ namespace Cheesesquare
             TextView = view.FindViewById<TextView>(Resource.Id.ContactName);
             ImageView = view.FindViewById<ImageView>(Resource.Id.ContactImage);
         }
+
+        //public override void OnClick(View v)
+        //{
+        //    Contact contact = GetValueAt(AdapterPosition);
+        //    Log.Debug("SelectContactsActivity", contact.ToString());
+        //    //    h.View.SetBackgroundColor(Color.Aqua);
+        //}
 
         public override string ToString()
         {

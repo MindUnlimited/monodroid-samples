@@ -8,6 +8,7 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/contacts_recycler_view"
         android:scrollbars="none"
+        android:background="#D1C4E9"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
     <Cheesesquare.FastScroller

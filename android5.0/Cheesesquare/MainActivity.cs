@@ -109,11 +109,10 @@ namespace Cheesesquare
             switch (menuItem.ItemId)
             {
                 case Resource.Id.nav_home:
-                    drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
-
-                    NavUtils.NavigateUpFromSameTask(this);
+                    drawerLayout.CloseDrawers();
                     return true;
             }
+
 
             return false;
         }
