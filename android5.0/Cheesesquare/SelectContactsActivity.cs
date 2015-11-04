@@ -18,75 +18,19 @@ using Android.Support.V4.Graphics.Drawable;
 using Android.Support.V7.App;
 using Android.Database;
 using Android.Support.V7.Widget;
+using V7Toolbar = Android.Support.V7.Widget.Toolbar;
 
 namespace Cheesesquare
 {
-    [Activity(Label = "SelectContactsActivity")]
-    public class SelectContactsActivity : AppCompatActivity
+
+    public static class CircleBitmap
     {
-        private RecyclerView contactsRecyclerView;
-        private RecyclerView.Adapter recyclerAdapter;
-        private RecyclerView.LayoutManager recyclerLayoutManager;
-
-        protected override void OnCreate(Bundle bundle)
-        {
-            base.OnCreate(bundle);
-
-            // Create your application here
-
-            SetContentView(Resource.Layout.activity_select_contacts);
-            //ContactsAdapter contactsAdapter = new ContactsAdapter(this);
-            //ListView contactsListView = FindViewById<ListView>(Resource.Id.ContactsListView);
-            //contactsListView.Adapter = contactsAdapter;
-
-
-            contactsRecyclerView = FindViewById<RecyclerView>(Resource.Id.contacts_recycler_view);
-
-            // use this setting to improve performance if you know that changes
-            // in content do not change the layout size of the RecyclerView
-            contactsRecyclerView.HasFixedSize = true;
-
-            // set the dividers between the items (contacts)
-            contactsRecyclerView.AddItemDecoration(new DividerItemDecoration(Application.Context, Resource.Drawable.line_divider));
-
-            // specify an adapter (see also next example)
-            recyclerAdapter = new ContactsRecyclerAdapter(this);
-            contactsRecyclerView.SetAdapter(recyclerAdapter);
-
-            // use a linear layout manager
-            recyclerLayoutManager = new LinearLayoutManager(this);
-            contactsRecyclerView.SetLayoutManager(recyclerLayoutManager);
-
-            // use a fast scroller
-            FastScroller fastScroller = FindViewById<FastScroller>(Resource.Id.fastscroller);
-            fastScroller.SetRecyclerView(contactsRecyclerView);
-        }
-
-
-
-    }
-
-    public class ContactsRecyclerAdapter : BaseRecyclerAdapter
-    {
-        Activity _activity;
-        List<Contact> _contactList;
-
-        public ContactsRecyclerAdapter(Activity activity)
-        {
-            _activity = activity;
-            FillContacts();
-            _contactList.Sort();
-
-            var groupThumb = getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_24dp), Application.Context.Resources.GetColor(Resource.Color.colorAccent));
-            _contactList.Insert(0, new Contact { DisplayName = "Group", PhotoThumb = groupThumb });
-        }
-
-        private Bitmap getCircleBitmap(Bitmap bitmap)
+        public static Bitmap getCircleBitmap(Bitmap bitmap)
         {
             return getCircleBitmap(bitmap, Color.ParseColor("#A9A9A9")); // default is gray
         }
 
-        private Bitmap getCircleBitmap(Bitmap bitmap, Color color)
+        public static Bitmap getCircleBitmap(Bitmap bitmap, Color color)
         {
             //var imageView = _activity.FindViewById<ImageView>(Resource.Id.ContactImage);
             //int width = imageView.Width;
@@ -121,6 +65,152 @@ namespace Cheesesquare
 
             return output;
         }
+    }
+
+    public class Contact : IComparable<Contact>
+    {
+        public long Id { get; set; }
+        public string DisplayName { get; set; }
+        public string PhotoId { get; set; }
+        public Bitmap PhotoThumb { get; set; }
+        public string Email { get; set; }
+
+        public int CompareTo(Contact other)
+        {
+            if (this.DisplayName != null && other.DisplayName != null)
+            {
+                if (DisplayName.ToUpper()[0] < other.DisplayName.ToUpper()[0])
+                    return -1;
+                if (DisplayName.ToUpper()[0] == other.DisplayName.ToUpper()[0])
+                    return 0;
+                if (DisplayName.ToUpper()[0] > other.DisplayName.ToUpper()[0])
+                    return 1;
+            }
+            return -1;
+
+        }
+
+        public override string ToString()
+        {
+            return System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
+        }
+    }
+
+    [Activity(Label = "SelectContactsActivity")]
+    public class SelectContactsActivity : AppCompatActivity
+    {
+        private RecyclerView contactsRecyclerView;
+        private ContactsRecyclerAdapter recyclerAdapter;
+        private RecyclerView.LayoutManager recyclerLayoutManager;
+
+        protected override void OnCreate(Bundle bundle)
+        {
+            base.OnCreate(bundle);
+
+            // Create your application here
+            SetContentView(Resource.Layout.activity_select_contacts);
+
+            var toolbar = FindViewById<V7Toolbar>(Resource.Id.contacts_toolbar);
+            SetSupportActionBar(toolbar);
+
+            SupportActionBar.SetDisplayHomeAsUpEnabled(true);
+            SupportActionBar.SetDisplayShowHomeEnabled(true);
+            SupportActionBar.SetHomeButtonEnabled(true);
+
+
+            //ContactsAdapter contactsAdapter = new ContactsAdapter(this);
+            //ListView contactsListView = FindViewById<ListView>(Resource.Id.ContactsListView);
+            //contactsListView.Adapter = contactsAdapter;
+
+            //LinearLayout groupItem = FindViewById<LinearLayout>(Resource.Id.group_item);
+            //groupItem.SetBackgroundColor(Color.ParseColor("#D1C4E9"));
+            //groupItem.Click += GroupItem_Click;
+
+            //var groupImage = groupItem.FindViewById<ImageView>(Resource.Id.ContactImage);
+            //var groupName = groupItem.FindViewById<TextView>(Resource.Id.ContactName);
+
+            //var groupThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_24dp), Application.Context.Resources.GetColor(Resource.Color.colorAccent));
+            //groupImage.SetImageBitmap(groupThumb);
+            //groupName.Text = "Group";
+
+            contactsRecyclerView = FindViewById<RecyclerView>(Resource.Id.contacts_recycler_view);
+
+            // use this setting to improve performance if you know that changes
+            // in content do not change the layout size of the RecyclerView
+            contactsRecyclerView.HasFixedSize = true;
+
+            // set the dividers between the items (contacts)
+            contactsRecyclerView.AddItemDecoration(new DividerItemDecoration(Application.Context, Resource.Drawable.line_divider));
+
+            // specify an adapter (see also next example)
+            recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView);
+            recyclerAdapter.ItemClick += OnItemClick;
+            contactsRecyclerView.SetAdapter(recyclerAdapter);
+
+            // use a linear layout manager
+            recyclerLayoutManager = new LinearLayoutManager(this);
+            contactsRecyclerView.SetLayoutManager(recyclerLayoutManager);
+
+            // use a fast scroller
+            FastScroller fastScroller = FindViewById<FastScroller>(Resource.Id.fastscroller);
+            fastScroller.SetRecyclerView(contactsRecyclerView);
+            fastScroller.BringToFront();
+        }
+
+        private void OnItemClick(object sender, int e)
+        {
+            var adapter = sender as ContactsRecyclerAdapter;
+            var contact = adapter.GetValueAt(e).ToString();
+            Log.Debug("SelectContactActivity", contact);
+            var view = contactsRecyclerView.GetChildAt(e);
+            //var contactView = contactsRecyclerView.GetChildAt(e);
+            //contactView.SetBackgroundColor(Color.AliceBlue);
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            switch (item.ItemId)
+            {
+                case Android.Resource.Id.Home:
+                    Finish();
+                    return true;
+            }
+            return base.OnOptionsItemSelected(item);
+        }
+    }
+
+
+
+    public class ContactsRecyclerAdapter : BaseRecyclerAdapter
+    {
+        Activity _activity;
+        List<Contact> _contactList;
+        RecyclerView _recyclerview;
+
+        //Create an Event so that our our clients can act when a user clicks
+        //on each individual item.
+        public event EventHandler<int> ItemClick;
+
+        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView)
+        {
+            _activity = (SelectContactsActivity)activity;
+            _recyclerview = recyclerView;
+            FillContacts();
+            _contactList.Sort();
+
+            var groupThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_24dp), Application.Context.Resources.GetColor(Resource.Color.colorAccent));
+            _contactList.Insert(0, new Contact { DisplayName = "Group", PhotoThumb = groupThumb });
+        }
+
+        //This will fire any event handlers that are registered with our ItemClick
+        //event.
+        private void OnClick(int position)
+        {
+            if (ItemClick != null)
+            {
+                ItemClick(this, position);
+            }
+        }
 
         void FillContacts()
         {
@@ -137,7 +227,7 @@ namespace Cheesesquare
 
 
             _contactList = new List<Contact>();
-            var noThumb = getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
+            var noThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
 
             try
             {
@@ -237,7 +327,7 @@ namespace Cheesesquare
 
         }
 
-        private Contact GetValueAt(int position)
+        public Contact GetValueAt(int position)
         {
             return _contactList[position];
         }
@@ -263,7 +353,8 @@ namespace Cheesesquare
             roundedThumbBitmap.Circular = true;
             h.ImageView.SetImageDrawable(roundedThumbBitmap);
 
-            
+            //h.View.Click += View_Click;
+
             //h.View.Click += (sender, e) =>
             //{
             //    Log.Debug("SelectContactsActivity", contact.ToString());
@@ -271,12 +362,23 @@ namespace Cheesesquare
             //};
         }
 
+        //private void View_Click(object sender, EventArgs e)
+        //{
+        //    var view = sender as View;
+
+        //    int position = _recyclerview.GetChildLayoutPosition(view);
+        //    var contact = GetValueAt(position);
+        //    Log.Debug("SelectContactsActivity", contact.ToString());
+
+        //    //view.SetBackgroundColor(Color.AliceBlue);
+        //}
+
         public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
         {
             var view = LayoutInflater.From(parent.Context)
                 .Inflate(Resource.Layout.contact_list_item, parent, false);
 
-            return new ViewHolder(view);
+            return new ViewHolder(view, OnClick);
         }
 
         public override string GetTextToShowInBubble(int pos)
@@ -286,38 +388,8 @@ namespace Cheesesquare
             return "";
         }
 
-        class Contact : IComparable<Contact>
-        {
-            public long Id { get; set; }
-            public string DisplayName { get; set; }
-            public string PhotoId { get; set; }
-            public Bitmap PhotoThumb { get; set; }
-            public string Email { get; set; }
-
-            public int CompareTo(Contact other)
-            {
-                if (this.DisplayName != null && other.DisplayName != null)
-                {
-                    if (DisplayName.ToUpper()[0] < other.DisplayName.ToUpper()[0])
-                        return -1;
-                    if (DisplayName.ToUpper()[0] == other.DisplayName.ToUpper()[0])
-                        return 0;
-                    if (DisplayName.ToUpper()[0] > other.DisplayName.ToUpper()[0])
-                        return 1;
-                }
-                return -1;
-
-            }
-
-            public override string ToString()
-            {
-                return System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
-            }
-        }
-
-
-
     }
+
 
     public class ViewHolder : RecyclerView.ViewHolder
     {
@@ -325,11 +397,13 @@ namespace Cheesesquare
         public TextView TextView { get; set; }
         public ImageView ImageView { get; set; }
 
-        public ViewHolder(View view) : base(view)
+        public ViewHolder(View view, Action<int> listener) : base(view)
         {
             View = view;
             TextView = view.FindViewById<TextView>(Resource.Id.ContactName);
             ImageView = view.FindViewById<ImageView>(Resource.Id.ContactImage);
+
+            view.Click += (sender, e) => listener(base.LayoutPosition);
         }
 
         //public override void OnClick(View v)

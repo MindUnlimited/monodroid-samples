@@ -1,23 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-<!-- A RecyclerView with some commonly used attributes -->
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/contacts_recycler_view"
-        android:scrollbars="none"
-        android:background="#D1C4E9"
+    android:id="@+id/contacts_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/contacts_appbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    <Cheesesquare.FastScroller
-        android:id="@+id/fastscroller"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_alignTop="@id/contacts_recycler_view"
-        android:layout_alignBottom="@id/contacts_recycler_view"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        tools:ignore="RtlCompat" />
-</RelativeLayout>
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/contacts_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+    </android.support.design.widget.AppBarLayout>
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    <!--<include
+        android:id="@+id/group_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/contact_list_item" />-->
+    <!-- A RecyclerView with some commonly used attributes -->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/contacts_recycler_view"
+            android:scrollbars="none"
+            android:background="#D1C4E9"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/group_item" />
+        <View
+            android:layout_width="2dp"
+            android:layout_height="fill_parent"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_alignTop="@id/contacts_recycler_view"
+            android:layout_alignBottom="@id/contacts_recycler_view"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:background="#D1D1D1" />
+        <Cheesesquare.FastScroller
+            android:id="@+id/fastscroller"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:layout_alignTop="@id/contacts_recycler_view"
+            android:layout_alignBottom="@id/contacts_recycler_view"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            tools:ignore="RtlCompat" />
+    </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

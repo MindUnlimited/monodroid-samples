@@ -138,7 +138,9 @@
                         app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
                         android:layout_alignParentRight="true"
                         android:layout_toRightOf="@+id/user_to_share_icon"
-                        android:background="@android:color/transparent" />
+                        android:background="@android:color/transparent"
+                        android:focusable="false"
+                        android:clickable="true" />
                     <ListView
                         android:id="@+id/user_to_share_listview"
                         android:layout_width="wrap_content"

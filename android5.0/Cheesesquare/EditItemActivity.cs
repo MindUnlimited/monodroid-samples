@@ -71,7 +71,7 @@ namespace Cheesesquare
             txtDate.FocusChange += TxtDate_FocusChange;
 
             shareEditText = FindViewById<EditText>(Resource.Id.user_to_share_name);
-            shareEditText.FocusChange += share_FocusChange;
+            shareEditText.Click += ShareEditText_Click;
 
             shareListView = FindViewById<ListView>(Resource.Id.user_to_share_listview);
             shareArrayAdapter = new ArrayAdapter<String>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, shareList);
@@ -109,6 +109,14 @@ namespace Cheesesquare
             };
         }
 
+        private void ShareEditText_Click(object sender, EventArgs e)
+        {
+            var editText = (EditText)sender;
+
+            var intent = new Intent(this, typeof(SelectContactsActivity));
+            StartActivity(intent);
+        }
+
         private void ThumbAndName_Click(object sender, EventArgs e)
         {
             Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
@@ -131,21 +139,21 @@ namespace Cheesesquare
             }
         }
 
-        private void share_FocusChange(object sender, View.FocusChangeEventArgs e)
-        {
-            var editText = (EditText)sender;
+        //private void share_FocusChange(object sender, View.FocusChangeEventArgs e)
+        //{
+        //    var editText = (EditText)sender;
 
-            var intent = new Intent(this, typeof(SelectContactsActivity));
-            StartActivity(intent);
+        //    var intent = new Intent(this, typeof(SelectContactsActivity));
+        //    StartActivity(intent);
 
-            //Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
-            //if (e.HasFocus)
-            //{
+        //    //Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
+        //    //if (e.HasFocus)
+        //    //{
                 
-            //    StartActivityForResult(intent, SHARE_CONTACT);//PICK_CONTACT is private static final int, so declare in activity class
-            //    editText.ClearFocus();
-            //}
-        }
+        //    //    StartActivityForResult(intent, SHARE_CONTACT);//PICK_CONTACT is private static final int, so declare in activity class
+        //    //    editText.ClearFocus();
+        //    //}
+        //}
 
         protected override void OnActivityResult(int requestCode, Result resultCode,
         Intent intent)

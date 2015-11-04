@@ -15,6 +15,8 @@ using Android.Support.Design.Widget;
 using System.Collections.Generic;
 using Android.Support.V4.App;
 using Android.Util;
+using Android.Support.V4.View;
+using Android.Graphics;
 
 namespace Cheesesquare
 {
@@ -61,7 +63,7 @@ namespace Cheesesquare
             var tabLayout = FindViewById<TabLayout> (Resource.Id.tabs);
             tabLayout.SetupWithViewPager (viewPager);
         }
-            
+
         public override bool OnCreateOptionsMenu (IMenu menu) 
         {
             MenuInflater.Inflate(Resource.Menu.sample_actions, menu);
