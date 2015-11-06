@@ -160,9 +160,16 @@ namespace Cheesesquare
         private void OnItemClick(object sender, int e)
         {
             var adapter = sender as ContactsRecyclerAdapter;
-            var contact = adapter.GetValueAt(e).ToString();
-            Log.Debug("SelectContactActivity", contact);
+            var contact = adapter.GetValueAt(e);
+            if (contact.DisplayName == "Group" && contact.Email == null)
+            {
+                var intent = new Intent(this, typeof(DefineGroupActivity));
+                StartActivity(intent);
+            }
+
+            Log.Debug("SelectContactActivity", contact.ToString());
             var view = contactsRecyclerView.GetChildAt(e);
+            view.SetBackgroundColor(Color.AliceBlue);
             //var contactView = contactsRecyclerView.GetChildAt(e);
             //contactView.SetBackgroundColor(Color.AliceBlue);
         }

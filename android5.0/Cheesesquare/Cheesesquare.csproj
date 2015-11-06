@@ -65,6 +65,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DateDialog.cs" />
+    <Compile Include="AddGroupMembersActivity.cs" />
+    <Compile Include="DefineGroupActivity.cs" />
     <Compile Include="EditItemActivity.cs" />
     <Compile Include="FastScroller Code\Adapters\BaseRecyclerAdapter.cs" />
     <Compile Include="FastScroller Code\Adapters\LargeAdapter.cs" />
@@ -91,6 +93,12 @@
     </AndroidResource>
     <AndroidResource Include="Resources\layout\activity_select_contacts.axml" />
     <AndroidResource Include="Resources\layout\FastScroller.axml">
+      <SubType>AndroidResource</SubType>
+    </AndroidResource>
+    <AndroidResource Include="Resources\layout\activity_define_group.axml">
+      <SubType>AndroidResource</SubType>
+    </AndroidResource>
+    <AndroidResource Include="Resources\layout\activity_add_group_members.axml">
       <SubType>AndroidResource</SubType>
     </AndroidResource>
   </ItemGroup>
@@ -470,6 +478,9 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\values\ids.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\menu\def_group_actions.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
