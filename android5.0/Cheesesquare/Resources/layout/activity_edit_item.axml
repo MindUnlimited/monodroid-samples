@@ -147,8 +147,6 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/user_to_share_name"
                         android:layout_marginLeft="40dp"
-                        android:fastScrollEnabled="true"
-                        android:fastScrollAlwaysVisible="true"
                         android:stackFromBottom="true"
                         android:transcriptMode="alwaysScroll"
                         android:divider="@null" />

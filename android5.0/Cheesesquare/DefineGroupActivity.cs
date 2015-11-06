@@ -19,6 +19,8 @@ namespace Cheesesquare
     class DefineGroupActivity : AppCompatActivity
     {
         private EditText GroupName;
+        private const int SHARE_CONTACT = 101;
+        private string contacts;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -26,6 +28,8 @@ namespace Cheesesquare
 
             // Create your application here
             SetContentView(Resource.Layout.activity_define_group);
+
+            contacts = Intent.GetStringExtra("contacts");
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.def_group_toolbar);
             SetSupportActionBar(toolbar);
@@ -50,9 +54,8 @@ namespace Cheesesquare
                     {
                         var addGroupMembers = new Intent(this, typeof(AddGroupMembersActivity));
                         addGroupMembers.PutExtra("GroupName", GroupName.Text);
-                        StartActivity(addGroupMembers);
-
-                        Finish();
+                        addGroupMembers.PutExtra("contacts", contacts);
+                        StartActivityForResult(addGroupMembers, SHARE_CONTACT);
                         return true;
                     }
                     else
@@ -70,6 +73,32 @@ namespace Cheesesquare
 
             MenuInflater.Inflate(Resource.Menu.def_group_actions, menu);
             return true;
+        }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent intent)
+        {
+            base.OnActivityResult(requestCode, resultCode, intent);
+
+            if (resultCode == Result.Ok)
+            {
+                switch (requestCode)
+                {
+                    case SHARE_CONTACT:
+                        var members = intent.GetStringExtra("members");
+                        Intent myIntent = new Intent(this, typeof(SelectContactsActivity));
+                        myIntent.PutExtra("members", members);
+                        myIntent.PutExtra("groupname", GroupName.Text);
+                        SetResult(Result.Ok, myIntent);
+                        Log.Debug(this.LocalClassName, "Define group");
+                        Finish();
+
+                        
+
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
     }

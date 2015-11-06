@@ -15,6 +15,7 @@ using Android.Util;
 using Android.Graphics;
 using Android.Support.Design.Widget;
 using Android.Support.V4.Graphics.Drawable;
+using Newtonsoft.Json;
 
 namespace Cheesesquare
 {
@@ -36,9 +37,11 @@ namespace Cheesesquare
         private ListView subTaskListView;
         private ListView shareListView;
         private ArrayAdapter<String> subTaskArrayAdapter;
-        private ArrayAdapter<String> shareArrayAdapter;
+        private AutocompleteCustomArrayAdapter shareArrayAdapter;
         private List<String> subTaskList;
         private List<String> shareList;
+        private List<Contact> selectedContacts;
+        private Contact selectedContact;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -53,6 +56,7 @@ namespace Cheesesquare
 
             subTaskList = new List<string>();
             shareList = new List<string>();
+            selectedContacts = new List<Contact>();
 
             toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar_edit);
             toolbar.Title = cheeseName;
@@ -74,7 +78,10 @@ namespace Cheesesquare
             shareEditText.Click += ShareEditText_Click;
 
             shareListView = FindViewById<ListView>(Resource.Id.user_to_share_listview);
-            shareArrayAdapter = new ArrayAdapter<String>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, shareList);
+            //shareArrayAdapter = new ArrayAdapter<String>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, shareList);
+            //shareArrayAdapter.SetNotifyOnChange(true);
+            //shareListView.Adapter = shareArrayAdapter;
+            shareArrayAdapter = new AutocompleteCustomArrayAdapter(this, Resource.Layout.contact_list_item_small, selectedContacts);
             shareArrayAdapter.SetNotifyOnChange(true);
             shareListView.Adapter = shareArrayAdapter;
 
@@ -114,12 +121,13 @@ namespace Cheesesquare
             var editText = (EditText)sender;
 
             var intent = new Intent(this, typeof(SelectContactsActivity));
-            StartActivity(intent);
+            StartActivityForResult(intent, SHARE_CONTACT);
         }
 
         private void ThumbAndName_Click(object sender, EventArgs e)
         {
-            Intent intent = new Intent(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
+            Intent intent = new Intent(this, typeof(SelectContactsActivity));//(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
+            intent.PutExtra("members", JsonConvert.SerializeObject(selectedContacts));
             StartActivityForResult(intent, ASSIGN_CONTACT);
         }
 
@@ -162,235 +170,295 @@ namespace Cheesesquare
 
             if (resultCode == Result.Ok)
             {
+                ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                EditText assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
+
                 switch (requestCode)
                 {
                     case ASSIGN_CONTACT:
-                        Android.Net.Uri uri = intent.Data;
-                        String id = intent.Data.LastPathSegment;
-
-                        Android.Database.ICursor cursor = null;
-                        String photoUri = "", photoThumbnailUri = "", name = "";
-                        try
+                        if (intent.GetStringExtra("member") != null)
                         {
-                            String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri };
-                            cursor = ContentResolver.Query(uri, projection,
-                                null, null, null);
-                            cursor.MoveToFirst();
+                            var member = intent.GetStringExtra("member");
+                            selectedContact = JsonConvert.DeserializeObject<Contact>(member);
+                            selectedContact = CircleBitmap.addPhotoThumbs(selectedContact); // add the photo thumbnails to the contact
 
-                            if (cursor.MoveToFirst())
-                            {
-                                int nameColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactNameColumns.DisplayNamePrimary);
-                                name = cursor.GetString(nameColumnIndex);
+                            Log.Debug("EditItemActivity", "back to edit item activity! " + selectedContact.DisplayName);
 
-                                int photoUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoUri);
-                                photoUri = cursor.GetString(photoUriColumnIndex);
+                            var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, selectedContact.PhotoThumb);
+                            roundedThumbBitmap.Circular = true;
+                            assignedThumb.SetImageDrawable(roundedThumbBitmap);
 
-                                int photoThumbnailUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoThumbnailUri);
-                                photoThumbnailUri = cursor.GetString(photoThumbnailUriColumnIndex);
-                            }
-                            else
-                            {
-                                Log.Warn("EditItemActivity", "No results");
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error("EditItemActivity", "Failed to personal data", e);
-                        }
-                        finally
-                        {
-                            if (cursor != null)
-                            {
-                                cursor.Close();
-                            }
-
-                            if (photoThumbnailUri != null)
-                            {
-                                var photo = Android.Net.Uri.Parse(photoThumbnailUri);
-                                ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
-                                Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(ContentResolver, photo); //.getBitmap(this.getContentResolver(), imageUri);
-                                var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Resources, thumbBitmap);
-                                roundedThumbBitmap.Circular = true;
-
-                                assignedThumb.SetImageDrawable(roundedThumbBitmap);
-                                assignedThumb.SetColorFilter(null);
-                                assignedThumb.Visibility = ViewStates.Visible;
-                            }
-                            else
-                            {
-                                ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
-                                assignedThumb.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
-                                assignedThumb.SetColorFilter(Color.ParseColor("#A9A9A9"));//. ImageTintMode = PorterDuff.Mode.ValueOf();
-                                assignedThumb.Visibility = ViewStates.Visible;
-                            }
-                            if (name == null)
-                            {
-                                //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No name for Selected Contact", Snackbar.LengthLong).Show();
-                                Toast.MakeText(this, "No name for Selected Contact", ToastLength.Long).Show();
-                                var assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
-                                assignedTo.Text = "(No name)";
-                            }
-                            else
-                            {
-                                var assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
-                                assignedTo.Text = name;
-                            }
+                            assignedTo.Text = selectedContact.DisplayName;
                         }
 
-                        cursor = null;
-                        String email = "";
-                        try
-                        {
-                            cursor = ContentResolver.Query(ContactsContract.CommonDataKinds.Email.ContentUri, null, ContactsContract.CommonDataKinds.Email.InterfaceConsts.ContactId + "=?", new String[] { id }, null);
-                            int emailColumnIndex = cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Email.InterfaceConsts.Data);
+                        //Android.Net.Uri uri = intent.Data;
+                        //String id = intent.Data.LastPathSegment;
 
-                            cursor.MoveToFirst();
+                        //Android.Database.ICursor cursor = null;
+                        //String photoUri = "", photoThumbnailUri = "", name = "";
+                        //try
+                        //{
+                        //    String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri };
+                        //    cursor = ContentResolver.Query(uri, projection,
+                        //        null, null, null);
+                        //    cursor.MoveToFirst();
 
-                            if (cursor.MoveToFirst())
-                            {
-                                email = cursor.GetString(emailColumnIndex);
-                                Log.Verbose("EditItemActivity", "Got email: " + email);
-                            }
-                            else
-                            {
-                                Log.Warn("EditItemActivity", "No results");
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error("EditItemActivity", "Failed to get email data", e);
-                        }
-                        finally
-                        {
-                            if (cursor != null)
-                            {
-                                cursor.Close();
-                            }
-                            if (email.Length == 0)
-                            {
-                                //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No email for Selected Contact", Snackbar.LengthLong).Show();
-                                Toast.MakeText(this, "No email for Selected Contact", ToastLength.Long).Show();
-                            }
-                        }
+                        //    if (cursor.MoveToFirst())
+                        //    {
+                        //        int nameColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactNameColumns.DisplayNamePrimary);
+                        //        name = cursor.GetString(nameColumnIndex);
 
-                        Log.Debug(this.LocalClassName, " id :  " + id + " , name : " + name + " , email : " + email + " photo uri : " + photoUri + " photo thumb uri: " + photoThumbnailUri);
+                        //        int photoUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoUri);
+                        //        photoUri = cursor.GetString(photoUriColumnIndex);
+
+                        //        int photoThumbnailUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoThumbnailUri);
+                        //        photoThumbnailUri = cursor.GetString(photoThumbnailUriColumnIndex);
+                        //    }
+                        //    else
+                        //    {
+                        //        Log.Warn("EditItemActivity", "No results");
+                        //    }
+                        //}
+                        //catch (Exception e)
+                        //{
+                        //    Log.Error("EditItemActivity", "Failed to retrieve personal data", e);
+                        //}
+                        //finally
+                        //{
+                        //    if (cursor != null)
+                        //    {
+                        //        cursor.Close();
+                        //    }
+
+                        //    if (photoThumbnailUri != null)
+                        //    {
+                        //        var photo = Android.Net.Uri.Parse(photoThumbnailUri);
+                        //        ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                        //        Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(ContentResolver, photo); //.getBitmap(this.getContentResolver(), imageUri);
+                        //        var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Resources, thumbBitmap);
+                        //        roundedThumbBitmap.Circular = true;
+
+                        //        assignedThumb.SetImageDrawable(roundedThumbBitmap);
+                        //        assignedThumb.SetColorFilter(null);
+                        //        assignedThumb.Visibility = ViewStates.Visible;
+                        //    }
+                        //    else
+                        //    {
+                        //        ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                        //        assignedThumb.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                        //        assignedThumb.SetColorFilter(Color.ParseColor("#A9A9A9"));//. ImageTintMode = PorterDuff.Mode.ValueOf();
+                        //        assignedThumb.Visibility = ViewStates.Visible;
+                        //    }
+                        //    if (name == null)
+                        //    {
+                        //        //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No name for Selected Contact", Snackbar.LengthLong).Show();
+                        //        Toast.MakeText(this, "No name for Selected Contact", ToastLength.Long).Show();
+                        //        var assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
+                        //        assignedTo.Text = "(No name)";
+                        //    }
+                        //    else
+                        //    {
+                        //        var assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
+                        //        assignedTo.Text = name;
+                        //    }
+                        //}
+
+                        //cursor = null;
+                        //String email = "";
+                        //try
+                        //{
+                        //    cursor = ContentResolver.Query(ContactsContract.CommonDataKinds.Email.ContentUri, null, ContactsContract.CommonDataKinds.Email.InterfaceConsts.ContactId + "=?", new String[] { id }, null);
+                        //    int emailColumnIndex = cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Email.InterfaceConsts.Data);
+
+                        //    cursor.MoveToFirst();
+
+                        //    if (cursor.MoveToFirst())
+                        //    {
+                        //        email = cursor.GetString(emailColumnIndex);
+                        //        Log.Verbose("EditItemActivity", "Got email: " + email);
+                        //    }
+                        //    else
+                        //    {
+                        //        Log.Warn("EditItemActivity", "No results");
+                        //    }
+                        //}
+                        //catch (Exception e)
+                        //{
+                        //    Log.Error("EditItemActivity", "Failed to get email data", e);
+                        //}
+                        //finally
+                        //{
+                        //    if (cursor != null)
+                        //    {
+                        //        cursor.Close();
+                        //    }
+                        //    if (email.Length == 0)
+                        //    {
+                        //        //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No email for Selected Contact", Snackbar.LengthLong).Show();
+                        //        Toast.MakeText(this, "No email for Selected Contact", ToastLength.Long).Show();
+                        //    }
+                        //}
+
+                        //Log.Debug(this.LocalClassName, " id :  " + id + " , name : " + name + " , email : " + email + " photo uri : " + photoUri + " photo thumb uri: " + photoThumbnailUri);
 
                         break;
                     case SHARE_CONTACT:
-                        uri = intent.Data;
-                        id = intent.Data.LastPathSegment;
+                        // clear assigned to field first
+                        //assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                        assignedThumb.SetImageDrawable(null);
 
-                        cursor = null;
-                        photoUri = "";
-                        photoThumbnailUri = "";
-                        name = "";
+                        //EditText assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
+                        assignedTo.Text = "";
 
-                        try
+                        if (intent.GetStringExtra("members") != null)
                         {
-                            String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri };
-                            cursor = ContentResolver.Query(uri, projection,
-                                null, null, null);
-                            cursor.MoveToFirst();
+                            var members = intent.GetStringExtra("members");
+                            selectedContacts = JsonConvert.DeserializeObject<List<Contact>>(members);
+                            selectedContacts = CircleBitmap.addPhotoThumbs(selectedContacts); // add all the photo thumbnails to the contacts
 
-                            if (cursor.MoveToFirst())
-                            {
-                                int nameColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactNameColumns.DisplayNamePrimary);
-                                name = cursor.GetString(nameColumnIndex);
+                            var groupName = intent.GetStringExtra("groupname");
+                            Log.Debug("EditItemActivity", "back to edit item activity! " + members + groupName);
 
-                                int photoUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoUri);
-                                photoUri = cursor.GetString(photoUriColumnIndex);
-
-                                int photoThumbnailUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoThumbnailUri);
-                                photoThumbnailUri = cursor.GetString(photoThumbnailUriColumnIndex);
-                            }
-                            else
-                            {
-                                Log.Warn("EditItemActivity", "No results");
-                            }
+                            shareArrayAdapter.Clear();
+                            shareArrayAdapter.AddAll(selectedContacts);
+                            shareArrayAdapter.NotifyDataSetChanged();
+                            shareEditText.Text = groupName;
                         }
-                        catch (Exception e)
+                        else if (intent.GetStringExtra("member") != null)
                         {
-                            Log.Error("EditItemActivity", "Failed to personal data", e);
+                            var member = intent.GetStringExtra("member");
+                            selectedContact = JsonConvert.DeserializeObject<Contact>(member);
+                            selectedContact = CircleBitmap.addPhotoThumbs(selectedContact); // add the photo thumbnails to the contact
+
+                            Log.Debug("EditItemActivity", "back to edit item activity! " + selectedContact.DisplayName);
+
+                            shareArrayAdapter.Clear();
+                            selectedContacts.Clear();
+                            selectedContacts.Add(selectedContact);
+                            //shareArrayAdapter.Add(selectedContact); // don't add anything to the listview
+                            shareArrayAdapter.NotifyDataSetChanged();
+                            shareEditText.Text = selectedContact.DisplayName;
                         }
-                        finally
+                        else
                         {
-                            if (cursor != null)
-                            {
-                                cursor.Close();
-                            }
-
-                            if (photoThumbnailUri != null)
-                            {
-                                //var photo = Android.Net.Uri.Parse(photoThumbnailUri);
-                                //ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
-                                //Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(ContentResolver, photo); //.getBitmap(this.getContentResolver(), imageUri);
-                                //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Resources, thumbBitmap);
-                                //roundedThumbBitmap.Circular = true;
-
-                                //assignedThumb.SetImageDrawable(roundedThumbBitmap);
-                                //assignedThumb.SetColorFilter(null);
-                                //assignedThumb.Visibility = ViewStates.Visible;
-                            }
-                            else
-                            {
-                                //ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
-                                //assignedThumb.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
-                                //assignedThumb.SetColorFilter(Color.ParseColor("#A9A9A9"));//. ImageTintMode = PorterDuff.Mode.ValueOf();
-                                //assignedThumb.Visibility = ViewStates.Visible;
-                            }
-                            if (name == null)
-                            {
-                                //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No name for Selected Contact", Snackbar.LengthLong).Show();
-                                Toast.MakeText(this, "No name for Selected Contact", ToastLength.Long).Show();
-
-                            }
-                            else
-                            {
-                                var shareUser = FindViewById<EditText>(Resource.Id.user_to_share_name);
-                                shareUser.Text = "";
-                                shareArrayAdapter.Add(name);
-                                shareArrayAdapter.NotifyDataSetChanged();
-                                Log.Debug("EditItemActivity", shareArrayAdapter.Count.ToString());
-                            }
+                            Log.Warn("EditItemActivity", "returned to edit item activity but no contacts selected?");
                         }
+                        
 
-                        cursor = null;
-                        email = "";
-                        try
-                        {
-                            cursor = ContentResolver.Query(ContactsContract.CommonDataKinds.Email.ContentUri, null, ContactsContract.CommonDataKinds.Email.InterfaceConsts.ContactId + "=?", new String[] { id }, null);
-                            int emailColumnIndex = cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Email.InterfaceConsts.Data);
+                        //    uri = intent.Data;
+                        //    id = intent.Data.LastPathSegment;
 
-                            cursor.MoveToFirst();
+                        //    cursor = null;
+                        //    photoUri = "";
+                        //    photoThumbnailUri = "";
+                        //    name = "";
 
-                            if (cursor.MoveToFirst())
-                            {
-                                email = cursor.GetString(emailColumnIndex);
-                                Log.Verbose("EditItemActivity", "Got email: " + email);
-                            }
-                            else
-                            {
-                                Log.Warn("EditItemActivity", "No results");
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Log.Error("EditItemActivity", "Failed to get email data", e);
-                        }
-                        finally
-                        {
-                            if (cursor != null)
-                            {
-                                cursor.Close();
-                            }
-                            if (email.Length == 0)
-                            {
-                                //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No email for Selected Contact", Snackbar.LengthLong).Show();
-                                Toast.MakeText(this, "No email for Selected Contact", ToastLength.Long).Show();
-                            }
-                        }
+                        //    try
+                        //    {
+                        //        String[] projection = { ContactsContract.ContactNameColumns.DisplayNamePrimary, ContactsContract.ContactsColumns.PhotoUri, ContactsContract.ContactsColumns.PhotoThumbnailUri };
+                        //        cursor = ContentResolver.Query(uri, projection,
+                        //            null, null, null);
+                        //        cursor.MoveToFirst();
 
-                        Log.Debug(this.LocalClassName, " id :  " + id + " , name : " + name + " , email : " + email + " photo uri : " + photoUri + " photo thumb uri: " + photoThumbnailUri);
+                        //        if (cursor.MoveToFirst())
+                        //        {
+                        //            int nameColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactNameColumns.DisplayNamePrimary);
+                        //            name = cursor.GetString(nameColumnIndex);
+
+                        //            int photoUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoUri);
+                        //            photoUri = cursor.GetString(photoUriColumnIndex);
+
+                        //            int photoThumbnailUriColumnIndex = cursor.GetColumnIndex(ContactsContract.ContactsColumns.PhotoThumbnailUri);
+                        //            photoThumbnailUri = cursor.GetString(photoThumbnailUriColumnIndex);
+                        //        }
+                        //        else
+                        //        {
+                        //            Log.Warn("EditItemActivity", "No results");
+                        //        }
+                        //    }
+                        //    catch (Exception e)
+                        //    {
+                        //        Log.Error("EditItemActivity", "Failed to personal data", e);
+                        //    }
+                        //    finally
+                        //    {
+                        //        if (cursor != null)
+                        //        {
+                        //            cursor.Close();
+                        //        }
+
+                        //        if (photoThumbnailUri != null)
+                        //        {
+                        //            //var photo = Android.Net.Uri.Parse(photoThumbnailUri);
+                        //            //ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                        //            //Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(ContentResolver, photo); //.getBitmap(this.getContentResolver(), imageUri);
+                        //            //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Resources, thumbBitmap);
+                        //            //roundedThumbBitmap.Circular = true;
+
+                        //            //assignedThumb.SetImageDrawable(roundedThumbBitmap);
+                        //            //assignedThumb.SetColorFilter(null);
+                        //            //assignedThumb.Visibility = ViewStates.Visible;
+                        //        }
+                        //        else
+                        //        {
+                        //            //ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                        //            //assignedThumb.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                        //            //assignedThumb.SetColorFilter(Color.ParseColor("#A9A9A9"));//. ImageTintMode = PorterDuff.Mode.ValueOf();
+                        //            //assignedThumb.Visibility = ViewStates.Visible;
+                        //        }
+                        //        if (name == null)
+                        //        {
+                        //            //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No name for Selected Contact", Snackbar.LengthLong).Show();
+                        //            Toast.MakeText(this, "No name for Selected Contact", ToastLength.Long).Show();
+
+                        //        }
+                        //        else
+                        //        {
+                        //            var shareUser = FindViewById<EditText>(Resource.Id.user_to_share_name);
+                        //            shareUser.Text = "";
+                        //            shareArrayAdapter.Add(name);
+                        //            shareArrayAdapter.NotifyDataSetChanged();
+                        //            Log.Debug("EditItemActivity", shareArrayAdapter.Count.ToString());
+                        //        }
+                        //    }
+
+                        //    cursor = null;
+                        //    email = "";
+                        //    try
+                        //    {
+                        //        cursor = ContentResolver.Query(ContactsContract.CommonDataKinds.Email.ContentUri, null, ContactsContract.CommonDataKinds.Email.InterfaceConsts.ContactId + "=?", new String[] { id }, null);
+                        //        int emailColumnIndex = cursor.GetColumnIndex(ContactsContract.CommonDataKinds.Email.InterfaceConsts.Data);
+
+                        //        cursor.MoveToFirst();
+
+                        //        if (cursor.MoveToFirst())
+                        //        {
+                        //            email = cursor.GetString(emailColumnIndex);
+                        //            Log.Verbose("EditItemActivity", "Got email: " + email);
+                        //        }
+                        //        else
+                        //        {
+                        //            Log.Warn("EditItemActivity", "No results");
+                        //        }
+                        //    }
+                        //    catch (Exception e)
+                        //    {
+                        //        Log.Error("EditItemActivity", "Failed to get email data", e);
+                        //    }
+                        //    finally
+                        //    {
+                        //        if (cursor != null)
+                        //        {
+                        //            cursor.Close();
+                        //        }
+                        //        if (email.Length == 0)
+                        //        {
+                        //            //Snackbar.Make(FindViewById(Resource.Id.edit_item_coordinator), "No email for Selected Contact", Snackbar.LengthLong).Show();
+                        //            Toast.MakeText(this, "No email for Selected Contact", ToastLength.Long).Show();
+                        //        }
+                        //    }
+
+                        //    Log.Debug(this.LocalClassName, " id :  " + id + " , name : " + name + " , email : " + email + " photo uri : " + photoUri + " photo thumb uri: " + photoThumbnailUri);
 
 
 

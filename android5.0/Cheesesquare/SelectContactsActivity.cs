@@ -19,12 +19,76 @@ using Android.Support.V7.App;
 using Android.Database;
 using Android.Support.V7.Widget;
 using V7Toolbar = Android.Support.V7.Widget.Toolbar;
+using Java.Util;
+using System.Xml.Serialization;
+using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Cheesesquare
 {
 
     public static class CircleBitmap
     {
+        public static List<Contact> addPhotoThumbs(List<Contact> contacts)
+        {
+            var noThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
+
+            foreach (Contact contact in contacts)
+            {
+                if (contact.PhotoId == null)
+                {
+                    //h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                    //h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
+
+                    contact.PhotoThumb = noThumb;
+                }
+                else
+                {
+                    //var contactUri = ContentUris.WithAppendedId(
+                    //    ContactsContract.Contacts.ContentUri, contact.Id);
+                    //var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
+                    //    Contacts.Photos.ContentDirectory);
+
+                    var contactPhotoUri = Android.Net.Uri.Parse(contact.PhotoId);
+                    Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(Application.Context.ContentResolver, contactPhotoUri); //.getBitmap(this.getContentResolver(), imageUri);
+                                                                                                                                  //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
+                                                                                                                                  //roundedThumbBitmap.Circular = true;
+
+                    contact.PhotoThumb = thumbBitmap;
+                }
+            }
+            return contacts;
+        }
+
+        public static Contact addPhotoThumbs(Contact contact)
+        {
+            var noThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
+
+                if (contact.PhotoId == null)
+                {
+                    //h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                    //h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
+
+                    contact.PhotoThumb = noThumb;
+                }
+                else
+                {
+                    //var contactUri = ContentUris.WithAppendedId(
+                    //    ContactsContract.Contacts.ContentUri, contact.Id);
+                    //var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
+                    //    Contacts.Photos.ContentDirectory);
+
+                    var contactPhotoUri = Android.Net.Uri.Parse(contact.PhotoId);
+                    Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(Application.Context.ContentResolver, contactPhotoUri); //.getBitmap(this.getContentResolver(), imageUri);
+                                                                                                                                  //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
+                                                                                                                                  //roundedThumbBitmap.Circular = true;
+
+                    contact.PhotoThumb = thumbBitmap;
+                }
+            return contact;
+        }
+
         public static Bitmap getCircleBitmap(Bitmap bitmap)
         {
             return getCircleBitmap(bitmap, Color.ParseColor("#A9A9A9")); // default is gray
@@ -69,9 +133,11 @@ namespace Cheesesquare
 
     public class Contact : IComparable<Contact>
     {
+
         public long Id { get; set; }
         public string DisplayName { get; set; }
         public string PhotoId { get; set; }
+        [JsonIgnore]
         public Bitmap PhotoThumb { get; set; }
         public string Email { get; set; }
 
@@ -92,7 +158,7 @@ namespace Cheesesquare
 
         public override string ToString()
         {
-            return System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
+            return DisplayName;//System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
         }
     }
 
@@ -102,6 +168,8 @@ namespace Cheesesquare
         private RecyclerView contactsRecyclerView;
         private ContactsRecyclerAdapter recyclerAdapter;
         private RecyclerView.LayoutManager recyclerLayoutManager;
+        private const int SHARE_CONTACT = 101;
+        private List<Contact> members;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -109,6 +177,8 @@ namespace Cheesesquare
 
             // Create your application here
             SetContentView(Resource.Layout.activity_select_contacts);
+
+            
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.contacts_toolbar);
             SetSupportActionBar(toolbar);
@@ -142,8 +212,20 @@ namespace Cheesesquare
             // set the dividers between the items (contacts)
             contactsRecyclerView.AddItemDecoration(new DividerItemDecoration(Application.Context, Resource.Drawable.line_divider));
 
+            var contactList = Intent.GetStringExtra("members");
+            if (contactList != null)
+            {
+                members = JsonConvert.DeserializeObject<List<Contact>>(contactList);
+                members = CircleBitmap.addPhotoThumbs(members);
+                recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView, members);
+            }
+            else
+            {
+                recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView);
+            }
+
             // specify an adapter (see also next example)
-            recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView);
+            
             recyclerAdapter.ItemClick += OnItemClick;
             contactsRecyclerView.SetAdapter(recyclerAdapter);
 
@@ -164,15 +246,64 @@ namespace Cheesesquare
             if (contact.DisplayName == "Group" && contact.Email == null)
             {
                 var intent = new Intent(this, typeof(DefineGroupActivity));
-                StartActivity(intent);
+
+                var contacts = recyclerAdapter.GetContactList();
+                var jsonContacts = JsonConvert.SerializeObject(contacts);
+                //    , Formatting.None,
+                //new JsonSerializerSettings()
+                //{
+                //    PreserveReferencesHandling = PreserveReferencesHandling.Objects,
+                //    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                //});
+
+                intent.PutExtra("contacts", jsonContacts);
+
+                StartActivityForResult(intent, SHARE_CONTACT);
+
+            }
+            else
+            {
+                Intent myIntent = new Intent(this, typeof(EditItemActivity));
+                myIntent.PutExtra("member", JsonConvert.SerializeObject(contact));
+                SetResult(Result.Ok, myIntent);
+                Finish();
             }
 
-            Log.Debug("SelectContactActivity", contact.ToString());
-            var view = contactsRecyclerView.GetChildAt(e);
-            view.SetBackgroundColor(Color.AliceBlue);
+            //Log.Debug("SelectContactActivity", contact.ToString());
+            //var view = contactsRecyclerView.GetChildAt(e);
+            //view.SetBackgroundColor(Color.AliceBlue);
             //var contactView = contactsRecyclerView.GetChildAt(e);
             //contactView.SetBackgroundColor(Color.AliceBlue);
         }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode,
+Intent intent)
+        {
+            base.OnActivityResult(requestCode, resultCode, intent);
+
+            if (resultCode == Result.Ok)
+            {
+                switch (requestCode)
+                {
+                    case SHARE_CONTACT:
+                        var members = intent.GetStringExtra("members");
+                        var groupName = intent.GetStringExtra("groupname");
+
+                        Intent myIntent = new Intent(this, typeof(EditItemActivity));
+                        myIntent.PutExtra("members", members);
+                        myIntent.PutExtra("groupname", groupName);
+                        SetResult(Result.Ok, myIntent);
+                        Finish();
+
+                        Log.Debug(this.LocalClassName, "Select contacts");
+
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
 
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
@@ -209,6 +340,13 @@ namespace Cheesesquare
             _contactList.Insert(0, new Contact { DisplayName = "Group", PhotoThumb = groupThumb });
         }
 
+        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView, List<Contact> contactList)
+        {
+            _activity = (SelectContactsActivity)activity;
+            _recyclerview = recyclerView;
+            _contactList = contactList;
+        }
+
         //This will fire any event handlers that are registered with our ItemClick
         //event.
         private void OnClick(int position)
@@ -217,6 +355,11 @@ namespace Cheesesquare
             {
                 ItemClick(this, position);
             }
+        }
+
+        public List<Contact> GetContactList()
+        {
+            return _contactList;
         }
 
         void FillContacts()
@@ -261,10 +404,10 @@ namespace Cheesesquare
                                 email = cursor_email.GetString(emailColumnIndex);
                                 //Log.Verbose("EditItemActivity", "Got email: " + email);
                             }
-                            else
-                            {
-                                Log.Warn("EditItemActivity", "No email found for this account");
-                            }
+                            //else
+                            //{
+                            //    Log.Warn("EditItemActivity", "No email found for this account");
+                            //}
                         }
                         catch (Java.Lang.Exception e)
                         {

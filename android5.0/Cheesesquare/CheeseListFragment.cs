@@ -31,7 +31,7 @@ namespace Cheesesquare
 
         void setupRecyclerView (RecyclerView recyclerView) 
         {
-            recyclerView.SetLayoutManager (new LinearLayoutManager (recyclerView.Context));
+            recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
             recyclerView.SetAdapter (new SimpleStringRecyclerViewAdapter (Activity,
                 getRandomSublist(Cheeses.CheeseList, 25)));
         }
