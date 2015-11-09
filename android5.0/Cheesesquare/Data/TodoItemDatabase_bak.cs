@@ -1,0 +1,92 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SQLite;
+using System.IO;
+
+namespace Todo
+{
+	public class TodoItemDatabase2 
+	{
+		static object locker = new object ();
+
+		SQLiteConnection database;
+
+		string DatabasePath {
+			get { 
+				var sqliteFilename = "TodoSQLite.db3";
+				#if __IOS__
+				string documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal); // Documents folder
+				string libraryPath = Path.Combine (documentsPath, "..", "Library"); // Library folder
+				var path = Path.Combine(libraryPath, sqliteFilename);
+				#else
+				#if __ANDROID__
+				string documentsPath = Environment.GetFolderPath (Environment.SpecialFolder.Personal); // Documents folder
+				var path = Path.Combine(documentsPath, sqliteFilename);
+				#else
+				// WinPhone
+				var path = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, sqliteFilename);;
+			    //var path = sqliteFilename;
+				#endif
+				#endif
+				return path;
+			}
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Tasky.DL.TaskDatabase"/> TaskDatabase. 
+		/// if the database doesn't exist, it will create the database and all the tables.
+		/// </summary>
+		/// <param name='path'>
+		/// Path.
+		/// </param>
+		public TodoItemDatabase2()
+		{
+			database = new SQLiteConnection (DatabasePath);
+
+			// create the tables
+			database.CreateTable<TodoItem>();
+		}
+
+		public IEnumerable<TodoItem> GetItems ()
+		{
+			lock (locker) {
+				return (from i in database.Table<TodoItem>() select i).ToList();
+			}
+		}
+
+		public IEnumerable<TodoItem> GetItemsNotDone ()
+		{
+			lock (locker) {
+				return database.Query<TodoItem>("SELECT * FROM [TodoItem] WHERE [Done] = 0");
+			}
+		}
+
+		public TodoItem GetItem (String id) 
+		{
+			lock (locker) {
+				return database.Table<TodoItem>().FirstOrDefault(x => x.Id == id);
+			}
+		}
+
+		public int SaveItem (TodoItem item) 
+		{
+			lock (locker) {
+                //if (item.Id != 0) {
+                //    database.Update(item);
+                //    return item.Id;
+                //} else {
+					return database.Insert(item);
+				//}
+			}
+		}
+
+		public int DeleteItem(int id)
+		{
+			lock (locker) {
+				return database.Delete<TodoItem>(id);
+			}
+		}
+	}
+}
+
