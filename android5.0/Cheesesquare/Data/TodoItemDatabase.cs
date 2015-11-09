@@ -11,11 +11,12 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.MobileServices;
 using Microsoft.WindowsAzure.MobileServices.Sync;
 using Microsoft.WindowsAzure.MobileServices.SQLiteStore;
-using Xamarin.Forms;
+//using Xamarin.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Xamarin.Contacts;
 using System.Collections.ObjectModel;
+using Android.App;
 
 namespace Todo
 {
@@ -202,9 +203,9 @@ namespace Todo
             contacts = new List<User>();
 
             #if __ANDROID__
-            var book = new AddressBook(Forms.Context);
+                        var book = new AddressBook(Application.Context);
             #else
-            var book = new AddressBook();
+                        var book = new AddressBook();
             #endif
 
             if (!book.RequestPermission().Result)
@@ -219,11 +220,13 @@ namespace Todo
                 //enum emailAddressImportance {EmailType.Home, EmailType.Work, EmailType.Other};
 
                 List<EmailType> emailImportance = new List<EmailType>(new EmailType[]
-	            {
-	                EmailType.Home,
-	                EmailType.Work,     // River 2
+                {
+                    EmailType.Home,
+                    EmailType.Work,     // River 2
 	                EmailType.Other
-	            });
+                });
+
+                
 
                 string emailAddress = null;
                 int index = 0;
@@ -242,6 +245,7 @@ namespace Todo
                     User user = new User();
                     user.Email = emailAddress;
                     user.Name = contact.FirstName + " " + contact.LastName;
+                    user.Thumbnail = contact.GetThumbnail();
                     contacts.Add(user);
                 }
             }
@@ -434,40 +438,40 @@ namespace Todo
 
 
 
-        public async void AddItem(View view)
-        {
-            if (client == null)// || string.IsNullOrWhiteSpace(textNewToDo.Text))
-            {
-                return;
-            }
+        //public async void AddItem(View view)
+        //{
+        //    if (client == null)// || string.IsNullOrWhiteSpace(textNewToDo.Text))
+        //    {
+        //        return;
+        //    }
 
-            // Create a new item
-            var item = new Item
-            {
+        //    // Create a new item
+        //    var item = new Item
+        //    {
                 
-                //Name = textNewToDo.Text,
+        //        //Name = textNewToDo.Text,
 
-                Status = 0
-            };
+        //        Status = 0
+        //    };
 
-            try
-            {
-                await itemTable.InsertAsync(item); // insert the new item into the local database
-                await SyncAsync(); // send changes to the mobile service
+        //    try
+        //    {
+        //        await itemTable.InsertAsync(item); // insert the new item into the local database
+        //        await SyncAsync(); // send changes to the mobile service
 
 
-                //if (!item.Done)
-                //{
-                //    adapter.Add(item);
-                //}
-            }
-            catch (Exception e)
-            {
-                CreateAndShowDialog(e, "Error: " + e.Message);
-            }
+        //        //if (!item.Done)
+        //        //{
+        //        //    adapter.Add(item);
+        //        //}
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        CreateAndShowDialog(e, "Error: " + e.Message);
+        //    }
 
-            //textNewToDo.Text = "";
-        }
+        //    //textNewToDo.Text = "";
+        //}
 
 	    private void CreateAndShowDialog(Exception exception, String title)
 	    {
@@ -609,7 +613,7 @@ namespace Todo
 
                     foreach (Item dom in _domains)
                     {
-                        StackLayout head = new StackLayout { Padding = 2, Spacing = 1 };
+                        //StackLayout head = new StackLayout { Padding = 2, Spacing = 1 };
 
                         switch (dom.Name)
                         {

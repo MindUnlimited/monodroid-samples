@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using Microsoft.WindowsAzure.MobileServices;
+using Android.Graphics;
 
 namespace Todo
 {
@@ -33,6 +34,9 @@ namespace Todo
         public string Culture { get; set; }
 
         public string TrainingProgramLanguages { get; set; }
+
+        [JsonIgnore]
+        public Bitmap Thumbnail { get; set; }
 
         [Version]
         public string Version { get; set; }
