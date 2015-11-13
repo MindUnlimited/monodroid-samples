@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp">
+    <ImageView
+        android:src="@drawable/logomindset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/loginMindSetIcon"
+        android:layout_weight="0.5"
+        android:padding="40dp"
+        android:scaleX="0.6"
+        android:scaleY="0.6" />
+    <TextView
+        android:text="MindSet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView1"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"
+        android:textSize="40dp" />
+    <Button
+        android:text="Facebook Login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/facebook_button"
+        android:background="#3b5998"
+        android:layout_margin="5dp" />
+    <Button
+        android:text="Google Login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/google_button"
+        android:background="#D50F25"
+        android:layout_margin="5dp" />
+    <Button
+        android:text="Microsoft Login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/microsoft_button"
+        android:background="#28B1E6"
+        android:layout_margin="5dp" />
+</LinearLayout>

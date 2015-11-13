@@ -17,158 +17,49 @@ using Android.Support.V4.App;
 using Android.Util;
 using Android.Support.V4.View;
 using Android.Graphics;
-using Xamarin.Auth;
-using System.Threading.Tasks;
-using System.Linq;
 using Microsoft.WindowsAzure.MobileServices;
-using System.Net.Http;
+using Android.Preferences;
 
 namespace Cheesesquare
 {
-    public static class Constants
+    public static class PublicFields
     {
-        // Azure app specific URL and key
-        public const string ApplicationURL = @"https://mindunlimited.azure-mobile.net/";
-        public const string ApplicationKey = @"RMFULNJBBVHwffaZeDYYhndAjEQzoT88";
+        public static Database Database;
     }
+    
 
     [Activity (Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true)]
     public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {        
         DrawerLayout drawerLayout;
-        private AccountStore accountStore;
-        private MobileServiceUser mobileServiceUser;
-        private MobileServiceClient client;
-        private bool justAuthenticated;
-        private Account currentAccount;
+        ViewPager viewPager;
+        TabLayout tabLayout;
+        private const int LOGIN = 102;
 
-        //private async Task Authenticate()
-        //{
-        //    //mobServiceUser = Todo.App.Database.mobileServiceUser;
-        //    accountStore = AccountStore.Create(this);
-        //    currentAccount = null;
-        //    bool useToken = true;
-
-        //    try
-        //    {
-        //        var accounts = accountStore.FindAccountsForService("Microsoft").ToArray();
-        //        // Log in 
-        //        if (useToken)
-        //        {
-        //            if (accounts.Length != 0)
-        //            {
-        //                mobileServiceUser = new MobileServiceUser(accounts[0].Username);
-        //                mobileServiceUser.MobileServiceAuthenticationToken = accounts[0].Properties["token"];
-
-        //                client.CurrentUser = mobileServiceUser;
-        //            }
-        //        }
-        //        if (mobileServiceUser != null) // Set the user from the stored credentials.
-        //        {
-        //            client.CurrentUser = mobileServiceUser;
-        //            //App.MobileService.CurrentUser = user;
-
-        //            try
-        //            {
-        //                // Try to return an item now to determine if the cached credential has expired.
-        //                //var test = await Todo.App.Database.client.GetTable<Item>().Take(1).ToListAsync();
-        //                var userInfo = await client.InvokeApiAsync("userInfo", HttpMethod.Get, null);
-
-        //                //CreateAndShowDialog(string.Format("you are now logged in - {0}", Todo.App.Database.mobileServiceUser.UserId), "Logged in!");
-        //                justAuthenticated = true;
-        //                //currentAccount = accounts[0];
-
-        //                //await Todo.App.Database.InitLocalStoreAsync();
-        //                //await Todo.App.Database.newUser(Todo.App.Database.mobileServiceUser.UserId);
-        //                //await Todo.App.Database.OnRefreshItemsSelected(); // pull database tables                 
-        //            }
-        //            catch (MobileServiceInvalidOperationException ex)
-        //            {
-        //                //System.Diagnostics.Debug.WriteLine(ex.InnerException.ToString());
-        //                if (ex.Response.StatusCode == System.Net.HttpStatusCode.Unauthorized || ex.Response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-        //                {
-        //                    // Remove the credential with the expired token.
-        //                    accountStore.Delete(accounts[0], "Microsoft");
-        //                    mobileServiceUser = null;
-        //                    client.CurrentUser = null;
-        //                    justAuthenticated = false;
-        //                }
-        //            }
-        //        }
-        //        else // Regular login flow
-        //        {
-        //            //user = new MobileServiceuser( await client
-        //            //    .LoginAsync(MobileServiceAuthenticationProvider.Facebook, token);
-        //            //var token = new JObject();
-        //            //// Replace access_token_value with actual value of your access token
-        //            //token.Add("access_token", "access_token_value");
-
-        //            mobileServiceUser = await client.LoginAsync(this, MobileServiceAuthenticationProvider.MicrosoftAccount);
-
-        //            if (useToken)
-        //            {
-        //                // After logging in
-        //                currentAccount = new Account(mobileServiceUser.UserId, new Dictionary<string, string> { { "token", mobileServiceUser.MobileServiceAuthenticationToken } });
-        //                accountStore.Save(currentAccount, "Microsoft");
-        //            }
-
-        //            //CreateAndShowDialog(string.Format("you are now logged in - {0}", Todo.App.Database.mobileServiceUser.UserId), "Logged in!");
-        //            justAuthenticated = true;
-
-        //            //await Todo.App.Database.InitLocalStoreAsync();
-        //            //await Todo.App.Database.newUser(Todo.App.Database.mobileServiceUser.UserId);
-        //            //await Todo.App.Database.OnRefreshItemsSelected(); // pull database tables
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //CreateAndShowDialog(ex, "Authentication failed");
-        //    }
-
-
-        //    //// Log out
-        //    //client.Logout();
-        //    //accountStore.Delete(account, "Facebook");
-        //}
-
-        private async Task Authenticate()
+        protected override void OnCreate(Bundle savedInstanceState) 
         {
-            try
-            {
-                mobileServiceUser = await client.LoginAsync(this, MobileServiceAuthenticationProvider.MicrosoftAccount);
-                //CreateAndShowDialog(string.Format("you are now logged in - {0}", user.UserId), "Logged in!");
-            }
-            catch (Exception ex)
-            {
-                Log.Debug("Main", ex.Message);//CreateAndShowDialog(ex, "Authentication failed");
-            }
-        }
+            base.OnCreate (savedInstanceState);
 
-        protected override async void OnCreate(Bundle savedInstanceState)
-        {
-            base.OnCreate(savedInstanceState);
+            PublicFields.Database = new Database();
 
-            SetContentView(Resource.Layout.activity_main);
+            SetContentView (Resource.Layout.activity_main);
 
-            Log.Debug("CheeseDetailAcitivity", this.ComponentName.ToString());
+            //Log.Debug("CheeseDetailAcitivity", this.ComponentName.ToString());
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
-            SetSupportActionBar(toolbar);
+            SetSupportActionBar (toolbar);
 
-            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
-            SupportActionBar.SetDisplayHomeAsUpEnabled(true);
+            SupportActionBar.SetHomeAsUpIndicator (Resource.Drawable.ic_menu);
+            SupportActionBar.SetDisplayHomeAsUpEnabled (true);
 
-            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
+            drawerLayout = FindViewById<DrawerLayout> (Resource.Id.drawer_layout);
 
-            var navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
+            var navigationView = FindViewById<NavigationView> (Resource.Id.nav_view);
             if (navigationView != null)
                 setupDrawerContent(navigationView);
 
-            var viewPager = FindViewById<Android.Support.V4.View.ViewPager>(Resource.Id.viewpager);
-            if (viewPager != null)
-                setupViewPager(viewPager);
 
-            var fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
+            var fab = FindViewById<FloatingActionButton> (Resource.Id.fab);
             fab.Click += (sender, e) =>
             {
                 //Snackbar.Make (fab, "Here's a snackbar!", Snackbar.LengthLong).SetAction ("Action",
@@ -179,41 +70,89 @@ namespace Cheesesquare
                 StartActivity(intent);
             };
 
-            var tabLayout = FindViewById<TabLayout>(Resource.Id.tabs);
-            tabLayout.SetupWithViewPager(viewPager);
+            viewPager = FindViewById<Android.Support.V4.View.ViewPager>(Resource.Id.viewpager);
+            tabLayout = FindViewById<TabLayout>(Resource.Id.tabs);
 
-            // Initialize the progress bar
-            //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-            SetProgressBarIndeterminateVisibility(true);
-            //progressBar = FindViewById<ProgressBar>(Resource.Id.loadingProgressBar);
-            //progressBar.Visibility = ViewStates.Gone;
+            var loginIntent = new Intent(this, typeof(LoginActivity));
+            StartActivityForResult(loginIntent, LOGIN);
 
-            //// Create ProgressFilter to handle busy state
-            //var progressHandler = new ProgressHandler();
-            //progressHandler.BusyStateChange += (busy) => {
-            //    if (progressBar != null)
-            //        progressBar.Visibility = busy ? ViewStates.Visible : ViewStates.Gone;
-            //};
+        }
 
-            try
+        protected async override void OnStart()
+        {
+            base.OnStart();
+
+            // Shared Preferences are the local saved value for the app. Used here to access the last used provider
+            var preferences = PreferenceManager.GetDefaultSharedPreferences(this);
+
+            // Try to use the latest used oauth provider           
+            if (preferences.Contains("LastUsedProvider"))
             {
-                CurrentPlatform.Init();
-                // Create the Mobile Service Client instance, using the provided
-                // Mobile Service URL and key
-                client = new MobileServiceClient(
-                    Constants.ApplicationURL,
-                    Constants.ApplicationKey);//, progressHandler);
+                string providerName = preferences.GetString("LastUsedProvider", "");
+                MobileServiceAuthenticationProvider provider;
 
-                await Authenticate();
-                //await CreateTable();
+                switch (providerName)
+                {
+                    case "Facebook":
+                        provider = MobileServiceAuthenticationProvider.Facebook;
+                        //await auth.Authenticate(provider);
+                        break;
+                    case "Google":
+                        provider = MobileServiceAuthenticationProvider.Google;
+                        //await auth.Authenticate(provider);
+                        break;
+                    case "MicrosoftAccount":
+                        provider = MobileServiceAuthenticationProvider.MicrosoftAccount;
+                        //await auth.Authenticate(provider);
+                        break;
+                    case "Twitter":
+                        provider = MobileServiceAuthenticationProvider.Twitter;
+                        //await auth.Authenticate(provider);
+                        break;
+                    case "WindowsAzureActiveDirectory":
+                        provider = MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory;
+                        //await auth.Authenticate(provider);
+                        break;
+                    default:
+                        break;
+                }
             }
-            catch (Java.Net.MalformedURLException)
+            //else
+            //{
+            //    var loginpage = new NavigationPage(new Views.SelectLoginProviderPage());
+            //    await App.Navigation.PushModalAsync(loginpage);
+            //}
+            //await Todo.App.selectedDomainPage.Refresh();
+
+            //RequestedOrientation = ScreenOrientation.Portrait;
+
+
+
+
+        }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode,
+        Intent intent)
+        {
+            base.OnActivityResult(requestCode, resultCode, intent);
+
+            if (resultCode == Result.Ok)
             {
-                //CreateAndShowDialog(new Exception("There was an error creating the Mobile Service. Verify the URL"), "Error");
-            }
-            catch (Exception e)
-            {
-                //CreateAndShowDialog(e, "Error");
+                ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
+                EditText assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
+
+                switch (requestCode)
+                {
+                    case LOGIN:
+                        if (viewPager != null)
+                            setupViewPager(viewPager);
+
+                        tabLayout.SetupWithViewPager(viewPager);
+
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -233,13 +172,21 @@ namespace Cheesesquare
             return base.OnOptionsItemSelected (item);
         }
 
-        void setupViewPager (Android.Support.V4.View.ViewPager viewPager) 
+        async void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
         {
-            var adapter = new Adapter (SupportFragmentManager);
-            adapter.AddFragment (new CheeseListFragment (), "Friends");
-            adapter.AddFragment (new CheeseListFragment (), "Family");
-            adapter.AddFragment (new CheeseListFragment (), "Work");
-            adapter.AddFragment(new CheeseListFragment(), "Other");
+            var domains = await PublicFields.Database.GetDomains();
+
+            var adapter = new Adapter(SupportFragmentManager);
+            foreach (Todo.Item domain in domains)
+            {
+                adapter.AddFragment(new CheeseListFragment(), domain.Name);
+            }
+
+
+            //adapter.AddFragment (new CheeseListFragment (), "Friends");
+            //adapter.AddFragment (new CheeseListFragment (), "Family");
+            //adapter.AddFragment (new CheeseListFragment (), "Work");
+            //adapter.AddFragment(new CheeseListFragment(), "Other");
             viewPager.Adapter = adapter;
         }
 

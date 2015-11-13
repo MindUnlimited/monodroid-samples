@@ -17,10 +17,11 @@ using Newtonsoft.Json.Linq;
 using Xamarin.Contacts;
 using System.Collections.ObjectModel;
 using Android.App;
+using Todo;
 
-namespace Todo
+namespace Cheesesquare
 {
-	public class TodoItemDatabase 
+	public class Database 
 	{
         //Mobile Service Client reference
         public MobileServiceClient client;
@@ -114,7 +115,7 @@ namespace Todo
             Debug.WriteLine(contactsFound);
         }
 
-	    public TodoItemDatabase()
+	    public Database()
 	    {
             try
             {
@@ -203,9 +204,9 @@ namespace Todo
             contacts = new List<User>();
 
             #if __ANDROID__
-                        var book = new AddressBook(Application.Context);
+            var book = new AddressBook(Application.Context);
             #else
-                        var book = new AddressBook();
+            var book = new AddressBook();
             #endif
 
             if (!book.RequestPermission().Result)
@@ -213,20 +214,18 @@ namespace Todo
                 Console.WriteLine("Permission denied by user or manifest");
             }
 
-            foreach (Contact contact in book)
+            foreach (Xamarin.Contacts.Contact contact in book)
             {
                 //Console.WriteLine("{0} {1}", contact.FirstName, contact.LastName);
 
                 //enum emailAddressImportance {EmailType.Home, EmailType.Work, EmailType.Other};
 
                 List<EmailType> emailImportance = new List<EmailType>(new EmailType[]
-                {
-                    EmailType.Home,
-                    EmailType.Work,     // River 2
+	            {
+	                EmailType.Home,
+	                EmailType.Work,     // River 2
 	                EmailType.Other
-                });
-
-                
+	            });
 
                 string emailAddress = null;
                 int index = 0;
@@ -245,7 +244,6 @@ namespace Todo
                     User user = new User();
                     user.Email = emailAddress;
                     user.Name = contact.FirstName + " " + contact.LastName;
-                    user.Thumbnail = contact.GetThumbnail();
                     contacts.Add(user);
                 }
             }
