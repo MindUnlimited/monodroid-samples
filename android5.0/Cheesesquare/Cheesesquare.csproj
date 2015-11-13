@@ -153,6 +153,9 @@
     <AndroidResource Include="Resources\layout\activity_login.axml">
       <SubType>AndroidResource</SubType>
     </AndroidResource>
+    <AndroidResource Include="Resources\layout\subtask_line.axml">
+      <SubType>AndroidResource</SubType>
+    </AndroidResource>
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\values\Strings.xml" />
@@ -195,7 +198,9 @@
       <SubType>Designer</SubType>
     </AndroidResource>
     <AndroidResource Include="Resources\layout\activity_main.xml" />
-    <AndroidResource Include="Resources\layout\fragment_cheese_list.xml" />
+    <AndroidResource Include="Resources\layout\fragment_cheese_list.xml">
+      <SubType>Designer</SubType>
+    </AndroidResource>
     <AndroidResource Include="Resources\layout\include_list_viewpager.xml" />
     <AndroidResource Include="Resources\layout\list_item.xml">
       <SubType>Designer</SubType>

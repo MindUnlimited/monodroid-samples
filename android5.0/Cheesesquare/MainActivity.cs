@@ -19,6 +19,7 @@ using Android.Support.V4.View;
 using Android.Graphics;
 using Microsoft.WindowsAzure.MobileServices;
 using Android.Preferences;
+using Newtonsoft.Json;
 
 namespace Cheesesquare
 {
@@ -73,50 +74,63 @@ namespace Cheesesquare
             viewPager = FindViewById<Android.Support.V4.View.ViewPager>(Resource.Id.viewpager);
             tabLayout = FindViewById<TabLayout>(Resource.Id.tabs);
 
-            var loginIntent = new Intent(this, typeof(LoginActivity));
-            StartActivityForResult(loginIntent, LOGIN);
+            // not logged in
+            if (PublicFields.Database.userID == null)
+            {
+                // Shared Preferences are the local saved value for the app. Used here to access the last used provider
+                var preferences = PreferenceManager.GetDefaultSharedPreferences(this);
+
+
+                var loginIntent = new Intent(this, typeof(LoginActivity));
+                // Try to use the latest used oauth provider           
+                if (preferences.Contains("LastUsedProvider"))
+                {
+                    string providerName = preferences.GetString("LastUsedProvider", "");
+                    MobileServiceAuthenticationProvider provider;
+
+                    switch (providerName)
+                    {
+                        case "Facebook":
+                            provider = MobileServiceAuthenticationProvider.Facebook;
+                            loginIntent.PutExtra("provider", JsonConvert.SerializeObject(provider));
+                            //await auth.Authenticate(provider);
+                            break;
+                        case "Google":
+                            provider = MobileServiceAuthenticationProvider.Google;
+                            loginIntent.PutExtra("provider", JsonConvert.SerializeObject(provider));
+                            //await auth.Authenticate(provider);
+                            break;
+                        case "MicrosoftAccount":
+                            provider = MobileServiceAuthenticationProvider.MicrosoftAccount;
+                            loginIntent.PutExtra("provider", JsonConvert.SerializeObject(provider));
+                            //await auth.Authenticate(provider);
+                            break;
+                        case "Twitter":
+                            provider = MobileServiceAuthenticationProvider.Twitter;
+                            loginIntent.PutExtra("provider", JsonConvert.SerializeObject(provider));
+                            //await auth.Authenticate(provider);
+                            break;
+                        case "WindowsAzureActiveDirectory":
+                            provider = MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory;
+                            loginIntent.PutExtra("provider", JsonConvert.SerializeObject(provider));
+                            //await auth.Authenticate(provider);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                StartActivityForResult(loginIntent, LOGIN);
+            }
+
 
         }
 
-        protected async override void OnStart()
+        protected override void OnStart()
         {
             base.OnStart();
 
-            // Shared Preferences are the local saved value for the app. Used here to access the last used provider
-            var preferences = PreferenceManager.GetDefaultSharedPreferences(this);
 
-            // Try to use the latest used oauth provider           
-            if (preferences.Contains("LastUsedProvider"))
-            {
-                string providerName = preferences.GetString("LastUsedProvider", "");
-                MobileServiceAuthenticationProvider provider;
-
-                switch (providerName)
-                {
-                    case "Facebook":
-                        provider = MobileServiceAuthenticationProvider.Facebook;
-                        //await auth.Authenticate(provider);
-                        break;
-                    case "Google":
-                        provider = MobileServiceAuthenticationProvider.Google;
-                        //await auth.Authenticate(provider);
-                        break;
-                    case "MicrosoftAccount":
-                        provider = MobileServiceAuthenticationProvider.MicrosoftAccount;
-                        //await auth.Authenticate(provider);
-                        break;
-                    case "Twitter":
-                        provider = MobileServiceAuthenticationProvider.Twitter;
-                        //await auth.Authenticate(provider);
-                        break;
-                    case "WindowsAzureActiveDirectory":
-                        provider = MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory;
-                        //await auth.Authenticate(provider);
-                        break;
-                    default:
-                        break;
-                }
-            }
             //else
             //{
             //    var loginpage = new NavigationPage(new Views.SelectLoginProviderPage());
@@ -179,9 +193,8 @@ namespace Cheesesquare
             var adapter = new Adapter(SupportFragmentManager);
             foreach (Todo.Item domain in domains)
             {
-                adapter.AddFragment(new CheeseListFragment(), domain.Name);
+                adapter.AddFragment(new CheeseListFragment(domain), domain.Name);
             }
-
 
             //adapter.AddFragment (new CheeseListFragment (), "Friends");
             //adapter.AddFragment (new CheeseListFragment (), "Family");
@@ -193,6 +206,7 @@ namespace Cheesesquare
         void setupDrawerContent(NavigationView navigationView) 
         {
             navigationView.SetNavigationItemSelectedListener(this);
+
             //navigationView.NavigationItemSelected += (sender, e) => {
             //    switch (e.MenuItem.ItemId)
             //    {
@@ -214,7 +228,6 @@ namespace Cheesesquare
                     drawerLayout.CloseDrawers();
                     return true;
             }
-
 
             return false;
         }

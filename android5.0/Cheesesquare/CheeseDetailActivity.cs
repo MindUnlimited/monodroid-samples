@@ -11,6 +11,7 @@ using Android.Util;
 using Android.Content;
 using Android.Support.V4.Widget;
 using Android.Support.V4.App;
+using Newtonsoft.Json;
 
 namespace Cheesesquare
 {
@@ -32,6 +33,7 @@ namespace Cheesesquare
         FloatingActionButton addItemFAB;
         CollapsingToolbarLayout collapsingToolbar;
         DrawerLayout drawerLayout;
+        Todo.Item item;
 
 
         protected override void OnCreate (Bundle savedInstanceState) 
@@ -42,6 +44,10 @@ namespace Cheesesquare
 
             if (Parent == null)
                 Log.Debug("CheeseDetailAcitivity", "Parent not found");
+
+            string itemJson = Intent.GetStringExtra("item");
+            if (itemJson != null)
+                item = JsonConvert.DeserializeObject<Todo.Item>(itemJson);
 
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_detail);
 
@@ -91,24 +97,24 @@ namespace Cheesesquare
                 context.StartActivity(intent);
             };
 
-            var titleSubTask1 = card1.FindViewById<TextView>(Resource.Id.subTask1);
-            titleSubTask1.Click += (sender, e) =>
-            {
-                var context = this;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+            //var titleSubTask1 = card1.FindViewById<TextView>(Resource.Id.subTask1);
+            //titleSubTask1.Click += (sender, e) =>
+            //{
+            //    var context = this;
+            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
+            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
 
-                context.StartActivity(intent);
-            };
-            var titleSubTask2 = card1.FindViewById<TextView>(Resource.Id.subTask2);
-            titleSubTask2.Click += (sender, e) =>
-            {
-                var context = this;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
+            //    context.StartActivity(intent);
+            //};
+            //var titleSubTask2 = card1.FindViewById<TextView>(Resource.Id.subTask2);
+            //titleSubTask2.Click += (sender, e) =>
+            //{
+            //    var context = this;
+            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
+            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
 
-                context.StartActivity(intent);
-            };
+            //    context.StartActivity(intent);
+            //};
 
             CardView card2 = FindViewById<CardView>(Resource.Id.detail_card_2);
 
@@ -122,24 +128,24 @@ namespace Cheesesquare
                 context.StartActivity(intent);
             };
 
-            var titleSubTask1c2 = card2.FindViewById<TextView>(Resource.Id.subTask1);
-            titleSubTask1c2.Click += (sender, e) =>
-            {
-                var context = this;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+            //var titleSubTask1c2 = card2.FindViewById<TextView>(Resource.Id.subTask1);
+            //titleSubTask1c2.Click += (sender, e) =>
+            //{
+            //    var context = this;
+            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
+            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
 
-                context.StartActivity(intent);
-            };
-            var titleSubTask2c2 = card2.FindViewById<TextView>(Resource.Id.subTask2);
-            titleSubTask2c2.Click += (sender, e) =>
-            {
-                var context = this;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
+            //    context.StartActivity(intent);
+            //};
+            //var titleSubTask2c2 = card2.FindViewById<TextView>(Resource.Id.subTask2);
+            //titleSubTask2c2.Click += (sender, e) =>
+            //{
+            //    var context = this;
+            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
+            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
 
-                context.StartActivity(intent);
-            };
+            //    context.StartActivity(intent);
+            //};
 
             loadBackdrop();
         }
@@ -151,6 +157,10 @@ namespace Cheesesquare
                 switch (e.MenuItem.ItemId)
                 {
                     case Resource.Id.nav_home:
+                        //Intent intent = new Intent(this, typeof(MainActivity));
+                        //intent.AddFlags(ActivityFlags.ClearTop);
+                        //StartActivity(intent);
+                        //NavigateUpTo(ParentActivityIntent);
                         NavUtils.NavigateUpFromSameTask(this);
                         break;
                 }

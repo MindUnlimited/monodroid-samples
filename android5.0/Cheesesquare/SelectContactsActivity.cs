@@ -364,7 +364,7 @@ Intent intent)
 
         void FillContacts()
         {
-            var db = new Todo.TodoItemDatabase();
+            var db = new Database();
             db.getContacts();
 
             var uri = ContactsContract.Contacts.ContentUri;

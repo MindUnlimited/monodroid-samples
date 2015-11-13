@@ -43,6 +43,7 @@
                     android:paddingTop="4dp"
                     android:paddingBottom="8dp">
                     <TextView
+                        android:id="@+id/status_task"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceSmall"
@@ -58,6 +59,7 @@
                         android:text="·"
                         android:padding="4dp" />
                     <TextView
+                        android:id="@+id/progress_task"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceSmall"
@@ -73,6 +75,7 @@
                         android:text="·"
                         android:padding="4dp" />
                     <TextView
+                        android:id="@+id/due_date_task"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceSmall"
@@ -88,6 +91,7 @@
                         android:text="·"
                         android:padding="4dp" />
                     <TextView
+                        android:id="@+id/importance_task"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceSmall"
@@ -112,6 +116,7 @@
             android:background="#D1D1D1" />
     <!-- subtasks -->
         <LinearLayout
+            android:id="@+id/subtasks_llayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -119,14 +124,14 @@
             android:layout_marginRight="16dp"
             android:padding="16dp">
             <TextView
-                android:id="@+id/noSubTasksText"
+                android:id="@+id/no_subtasks_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No subtasks defined"
+                android:text="No tasks defined.."
                 android:textColor="#494949"
                 android:textSize="16sp"
                 android:visibility="gone" />
-            <LinearLayout
+        <!--<LinearLayout
                 android:id="@+id/subTaskLine1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -225,9 +230,10 @@
                     android:text="subtask5"
                     android:textColor="#494949"
                     android:textSize="16sp" />
-            </LinearLayout>
+            </LinearLayout>-->
             <TextView
-                android:id="@+id/moreThanFiveSubTasksText"
+                android:id="@+id/more_than_five_subtasks_text"
+                android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="8dp"

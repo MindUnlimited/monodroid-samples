@@ -17,6 +17,7 @@ using Xamarin.Auth;
 using Android.Preferences;
 using Todo;
 using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace Cheesesquare
 {
@@ -27,11 +28,29 @@ namespace Cheesesquare
         private Button googleButton;
         private Button microsoftButton;
 
-        protected override void OnCreate(Bundle bundle)
+        private MobileServiceAuthenticationProvider provider;
+
+        protected override async void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
 
             SetContentView(Resource.Layout.activity_login);
+
+
+            var providerIntent = Intent.GetStringExtra("provider");
+
+            if (providerIntent != null)
+            {
+                provider = JsonConvert.DeserializeObject<MobileServiceAuthenticationProvider>(providerIntent);
+                if (providerIntent != null)
+                {
+                    await Authenticate(provider);
+
+                    Intent resultIntent = new Intent(this, typeof(MainActivity));
+                    SetResult(Result.Ok, resultIntent);
+                    Finish();
+                }
+            }
 
             facebookButton = FindViewById<Button>(Resource.Id.facebook_button);
             facebookButton.Click += FacebookButton_Click;
@@ -39,8 +58,6 @@ namespace Cheesesquare
             googleButton.Click += GoogleButton_Click;
             microsoftButton = FindViewById<Button>(Resource.Id.microsoft_button);
             microsoftButton.Click += MicrosoftButton_Click;
-
-
         }
 
         public async Task Authenticate(MobileServiceAuthenticationProvider provider)
@@ -190,10 +207,6 @@ namespace Cheesesquare
                 //MessageBox.Show(message);
 
                 //Todo.App.Current.MainPage.IsBusy = false;
-
-                Intent resultIntent = new Intent();
-                SetResult(Result.Ok, resultIntent);
-                Finish();
             }
         }
 
@@ -201,18 +214,27 @@ namespace Cheesesquare
         {
             Log.Debug("LoginActivity", "Microsoft");
             await Authenticate(MobileServiceAuthenticationProvider.MicrosoftAccount);
+            Intent resultIntent = new Intent(this, typeof(MainActivity));
+            SetResult(Result.Ok, resultIntent);
+            Finish();
         }
 
         private async void GoogleButton_Click(object sender, EventArgs e)
         {
             Log.Debug("LoginActivity", "Google");
             await Authenticate(MobileServiceAuthenticationProvider.Google);
+            Intent resultIntent = new Intent(this, typeof(MainActivity));
+            SetResult(Result.Ok, resultIntent);
+            Finish();
         }
 
         private async void FacebookButton_Click(object sender, EventArgs e)
         {
             Log.Debug("LoginActivity", "Facebook");
             await Authenticate(MobileServiceAuthenticationProvider.Facebook);
+            Intent resultIntent = new Intent(this, typeof(MainActivity));
+            SetResult(Result.Ok, resultIntent);
+            Finish();
         }
     }
 }
