@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Linq;
 using Android.Text.Format;
+using Android.App;
 
 namespace Cheesesquare
 {
@@ -56,19 +57,32 @@ namespace Cheesesquare
             List<Todo.Item> items;
             Android.App.Activity parent;
 
-            public class ViewHolder : RecyclerView.ViewHolder
+
+    public class ViewHolder : RecyclerView.ViewHolder
             {
                 public View View { get; set; }
                 public TextView TextView { get; set; }
                 public ImageView ImageView { get; set; }
+                public TextView Importance { get; set; }
+                public TextView DueDate { get; set; }
+                public TextView AmountOfSubTasks { get; set; }
+                public LinearLayout SubTasksLinearLayout { get; set; }
+                public TextView MoreThanFiveSubtasks { get; set; }
+
                 public List<Todo.Item> SubItems { get; set; }
-                public Todo.Item item {get;set;}
+
 
                 public ViewHolder (View view) : base (view) 
                 {
                     View = view;
                     TextView = view.FindViewById<TextView> (Resource.Id.task_title);
                     ImageView = view.FindViewById<ImageView>(Resource.Id.imageView);
+                    Importance = view.FindViewById<TextView>(Resource.Id.importance_task);
+                    DueDate = view.FindViewById<TextView>(Resource.Id.due_date_task);
+                    AmountOfSubTasks = view.FindViewById<TextView>(Resource.Id.amountOfSubTasks);
+                    SubTasksLinearLayout = view.FindViewById<LinearLayout>(Resource.Id.subtasks_llayout);
+                    MoreThanFiveSubtasks = view.FindViewById<TextView>(Resource.Id.more_than_five_subtasks_text);
+
 
                     SubItems = new List<Todo.Item>();
                     SubItems.Add(new Todo.Item { Name = "test" });
@@ -101,66 +115,8 @@ namespace Cheesesquare
                 var view = LayoutInflater.From (parent.Context)
                     .Inflate(Resource.Layout.item_card_view, parent, false);
 
-
                 var vh = new ViewHolder(view);
-                var subtasksLinearLayout = vh.View.FindViewById<LinearLayout>(Resource.Id.subtasks_llayout);
-                var amountOfSubTasks = vh.View.FindViewById<TextView>(Resource.Id.amountOfSubTasks);
-
-
-                var dueDate = vh.View.FindViewById<TextView>(Resource.Id.due_date_task);
-
-                long current_time_ms = Java.Lang.JavaSystem.CurrentTimeMillis();
-                DateTime time = System.DateTime.UtcNow.AddDays(5);
-                var long_time = time.ToFileTimeUtc();
-                dueDate.Text =
-                    DateUtils.GetRelativeTimeSpanString(parent.Context, current_time_ms + 1000 * 60 * 60* 24 * 2);
-
-                var importance = vh.View.FindViewById<TextView>(Resource.Id.importance_task);
-                Log.Debug("tag", vh.AdapterPosition.ToString());
-                importance.Text = string.Format("{0} stars", GetValueAt(vh.AdapterPosition).Importance) ?? "0 stars";
-
-                int index = 1;
-
-                if (vh.SubItems == null || vh.SubItems.Count == 0)
-                {
-                    var noSubtasksText = subtasksLinearLayout.FindViewById<TextView>(Resource.Id.no_subtasks_text);
-                    noSubtasksText.Visibility = ViewStates.Visible;
-                    amountOfSubTasks.Text = string.Format("{0} subtasks", 0);
-                }
-                else
-                {
-                    foreach (Todo.Item subitem in vh.SubItems)
-                    {
-                        LinearLayout subtaskView = (LinearLayout)LayoutInflater.From(subtasksLinearLayout.Context).Inflate(Resource.Layout.subtask_line, subtasksLinearLayout, false);
-                        var subtaskName = subtaskView.FindViewById<TextView>(Resource.Id.subtask_name);
-                        subtaskName.Text = subitem.Name;
-
-                        subtaskName.Click += (sender, e) =>
-                        {
-                            var context = vh.View.Context;
-                            var intent = new Intent(context, typeof(CheeseDetailActivity));
-                            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
-
-                            context.StartActivity(intent);
-                        };
-
-                        var subtaskCheckBox = subtaskView.FindViewById<CheckBox>(Resource.Id.checkbox);
-                        subtaskCheckBox.CheckedChange += SubtaskCheckBox_CheckedChange;
-
-                        subtasksLinearLayout.AddView(subtaskView, index);
-
-                        index++;
-
-                        if (index > 5) // 5 items displayed as maximum
-                        {
-                            var moreThanFiveSubtasksText = view.FindViewById<TextView>(Resource.Id.more_than_five_subtasks_text);
-                            moreThanFiveSubtasksText.Visibility = ViewStates.Visible;
-                            break;
-                        }
-                    }
-                    amountOfSubTasks.Text = string.Format("{0} subtasks", vh.SubItems.Count.ToString());
-                }
-
+                
                 return vh;
             }
 
@@ -181,29 +137,59 @@ namespace Cheesesquare
                     context.StartActivity(intent);
                 };
 
-                
 
-                //var titleSubTask1 = h.View.FindViewById<TextView>(Resource.Id.subTask1);
-                //titleSubTask1.Click += (sender, e) =>
-                //{
-                //    var context = h.View.Context;
-                //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-                //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+                long current_time_ms = Java.Lang.JavaSystem.CurrentTimeMillis();
+                DateTime time = System.DateTime.UtcNow.AddDays(5);
+                var long_time = time.ToFileTimeUtc();
+                h.DueDate.Text =
+                    DateUtils.GetRelativeTimeSpanString(Application.Context, current_time_ms + 1000 * 60 * 60 * 24 * 2);
 
-                //    context.StartActivity(intent);
-                //};
+                //var importance = vh.View.FindViewById<TextView>(Resource.Id.importance_task);
+                //Log.Debug("tag", vh.AdapterPosition.ToString());
+                //importance.Text = string.Format("{0} stars", GetValueAt(vh.AdapterPosition).Importance) ?? "0 stars";
 
-                //var titleSubTask2 = h.View.FindViewById<TextView>(Resource.Id.subTask2);
-                //titleSubTask2.Click += (sender, e) =>
-                //{
-                //    var context = h.View.Context;
-                //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-                //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
+                int index = 1;
 
-                //    context.StartActivity(intent);
-                //};
+                if (h.SubItems == null || h.SubItems.Count == 0)
+                {
+                    h.SubTasksLinearLayout.Visibility = ViewStates.Visible;
+                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", 0);
+                }
+                else
+                {
+                    foreach (Todo.Item subitem in h.SubItems)
+                    {
+                        LinearLayout subtaskView = (LinearLayout)LayoutInflater.From(h.SubTasksLinearLayout.Context).Inflate(Resource.Layout.subtask_line, h.SubTasksLinearLayout, false);
+                        var subtaskName = subtaskView.FindViewById<TextView>(Resource.Id.subtask_name);
+                        subtaskName.Text = subitem.Name;
 
-                h.TextView.Text = items [position].Name;
+                        subtaskName.Click += (sender, e) =>
+                        {
+                            var context = h.View.Context;
+                            var intent = new Intent(context, typeof(CheeseDetailActivity));
+                            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
+
+                            context.StartActivity(intent);
+                        };
+
+                        var subtaskCheckBox = subtaskView.FindViewById<CheckBox>(Resource.Id.checkbox);
+                        subtaskCheckBox.CheckedChange += SubtaskCheckBox_CheckedChange;
+
+                        h.SubTasksLinearLayout.AddView(subtaskView, index);
+
+                        index++;
+
+                        if (index > 5) // 5 items displayed as maximum
+                        {
+                            h.MoreThanFiveSubtasks.Visibility = ViewStates.Visible;
+                            break;
+                        }
+                    }
+                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", h.SubItems.Count.ToString());
+                }
+
+                h.TextView.Text = items[position].Name;
+                h.Importance.Text = string.Format("{0} stars", items[position].Importance) ?? "0 stars";
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             }
                           
