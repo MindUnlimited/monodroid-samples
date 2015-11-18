@@ -18,47 +18,66 @@ namespace Cheesesquare
 {
     public class CheeseListFragment : Android.Support.V4.App.Fragment
     {
-        Todo.Item domain;
-        public CheeseListFragment (Todo.Item domain)
+        //private Todo.Item domain;
+        private List<Todo.Item> childItems;
+
+        //public CheeseListFragment(Todo.Item domain)
+        //{
+        //    this.domain = domain;
+        //}
+
+        public CheeseListFragment(List<Todo.Item> items)
         {
-            this.domain = domain;
+            childItems = items;
         }
 
-        public override View OnCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+        public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
         {
-            var v = inflater.Inflate (
+            var v = inflater.Inflate(
                 Resource.Layout.fragment_cheese_list, container, false);
-            var rv = v.JavaCast<RecyclerView> ();
+            var rv = v.JavaCast<RecyclerView>();
 
             setupRecyclerView(rv);
 
             return rv;
         }
 
-        async void setupRecyclerView(RecyclerView recyclerView)
+
+
+        void setupRecyclerView(RecyclerView recyclerView)
         {
-            recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
-            var childItems = (List<Todo.Item>) await PublicFields.Database.GetChildItems(domain);
+            //if (this.childItems == null || this.childItems.Count == 0)
+            //{
+                recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
+
+            //    childItems = (List<Todo.Item>)await PublicFields.Database.GetChildItems(domain);
+
+            //    foreach (Todo.Item it in childItems)
+            //    {
+            //        it.SubItems = (List<Todo.Item>)await PublicFields.Database.GetChildItems(it);
+            //        AddSubTasks(it.SubItems);
+            //    }
+            //}
             recyclerView.SetAdapter(new ItemRecyclerViewAdapter(Activity, childItems));
         }
 
-        List<String> getRandomSublist(string[] array, int amount) 
+
+        List<String> getRandomSublist(string[] array, int amount)
         {
-            var list = new List<string> (amount);
+            var list = new List<string>(amount);
             var random = new Random();
             while (list.Count < amount)
-                list.Add (array[random.Next (array.Length)]);
-            //list.Add ("Old Amsterdam");
+                list.Add(array[random.Next(array.Length)]);
             return list;
         }
 
-        public class ItemRecyclerViewAdapter : RecyclerView.Adapter 
+        public class ItemRecyclerViewAdapter : RecyclerView.Adapter
         {
-            List<Todo.Item> items;
-            Android.App.Activity parent;
+            private List<Todo.Item> items;
+            private Android.App.Activity parent;
 
 
-    public class ViewHolder : RecyclerView.ViewHolder
+            public class ViewHolder : RecyclerView.ViewHolder
             {
                 public View View { get; set; }
                 public TextView TextView { get; set; }
@@ -68,55 +87,51 @@ namespace Cheesesquare
                 public TextView AmountOfSubTasks { get; set; }
                 public LinearLayout SubTasksLinearLayout { get; set; }
                 public TextView MoreThanFiveSubtasks { get; set; }
+                public TextView NoSubTasks { get; set; }
 
-                public List<Todo.Item> SubItems { get; set; }
+
+                //public List<Todo.Item> SubItems { get; set; }
 
 
-                public ViewHolder (View view) : base (view) 
+                public ViewHolder(View view) : base(view)
                 {
                     View = view;
-                    TextView = view.FindViewById<TextView> (Resource.Id.task_title);
+                    TextView = view.FindViewById<TextView>(Resource.Id.task_title);
                     ImageView = view.FindViewById<ImageView>(Resource.Id.imageView);
                     Importance = view.FindViewById<TextView>(Resource.Id.importance_task);
                     DueDate = view.FindViewById<TextView>(Resource.Id.due_date_task);
                     AmountOfSubTasks = view.FindViewById<TextView>(Resource.Id.amountOfSubTasks);
                     SubTasksLinearLayout = view.FindViewById<LinearLayout>(Resource.Id.subtasks_llayout);
                     MoreThanFiveSubtasks = view.FindViewById<TextView>(Resource.Id.more_than_five_subtasks_text);
-
-
-                    SubItems = new List<Todo.Item>();
-                    SubItems.Add(new Todo.Item { Name = "test" });
-                    SubItems.Add(new Todo.Item { Name = "test2" });
+                    NoSubTasks = view.FindViewById<TextView>(Resource.Id.no_subtasks_text);
                 }
 
-                public override string ToString () 
+                public override string ToString()
                 {
-                    return base.ToString () + " '" + TextView.Text;
+                    return base.ToString() + " '" + TextView.Text;
                 }
             }
 
-
-
-            public Todo.Item GetValueAt (int position) 
+            public Todo.Item GetValueAt(int position)
             {
                 return items[position];
             }
 
-            public ItemRecyclerViewAdapter (Android.App.Activity context, List<Todo.Item> items) 
+            public ItemRecyclerViewAdapter(Android.App.Activity context, List<Todo.Item> items)
             {
                 parent = context;
 
-                this.items = items;
+                this.items = items ?? new List<Todo.Item>();
             }
-            
-            public override RecyclerView.ViewHolder OnCreateViewHolder (ViewGroup parent, int viewType) 
+
+            public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
             {
-                
-                var view = LayoutInflater.From (parent.Context)
+
+                var view = LayoutInflater.From(parent.Context)
                     .Inflate(Resource.Layout.item_card_view, parent, false);
 
                 var vh = new ViewHolder(view);
-                
+
                 return vh;
             }
 
@@ -125,15 +140,16 @@ namespace Cheesesquare
                 Log.Debug("CheeseListFragment", "checkbox clicked");
             }
 
-            public override void OnBindViewHolder (RecyclerView.ViewHolder holder, int position) 
+            public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
             {
                 var h = holder as ViewHolder;
 
-                h.View.Click += (sender, e) => {
+                h.View.Click += (sender, e) =>
+                {
                     var context = h.View.Context;
                     var intent = new Intent(context, typeof(CheeseDetailActivity));
                     intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, items[position].Name);
-                    intent.PutExtra("item", JsonConvert.SerializeObject(items[position]));
+                    intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
                     context.StartActivity(intent);
                 };
 
@@ -150,14 +166,14 @@ namespace Cheesesquare
 
                 int index = 1;
 
-                if (h.SubItems == null || h.SubItems.Count == 0)
+                if (items[position].SubItems == null || items[position].SubItems.Count == 0)
                 {
-                    h.SubTasksLinearLayout.Visibility = ViewStates.Visible;
+                    h.NoSubTasks.Visibility = ViewStates.Visible;
                     h.AmountOfSubTasks.Text = string.Format("{0} subtasks", 0);
                 }
                 else
                 {
-                    foreach (Todo.Item subitem in h.SubItems)
+                    foreach (Todo.Item subitem in items[position].SubItems)
                     {
                         LinearLayout subtaskView = (LinearLayout)LayoutInflater.From(h.SubTasksLinearLayout.Context).Inflate(Resource.Layout.subtask_line, h.SubTasksLinearLayout, false);
                         var subtaskName = subtaskView.FindViewById<TextView>(Resource.Id.subtask_name);
@@ -168,6 +184,7 @@ namespace Cheesesquare
                             var context = h.View.Context;
                             var intent = new Intent(context, typeof(CheeseDetailActivity));
                             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
+                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
 
                             context.StartActivity(intent);
                         };
@@ -185,15 +202,16 @@ namespace Cheesesquare
                             break;
                         }
                     }
-                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", h.SubItems.Count.ToString());
+                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", items[position].SubItems.Count.ToString());
                 }
 
                 h.TextView.Text = items[position].Name;
                 h.Importance.Text = string.Format("{0} stars", items[position].Importance) ?? "0 stars";
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             }
-                          
-            public override int ItemCount {
+
+            public override int ItemCount
+            {
                 get { return items.Count; }
             }
         }

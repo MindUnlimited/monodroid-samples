@@ -531,7 +531,7 @@ namespace Cheesesquare
                 return null;
             else
             {
-                var groups = await getGroups(userID);
+                var groups = await getGroups();
                 foreach (Group group in groups)
                 {
                     if (group.Name == groupName)
@@ -542,7 +542,7 @@ namespace Cheesesquare
         }
 
 
-        public async Task<List<Group>> getGroups(string userID)
+        public async Task<List<Group>> getGroups()
         {
             if (userID == null)
                 return null;
@@ -598,7 +598,7 @@ namespace Cheesesquare
             List<Item> sortedDomains = new List<Item>();
             if (userID != null)
             {
-                List<Group> groups = await getGroups(userID);
+                List<Group> groups = await getGroups();
                 IEnumerable<string> groups_ids = from grp in groups select grp.ID;
 
                 try
@@ -652,7 +652,7 @@ namespace Cheesesquare
             List<Item> items = new List<Item>();
             if (userID != null)
             {
-                List<Group> groups = await getGroups(userID);
+                List<Group> groups = await getGroups();
                 IEnumerable<string> groups_ids = from grp in groups select grp.ID;
 
                 try
@@ -692,7 +692,7 @@ namespace Cheesesquare
             IEnumerable<Item> items = null;
             if (userID != null)
             {
-                List<Group> groups = await getGroups(userID);
+                List<Group> groups = await getGroups();
                 IEnumerable<string> groups_ids = from grp in groups select grp.ID;
 
                 try

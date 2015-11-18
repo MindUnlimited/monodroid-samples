@@ -20,47 +20,51 @@ using Android.Graphics;
 using Microsoft.WindowsAzure.MobileServices;
 using Android.Preferences;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace Cheesesquare
 {
     public static class PublicFields
     {
         public static Database Database;
+        public static List<Todo.Item> allItems { get; set; }
+        public static List<Todo.Item> domains { get; set; }
+        public static List<Todo.Group> userGroups { get; set; }
     }
-    
 
-    [Activity (Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true)]
+
+    [Activity(Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true)]
     public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
-    {        
+    {
         DrawerLayout drawerLayout;
         ViewPager viewPager;
         TabLayout tabLayout;
         private const int LOGIN = 102;
 
-        protected override void OnCreate(Bundle savedInstanceState) 
+
+
+        protected override void OnCreate(Bundle savedInstanceState)
         {
-            base.OnCreate (savedInstanceState);
+            base.OnCreate(savedInstanceState);
 
             PublicFields.Database = new Database();
 
-            SetContentView (Resource.Layout.activity_main);
-
-            //Log.Debug("CheeseDetailAcitivity", this.ComponentName.ToString());
+            SetContentView(Resource.Layout.activity_main);
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
-            SetSupportActionBar (toolbar);
+            SetSupportActionBar(toolbar);
 
-            SupportActionBar.SetHomeAsUpIndicator (Resource.Drawable.ic_menu);
-            SupportActionBar.SetDisplayHomeAsUpEnabled (true);
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
+            SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
-            drawerLayout = FindViewById<DrawerLayout> (Resource.Id.drawer_layout);
+            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
 
-            var navigationView = FindViewById<NavigationView> (Resource.Id.nav_view);
+            var navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
             if (navigationView != null)
                 setupDrawerContent(navigationView);
 
 
-            var fab = FindViewById<FloatingActionButton> (Resource.Id.fab);
+            var fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
             fab.Click += (sender, e) =>
             {
                 //Snackbar.Make (fab, "Here's a snackbar!", Snackbar.LengthLong).SetAction ("Action",
@@ -152,9 +156,6 @@ namespace Cheesesquare
 
             if (resultCode == Result.Ok)
             {
-                ImageView assignedThumb = this.FindViewById<ImageView>(Resource.Id.assigned_to_thumb);
-                EditText assignedTo = FindViewById<EditText>(Resource.Id.assigned_to_name);
-
                 switch (requestCode)
                 {
                     case LOGIN:
@@ -170,36 +171,49 @@ namespace Cheesesquare
             }
         }
 
-        public override bool OnCreateOptionsMenu (IMenu menu) 
+        public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.sample_actions, menu);
             return true;
         }
-            
-        public override bool OnOptionsItemSelected (IMenuItem item) 
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
         {
             switch (item.ItemId) {
-            case Android.Resource.Id.Home:
-                drawerLayout.OpenDrawer (Android.Support.V4.View.GravityCompat.Start);
-                return true;
+                case Android.Resource.Id.Home:
+                    drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
+                    return true;
             }
-            return base.OnOptionsItemSelected (item);
+            return base.OnOptionsItemSelected(item);
+        }
+
+        public void AddSubTasks(List<Todo.Item> items)
+        {
+            IEnumerable<string> groups_ids = from grp in PublicFields.userGroups select grp.ID;
+            foreach(Todo.Item item in items)
+            {
+                var directSubItems = PublicFields.allItems.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.ID).ToList();
+                //var directSubItems = (from it in PublicFields.allItems where groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.ID select it).ToList<Todo.Item>();
+                item.SubItems = directSubItems;
+
+                //if (directSubItems != null && directSubItems.Count != 0)
+                //    AddSubTasks(item.SubItems);
+            }
         }
 
         async void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
         {
-            var domains = await PublicFields.Database.GetDomains();
+            PublicFields.allItems = (List<Todo.Item>) await PublicFields.Database.GetItems();
+            PublicFields.userGroups = await PublicFields.Database.getGroups();           
+            AddSubTasks(PublicFields.allItems); // links subtasks to the items
+
+            PublicFields.domains = PublicFields.allItems.Where(it => it.Type == 1).ToList();
 
             var adapter = new Adapter(SupportFragmentManager);
-            foreach (Todo.Item domain in domains)
+            foreach (Todo.Item domain in PublicFields.domains)
             {
-                adapter.AddFragment(new CheeseListFragment(domain), domain.Name);
+                adapter.AddFragment(new CheeseListFragment(domain.SubItems), domain.Name);
             }
-
-            //adapter.AddFragment (new CheeseListFragment (), "Friends");
-            //adapter.AddFragment (new CheeseListFragment (), "Family");
-            //adapter.AddFragment (new CheeseListFragment (), "Work");
-            //adapter.AddFragment(new CheeseListFragment(), "Other");
             viewPager.Adapter = adapter;
         }
 

@@ -5,6 +5,8 @@ using Android.Support.V7.Widget;
 using Android.Views;
 using Android.Widget;
 using V7Toolbar = Android.Support.V7.Widget.Toolbar;
+using V4Fragment = Android.Support.V4.App.Fragment;
+using V4FragmentManager = Android.Support.V4.App.FragmentManager;
 using Android.Support.Design.Widget;
 using Android.App;
 using Android.Util;
@@ -12,6 +14,8 @@ using Android.Content;
 using Android.Support.V4.Widget;
 using Android.Support.V4.App;
 using Newtonsoft.Json;
+using Android.Support.V4.View;
+using System.Collections.Generic;
 
 namespace Cheesesquare
 {
@@ -20,20 +24,23 @@ namespace Cheesesquare
     public class CheeseDetailActivity : AppCompatActivity
     {
         public const string EXTRA_NAME = "cheese_name";
+        public const string ITEM_ID = "item_id";
         private const string TAG = "CheeseActivity";
 
-        bool editmode;
+        //bool editmode;
 
-        TextView txtDate;
-        String cheeseName;
-        LinearLayout titleDescriptionLayout;
-        SeekBar progressSlider;
-        TextView progressPercentText;
-        FloatingActionButton editFAB;
-        FloatingActionButton addItemFAB;
-        CollapsingToolbarLayout collapsingToolbar;
-        DrawerLayout drawerLayout;
-        Todo.Item item;
+        private TextView txtDate;
+        private String cheeseName;
+        private String itemID;
+        //private LinearLayout titleDescriptionLayout;
+        private SeekBar progressSlider;
+        private TextView progressPercentText;
+        private FloatingActionButton editFAB;
+        private FloatingActionButton addItemFAB;
+        private CollapsingToolbarLayout collapsingToolbar;
+        private DrawerLayout drawerLayout;
+        private ViewPager viewPager;
+        private Todo.Item item;
 
 
         protected override void OnCreate (Bundle savedInstanceState) 
@@ -45,9 +52,8 @@ namespace Cheesesquare
             if (Parent == null)
                 Log.Debug("CheeseDetailAcitivity", "Parent not found");
 
-            string itemJson = Intent.GetStringExtra("item");
-            if (itemJson != null)
-                item = JsonConvert.DeserializeObject<Todo.Item>(itemJson);
+            itemID = Intent.GetStringExtra(ITEM_ID);
+            item = PublicFields.allItems.Find(it => it.ID == itemID);
 
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_detail);
 
@@ -58,21 +64,11 @@ namespace Cheesesquare
             if (navigationView != null)
                 setupDrawerContent(navigationView);
 
-            //SupportActionBar.SetDisplayShowHomeEnabled(true);
-            //SupportActionBar.SetDisplayHomeAsUpEnabled(true);
-            //SupportActionBar.SetIcon(Resource.Drawable.ic_menu);
-            //SupportActionBar.SetHomeButtonEnabled(true);
             SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
-
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
             collapsingToolbar.SetTitle (cheeseName);
-                
-            //var title = FindViewById<EditText>(Resource.Id.txt_title);
-            //title.SetText(cheeseName,TextView.BufferType.Editable);
-
-            //titleDescriptionLayout = FindViewById<LinearLayout>(Resource.Id.title_description_layout);
 
             progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
@@ -84,72 +80,73 @@ namespace Cheesesquare
             addItemFAB = FindViewById<FloatingActionButton>(Resource.Id.add_task_fab);
             addItemFAB.Click += AddItemFAB_Click;
 
-            editmode = false;
-
-            CardView card1 = FindViewById<CardView>(Resource.Id.detail_card_1);
-            card1.Click += (sender, e) => {
-                var context = card1.Context;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-
-                var taskTitle = card1.FindViewById<TextView>(Resource.Id.task_title);
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
-
-                context.StartActivity(intent);
-            };
-
-            //var titleSubTask1 = card1.FindViewById<TextView>(Resource.Id.subTask1);
-            //titleSubTask1.Click += (sender, e) =>
-            //{
-            //    var context = this;
+            //CardView card1 = FindViewById<CardView>(Resource.Id.detail_card_1);
+            //card1.Click += (sender, e) => {
+            //    var context = card1.Context;
             //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
 
-            //    context.StartActivity(intent);
-            //};
-            //var titleSubTask2 = card1.FindViewById<TextView>(Resource.Id.subTask2);
-            //titleSubTask2.Click += (sender, e) =>
-            //{
-            //    var context = this;
-            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
+            //    var taskTitle = card1.FindViewById<TextView>(Resource.Id.task_title);
+            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
 
             //    context.StartActivity(intent);
             //};
 
-            CardView card2 = FindViewById<CardView>(Resource.Id.detail_card_2);
-
-            card2.Click += (sender, e) => {
-                var context = card2.Context;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-
-                var taskTitle = card2.FindViewById<TextView>(Resource.Id.task_title);
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
-
-                context.StartActivity(intent);
-            };
-
-            //var titleSubTask1c2 = card2.FindViewById<TextView>(Resource.Id.subTask1);
-            //titleSubTask1c2.Click += (sender, e) =>
-            //{
-            //    var context = this;
+            //CardView card2 = FindViewById<CardView>(Resource.Id.detail_card_2);
+            //card2.Click += (sender, e) => {
+            //    var context = card2.Context;
             //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask1.Text);
+
+            //    var taskTitle = card2.FindViewById<TextView>(Resource.Id.task_title);
+            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
 
             //    context.StartActivity(intent);
             //};
-            //var titleSubTask2c2 = card2.FindViewById<TextView>(Resource.Id.subTask2);
-            //titleSubTask2c2.Click += (sender, e) =>
-            //{
-            //    var context = this;
-            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, titleSubTask2.Text);
 
-            //    context.StartActivity(intent);
-            //};
+            viewPager = FindViewById<Android.Support.V4.View.ViewPager>(Resource.Id.viewpager_cards_detail);
+            setupViewPager(viewPager);
 
             loadBackdrop();
         }
 
+        class Adapter : Android.Support.V4.App.FragmentPagerAdapter
+        {
+            List<V4Fragment> fragments = new List<V4Fragment>();
+            List<string> fragmentTitles = new List<string>();
+
+            public Adapter(V4FragmentManager fm) : base(fm)
+            {
+            }
+
+            public void AddFragment(V4Fragment fragment, String title)
+            {
+                fragments.Add(fragment);
+                fragmentTitles.Add(title);
+            }
+
+            public override V4Fragment GetItem(int position)
+            {
+                return fragments[position];
+            }
+
+            public override int Count
+            {
+                get { return fragments.Count; }
+            }
+
+            public override Java.Lang.ICharSequence GetPageTitleFormatted(int position)
+            {
+                return new Java.Lang.String(fragmentTitles[position]);
+            }
+
+        }
+
+        void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
+        {
+            var adapter = new Adapter(SupportFragmentManager);
+
+            adapter.AddFragment(new CheeseListFragment(item.SubItems), item.Name);
+            viewPager.Adapter = adapter;
+        }
 
         void setupDrawerContent(NavigationView navigationView)
         {
@@ -228,7 +225,8 @@ namespace Cheesesquare
         protected override void OnStart()
         {
             base.OnStart();
-            txtDate = (TextView)FindViewById(Resource.Id.txtdate);
+            //txtDate = (TextView)FindViewById(Resource.Id.txtdate);
+
         }
 
 
