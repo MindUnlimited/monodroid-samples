@@ -40,7 +40,7 @@ namespace Cheesesquare
         ViewPager viewPager;
         TabLayout tabLayout;
         private const int LOGIN = 102;
-
+        private const int ITEMDETAIL = 103;
 
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -165,6 +165,25 @@ namespace Cheesesquare
                         tabLayout.SetupWithViewPager(viewPager);
 
                         break;
+                    case
+                        ITEMDETAIL:
+                        if (intent.GetBooleanExtra("itemChanged", false))
+                        {
+                            string ItemID = intent.GetStringExtra("itemID");
+                            Log.Debug("MainActivity", "Item changed");
+                            int index = viewPager.CurrentItem;
+                            var adapter = (MyAdapter)viewPager.Adapter;
+                            var currentFragment = (CheeseListFragment) adapter.GetItem(index);
+                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                            var item = PublicFields.allItems.Find(it => it.ID == ItemID);
+
+                            fragmentAdapter.UpdateValue(item);
+                            fragmentAdapter.ApplyChanges();
+                        }
+                            
+                        break;
+
                     default:
                         break;
                 }
@@ -208,8 +227,9 @@ namespace Cheesesquare
             AddSubTasks(PublicFields.allItems); // links subtasks to the items
 
             PublicFields.domains = PublicFields.allItems.Where(it => it.Type == 1).ToList();
+            
+            var adapter = new MyAdapter(SupportFragmentManager);
 
-            var adapter = new Adapter(SupportFragmentManager);
             foreach (Todo.Item domain in PublicFields.domains)
             {
                 adapter.AddFragment(new CheeseListFragment(domain.SubItems), domain.Name);
@@ -246,12 +266,12 @@ namespace Cheesesquare
             return false;
         }
 
-        class Adapter : Android.Support.V4.App.FragmentPagerAdapter 
+        class MyAdapter : Android.Support.V4.App.FragmentPagerAdapter 
         {
             List<V4Fragment> fragments = new List<V4Fragment> ();
             List<string> fragmentTitles = new List<string> ();
 
-            public Adapter (V4FragmentManager fm) : base (fm)
+            public MyAdapter(V4FragmentManager fm) : base (fm)
             {
             }
 

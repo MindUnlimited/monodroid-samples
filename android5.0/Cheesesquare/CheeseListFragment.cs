@@ -20,6 +20,8 @@ namespace Cheesesquare
     {
         //private Todo.Item domain;
         private List<Todo.Item> childItems;
+        public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
+        private const int ITEMDETAIL = 103;
 
         //public CheeseListFragment(Todo.Item domain)
         //{
@@ -58,7 +60,8 @@ namespace Cheesesquare
             //        AddSubTasks(it.SubItems);
             //    }
             //}
-            recyclerView.SetAdapter(new ItemRecyclerViewAdapter(Activity, childItems));
+            itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, childItems, this);
+            recyclerView.SetAdapter(itemRecyclerViewAdapter);
         }
 
 
@@ -71,25 +74,11 @@ namespace Cheesesquare
             return list;
         }
 
-        protected void onActivityResult(int requestCode, int resultCode,
-        Intent data)
-        {
-            if (requestCode == PICK_CONTACT_REQUEST)
-            {
-                if (resultCode == RESULT_OK)
-                {
-                    // A contact was picked.  Here we will just display it
-                    // to the user.
-                    startActivity(new Intent(Intent.ACTION_VIEW, data));
-                }
-            }
-        }
-
         public class ItemRecyclerViewAdapter : RecyclerView.Adapter
         {
             private List<Todo.Item> items;
             private Android.App.Activity parent;
-
+            private CheeseListFragment fragment;
 
             public class ViewHolder : RecyclerView.ViewHolder
             {
@@ -126,14 +115,33 @@ namespace Cheesesquare
                 }
             }
 
+            public void UpdateValue(Todo.Item item)
+            {
+                int index = items.FindIndex(it => it.ID == item.ID);
+                if (index >= 0)
+                    items[index] = item;
+            }
+
             public Todo.Item GetValueAt(int position)
             {
                 return items[position];
             }
 
-            public ItemRecyclerViewAdapter(Android.App.Activity context, List<Todo.Item> items)
+            public void ChangeValueAt(int position, Todo.Item item)
+            {
+                items[position] = item;
+            }
+
+            public void ApplyChanges()
+            {
+                fragment.childItems = items;
+                NotifyDataSetChanged();
+            }
+
+            public ItemRecyclerViewAdapter(Android.App.Activity context, List<Todo.Item> items, CheeseListFragment fragm)
             {
                 parent = context;
+                fragment = fragm;
 
                 this.items = items ?? new List<Todo.Item>();
             }
@@ -145,7 +153,6 @@ namespace Cheesesquare
                     .Inflate(Resource.Layout.item_card_view, parent, false);
 
                 var vh = new ViewHolder(view);
-
                 return vh;
             }
 
@@ -164,7 +171,8 @@ namespace Cheesesquare
                     var intent = new Intent(context, typeof(CheeseDetailActivity));
                     intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, items[position].Name);
                     intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
-                    context.StartActivity(intent);
+                    parent.StartActivityForResult(intent, ITEMDETAIL);
+                    //context.StartActivity(intent);
                 };
 
 
@@ -187,6 +195,10 @@ namespace Cheesesquare
                 }
                 else
                 {
+                    // more items than the item signaling that there are no tasks and the item signaling
+                    // that there are more than 5 tasks
+                    while (h.SubTasksLinearLayout.ChildCount > 2) 
+                        h.SubTasksLinearLayout.RemoveViewAt(1);
                     foreach (Todo.Item subitem in items[position].SubItems)
                     {
                         LinearLayout subtaskView = (LinearLayout)LayoutInflater.From(h.SubTasksLinearLayout.Context).Inflate(Resource.Layout.subtask_line, h.SubTasksLinearLayout, false);
@@ -198,10 +210,10 @@ namespace Cheesesquare
                             var context = h.View.Context;
                             var intent = new Intent(context, typeof(CheeseDetailActivity));
                             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
-                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
+                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.ID);
 
-                            parent.StartActivityForResult(intent, )
-                            context.StartActivityForResult(intent);
+                            parent.StartActivityForResult(intent, ITEMDETAIL);
+                            //context.StartActivityForResult(intent);
                             //context.StartActivity(intent);
                         };
 

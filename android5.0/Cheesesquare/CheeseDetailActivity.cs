@@ -26,12 +26,13 @@ namespace Cheesesquare
     {
         public const string EXTRA_NAME = "cheese_name";
         public const string ITEM_ID = "item_id";
+        private const int ITEMDETAIL = 103;
+        private const int EDIT_ITEM = 104;
         private const string TAG = "CheeseActivity";
 
         //bool editmode;
 
         private TextView txtDate;
-        private String cheeseName;
         private String itemID;
         //private LinearLayout titleDescriptionLayout;
 
@@ -46,13 +47,14 @@ namespace Cheesesquare
         private DrawerLayout drawerLayout;
         private ViewPager viewPager;
         private Todo.Item item;
-
+        private bool itemChanged;
 
         protected override void OnCreate (Bundle savedInstanceState) 
         {
             base.OnCreate (savedInstanceState);
             SetContentView(Resource.Layout.activity_detail);
-            cheeseName = Intent.GetStringExtra (EXTRA_NAME);
+
+            itemChanged = false;
 
             if (Parent == null)
                 Log.Debug("CheeseDetailAcitivity", "Parent not found");
@@ -73,7 +75,10 @@ namespace Cheesesquare
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
-            collapsingToolbar.SetTitle (cheeseName);
+            collapsingToolbar.SetTitle (item.Name);
+
+            txtDate = FindViewById<TextView>(Resource.Id.txtdate);
+            txtDate.Text = item.EndDate;
 
             progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
@@ -89,28 +94,6 @@ namespace Cheesesquare
             addItemFAB = FindViewById<FloatingActionButton>(Resource.Id.add_task_fab);
             addItemFAB.Click += AddItemFAB_Click;
 
-            //CardView card1 = FindViewById<CardView>(Resource.Id.detail_card_1);
-            //card1.Click += (sender, e) => {
-            //    var context = card1.Context;
-            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-
-            //    var taskTitle = card1.FindViewById<TextView>(Resource.Id.task_title);
-            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
-
-            //    context.StartActivity(intent);
-            //};
-
-            //CardView card2 = FindViewById<CardView>(Resource.Id.detail_card_2);
-            //card2.Click += (sender, e) => {
-            //    var context = card2.Context;
-            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-
-            //    var taskTitle = card2.FindViewById<TextView>(Resource.Id.task_title);
-            //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, taskTitle.Text);
-
-            //    context.StartActivity(intent);
-            //};
-
             viewPager = FindViewById<Android.Support.V4.View.ViewPager>(Resource.Id.viewpager_cards_detail);
             setupViewPager(viewPager);
 
@@ -124,14 +107,15 @@ namespace Cheesesquare
 
             item.Importance = rating;
             PublicFields.allItems.Where(it => it.ID == item.ID).FirstOrDefault().Importance = rating;
+            itemChanged = true;
         }
 
-        class Adapter : Android.Support.V4.App.FragmentPagerAdapter
+        class MyAdapter : Android.Support.V4.App.FragmentPagerAdapter
         {
             List<V4Fragment> fragments = new List<V4Fragment>();
             List<string> fragmentTitles = new List<string>();
 
-            public Adapter(V4FragmentManager fm) : base(fm)
+            public MyAdapter(V4FragmentManager fm) : base(fm)
             {
             }
 
@@ -160,10 +144,60 @@ namespace Cheesesquare
 
         void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
         {
-            var adapter = new Adapter(SupportFragmentManager);
+            var adapter = new MyAdapter(SupportFragmentManager);
 
             adapter.AddFragment(new CheeseListFragment(item.SubItems), item.Name);
             viewPager.Adapter = adapter;
+        }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode,
+Intent intent)
+        {
+            base.OnActivityResult(requestCode, resultCode, intent);
+
+            if (resultCode == Result.Ok)
+            {
+                switch (requestCode)
+                {
+                    case
+                        ITEMDETAIL:
+                        if (intent.GetBooleanExtra("itemChanged", false))
+                        {
+                            string ItemID = intent.GetStringExtra("itemID");
+                            Log.Debug("MainActivity", "Item changed");
+                            int index = viewPager.CurrentItem;
+                            var adapter = (MyAdapter)viewPager.Adapter;
+                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                            var item = PublicFields.allItems.Find(it => it.ID == ItemID);
+
+                            fragmentAdapter.UpdateValue(item);
+                            fragmentAdapter.ApplyChanges();
+                        }
+
+                        break;
+                    case
+                        EDIT_ITEM:
+                        var itemJSON = intent.GetBooleanExtra("edited", false);
+                        if (itemJSON)
+                        {
+                            itemChanged = true;
+                            item = PublicFields.allItems.Find(it => it.ID == item.ID);
+                            //Refresh?
+                            //ViewGroup drawerLayout = FindViewById<ViewGroup>(Resource.Id.main_content);
+                            //drawerLayout.Invalidate();
+
+                            //Finish();
+                            //var updateIntent = new Intent();
+                            //updateIntent.PutExtra(itemID, item.ID);
+                            //StartActivity(updateIntent);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         void setupDrawerContent(NavigationView navigationView)
@@ -211,28 +245,9 @@ namespace Cheesesquare
         private void EditFAB_Click(object sender, EventArgs e)
         {
             Log.Info(TAG, "edit fab clicked!");
-
-            //if (editmode) // saving edit
-            //{
-            //    editmode = false;
-            //    titleDescriptionLayout.Visibility = ViewStates.Gone;
-            //    editFAB.SetImageResource(Resource.Drawable.ic_mode_edit_white_24dp);
-
-            //    var title = FindViewById<EditText>(Resource.Id.txt_title);
-            //    collapsingToolbar.SetTitle(title.Text);
-            //}
-            //else // going into edit mode
-            //{
-            //    editmode = true;
-            //    titleDescriptionLayout.Visibility = ViewStates.Visible;
-            //    editFAB.SetImageResource(Resource.Drawable.ic_done);
-            //    collapsingToolbar.SetTitle("");
-            //}
-
-
             var intent = new Intent(this, typeof(EditItemActivity));
-            intent.PutExtra(EditItemActivity.EXTRA_NAME, cheeseName);
-            StartActivity(intent);
+            intent.PutExtra("itemID", item.ID);
+            StartActivityForResult(intent, EDIT_ITEM);
         }
 
         private void ProgressSlider_ProgressChanged(object sender, SeekBar.ProgressChangedEventArgs e)
@@ -245,6 +260,16 @@ namespace Cheesesquare
             base.OnStart();
             //txtDate = (TextView)FindViewById(Resource.Id.txtdate);
 
+        }
+
+        public override void Finish()
+        {
+            Intent returnIntent = new Intent();
+            returnIntent.PutExtra("itemChanged", itemChanged);// ("passed_item", itemYouJustCreated);
+            if (itemChanged)
+                returnIntent.PutExtra("itemID", item.ID);// ("passed_item", itemYouJustCreated);
+            SetResult(Result.Ok, returnIntent);
+            base.Finish();
         }
 
 
