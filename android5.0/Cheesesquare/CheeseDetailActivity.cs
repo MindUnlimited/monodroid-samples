@@ -16,6 +16,7 @@ using Android.Support.V4.App;
 using Newtonsoft.Json;
 using Android.Support.V4.View;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Cheesesquare
 {
@@ -33,8 +34,12 @@ namespace Cheesesquare
         private String cheeseName;
         private String itemID;
         //private LinearLayout titleDescriptionLayout;
+
+        private RatingBar importance;
+
         private SeekBar progressSlider;
         private TextView progressPercentText;
+
         private FloatingActionButton editFAB;
         private FloatingActionButton addItemFAB;
         private CollapsingToolbarLayout collapsingToolbar;
@@ -74,6 +79,10 @@ namespace Cheesesquare
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
             progressSlider.ProgressChanged += ProgressSlider_ProgressChanged;
 
+            importance = FindViewById<RatingBar>(Resource.Id.ratingbar);
+            importance.RatingBarChange += Importance_RatingBarChange;
+            importance.Rating = item.Importance;
+
             editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
             editFAB.Click += EditFAB_Click;
 
@@ -106,6 +115,15 @@ namespace Cheesesquare
             setupViewPager(viewPager);
 
             loadBackdrop();
+        }
+
+        private void Importance_RatingBarChange(object sender, RatingBar.RatingBarChangeEventArgs e)
+        {
+            var ratingbar = (RatingBar) sender;
+            int rating = (int)ratingbar.Rating;
+
+            item.Importance = rating;
+            PublicFields.allItems.Where(it => it.ID == item.ID).FirstOrDefault().Importance = rating;
         }
 
         class Adapter : Android.Support.V4.App.FragmentPagerAdapter

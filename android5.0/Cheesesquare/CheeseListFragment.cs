@@ -71,6 +71,20 @@ namespace Cheesesquare
             return list;
         }
 
+        protected void onActivityResult(int requestCode, int resultCode,
+        Intent data)
+        {
+            if (requestCode == PICK_CONTACT_REQUEST)
+            {
+                if (resultCode == RESULT_OK)
+                {
+                    // A contact was picked.  Here we will just display it
+                    // to the user.
+                    startActivity(new Intent(Intent.ACTION_VIEW, data));
+                }
+            }
+        }
+
         public class ItemRecyclerViewAdapter : RecyclerView.Adapter
         {
             private List<Todo.Item> items;
@@ -186,7 +200,9 @@ namespace Cheesesquare
                             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
                             intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
 
-                            context.StartActivity(intent);
+                            parent.StartActivityForResult(intent, )
+                            context.StartActivityForResult(intent);
+                            //context.StartActivity(intent);
                         };
 
                         var subtaskCheckBox = subtaskView.FindViewById<CheckBox>(Resource.Id.checkbox);
