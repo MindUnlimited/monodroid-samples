@@ -161,7 +161,7 @@ namespace Cheesesquare
 
                     if (selectedContacts != null && selectedContacts.Count > 0)
                     {
-                        Intent myIntent = new Intent(this, typeof(DefineGroupActivity));
+                        Intent myIntent = new Intent();
                         var members = JsonConvert.SerializeObject(selectedContacts);
                         myIntent.PutExtra("members", members);
                         SetResult(Result.Ok, myIntent);

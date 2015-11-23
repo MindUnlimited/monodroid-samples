@@ -99,7 +99,6 @@
   <ItemGroup>
     <Compile Include="Data\SQLite_bak.cs" />
     <Compile Include="Data\TodoItemDatabase.cs" />
-    <Compile Include="Data\TodoItemDatabase_bak.cs" />
     <Compile Include="DateDialog.cs" />
     <Compile Include="AddGroupMembersActivity.cs" />
     <Compile Include="DefineGroupActivity.cs" />

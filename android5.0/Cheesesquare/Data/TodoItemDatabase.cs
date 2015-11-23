@@ -75,6 +75,8 @@ namespace Cheesesquare
         {
             String contactsFound = "";
 
+            if (contacts == null)
+                getContacts();
 
             if (contacts.Count > 0 && userID != null)
             {
@@ -112,91 +114,30 @@ namespace Cheesesquare
                 }
 
             }
-            Debug.WriteLine(contactsFound);
+            //Debug.WriteLine(contactsFound);
         }
 
 	    public Database()
 	    {
             try
             {
-                getContacts();
-
-                //var json = (Newtonsoft.Json.Linq.JObject) client.InvokeApiAsync("contactsthatuseapp", HttpMethod.Get, parameters: {contacts: contactsString}).Result;
-
-                //client.InvokeApiAsync("contactsthatuseapp" 
-                //{
-                //        method: "get",
-                //        parameters: {
-                //        "contacts": contactsString 
-                //        }
-                //    });
-
-
-
-                    //.then(function(response) {
-                    //    console.log('Here is my response object');
-                    //    console.log(response)
-                    //}, function(err) {
-                    //    console.error('Azure Error: ' + err);
-                    //});
-
-                //var json = client.InvokeApiAsync("contactsthatuseapp", HttpMethod.Get);
-
-                //CurrentPlatform.Init();
 
                 // Create the Mobile Service Client instance, using the provided
                 // Mobile Service URL and key
                 client = new MobileServiceClient(applicationURL, applicationKey);
                 
-                //InitLocalStoreAsync(); useless since not logged in yet..
-                
-                //Task.Run(async () => { await InitLocalStoreAsync(); }); //task.run part is necessary, behaves as await
-
-                // Get the Mobile Service sync table instance to use
-                //toDoTable = client.GetSyncTable<TodoItem>();
-
-                var test = client.GetTable("Item");
-                var test_output = test.ToString();
-                var test2 = client.GetTable<Item>();
-                var test2_output = test2.ToListAsync();
-
-                
+                InitLocalStoreAsync();
+                                
                 userTable = client.GetSyncTable<User>();
                 userGroupMembershipTable = client.GetSyncTable<UserGroupMembership>();
                 groupTable = client.GetSyncTable<Group>();
                 groupGroupMembershipTable = client.GetSyncTable<GroupGroupMembership>();
                 itemTable = client.GetSyncTable<Item>();
-
-                //textNewToDo = FindViewById<EditText>(Resource.Id.textNewToDo);
-
-                //// Create an adapter to bind the items with the view
-                //adapter = new ToDoItemAdapter(this, Resource.Layout.Row_List_To_Do);
-                //var listViewToDo = FindViewById<ListView>(Resource.Id.listViewToDo);
-                //listViewToDo.Adapter = adapter;
-
-                // Load the items from the Mobile Service
-                
-                
-                
-                // OnRefreshItemsSelected(); useless since not logged in yet
             }
-            //catch (Java.Net.MalformedURLException)
-            //{
-            //    CreateAndShowDialog(new Exception("There was an error creating the Mobile Service. Verify the URL"), "Error");
-            //}
             catch (Exception e)
             {
                 CreateAndShowDialog(e, "Error");
-            }
-
-            //database = new SQLiteConnection (DatabasePath);
-
-            //// create the tables
-            //database.CreateTable<TodoItem>();
-
-            // Create the Mobile Service Client instance, using the provided
-            // Mobile Service URL and key
-            
+            }            
 	    }
 
         public void getContacts()
@@ -249,59 +190,6 @@ namespace Cheesesquare
             }
         }
 
-        public async Task getTables()
-        {
-            //var test = client.GetTable("Item");
-            //var test_output = test.ToString();
-            //var test2 = client.GetTable<Item>();
-            //var items_sync = await test2.ToListAsync();
-
-            //var test3 = client.GetTable<User>();
-            //var users_sync = await test3.ToListAsync();
-
-            //itemTable = client.GetSyncTable<Item>();
-            //var userTable3 = client.GetSyncTable("User");
-            //var users_sync_weak = await userTable3.ReadAsync("$top=5");
-            //var userTable2 = client.GetSyncTable<User>();
-            //await userTable2.PullAsync(null, userTable.CreateQuery());
-            //var users_new_sync = await userTable2.ToListAsync();
-            //userGroupMembershipTable = client.GetSyncTable<UserGroupMembership>();
-            //groupTable = client.GetSyncTable<Group>();
-            //groupGroupMembershipTable = client.GetSyncTable<GroupGroupMembership>();
-
-            //await userTable.PullAsync(null, userTable.Where(u => u.MicrosoftID != "MicrosoftAccount:f410857f6effabd4b6a47afc0ba2ef71"));
-            //var items = await itemTable.ToListAsync();
-            //var users = await userTable.ToListAsync();
-            //var ugms = await userGroupMembershipTable.ToListAsync();
-            //var groups = await groupTable.ToListAsync();
-            //var ggms = await groupGroupMembershipTable.ToListAsync();
-
-            var u1 = client.GetSyncTable<User>();
-            var u2 = client.GetSyncTable<User>();
-            var u3 = client.GetSyncTable<User>();
-            var u4 = client.GetSyncTable<User>();
-            var u5 = client.GetSyncTable<User>();
-
-            var u1_ = await u1.ToListAsync();
-            var u2_ = await u2.ToListAsync();
-            var u3_ = await u3.ToListAsync();
-            var u4_ = await u4.ToListAsync();
-            var u5_ = await u5.ToListAsync();
-
-            await u1.PullAsync(null, u1.CreateQuery());
-            await u2.PullAsync(null, u2.Where(u => u.ID != "test"));
-            //u3.pul
-            //await u3.PullAsync<User>(null, u3.CreateQuery());
-            //await u4.PullAsync<User>(null, u4.Where(u => u.ID != "test"));
-            await u5.PullAsync("u5", u5.CreateQuery());
-
-            var u1__ = await u1.ToListAsync();
-            var u2__ = await u2.ToListAsync();
-            var u3__ = await u3.ToListAsync();
-            var u4__ = await u4.ToListAsync();
-            var u5__ = await u5.ToListAsync();
-        }
-
         public async Task InitLocalStoreAsync()
         {
             // new code to initialize the SQLite store
@@ -325,16 +213,7 @@ namespace Cheesesquare
             await client.SyncContext.InitializeAsync(store);
         }
 
-        //private async Task SyncAsync()
-        //{
-        //    await client.SyncContext.PushAsync();
-        //    // All items should be synced since other clients might mark an item as complete
-        //    // The first parameter is a query ID that uniquely identifies the query.
-        //    // This is used in incremental sync to get only newer items the next time PullAsync is called
-        //    await toDoTable.PullAsync("allTodoItems", toDoTable.CreateQuery()); // query ID is used for incremental sync
-        //}
-
-        private async Task SyncAsync()
+        public async Task SyncAsync()
         {
             String errorString = null;
 
@@ -348,18 +227,6 @@ namespace Cheesesquare
                 await groupTable.PullAsync("Groups", groupTable.CreateQuery()); // first param is query ID, used for incremental sync
                 await groupGroupMembershipTable.PullAsync("GroupGroupMemberships", groupGroupMembershipTable.CreateQuery()); // first param is query ID, used for incremental sync
                 await itemTable.PullAsync("Items", itemTable.CreateQuery());// first param is query ID, used for incremental sync
-
-                //itemTable.PullAsync("Items", itemTable.CreateQuery());
-                //userTable.PullAsync("Users", userTable.CreateQuery());
-                //userGroupMembershipTable.PullAsync("UserGroupMemberships", userGroupMembershipTable.CreateQuery()); // first param is query ID, used for incremental sync
-                //groupTable.PullAsync("Groups", groupTable.CreateQuery()); // first param is query ID, used for incremental sync
-                //groupGroupMembershipTable.PullAsync("GroupGroupMemberships", groupGroupMembershipTable.CreateQuery()); // first param is query ID, used for incremental sync
-
-                //await itemTable.PullAsync("Items", itemTable.CreateQuery()); // first param is query ID, used for incremental sync
-                //await userTable.PullAsync("Users", itemTable.CreateQuery()); // first param is query ID, used for incremental sync
-                //await userGroupMembershipTable.PullAsync("UserGroupMemberships", itemTable.CreateQuery()); // first param is query ID, used for incremental sync
-                //await groupTable.PullAsync("Groups", itemTable.CreateQuery()); // first param is query ID, used for incremental sync
-                //await groupGroupMembershipTable.PullAsync("GroupGroupMemberships", itemTable.CreateQuery()); // first param is query ID, used for incremental sync
             }
 
             catch (MobileServicePushFailedException ex)
@@ -381,34 +248,12 @@ namespace Cheesesquare
             }
         }
 
-        // Called when the refresh menu option is selected
-        public async Task OnRefreshItemsSelected()
-        {
-            await SyncAsync(); // get changes from the mobile service
-            await RefreshItemsFromTableAsync(); // refresh view using local database
-        }
+        //// Called when the refresh menu option is selected
+        //public async Task OnRefreshItemsSelected()
+        //{
+        //    await SyncAsync(); // get changes from the mobile service
+        //}
 
-        //Refresh the list with the items in the local database
-        private async Task RefreshItemsFromTableAsync()
-        {
-            try
-            {
-                // Get the items that weren't marked as completed and add them in the adapter
-                var list = await itemTable.Where(item => item.Status != 7).ToListAsync();
-
-
-
-                //adapter.Clear();
-
-                //foreach (ToDoItem current in list)
-                //    adapter.Add(current);
-
-            }
-            catch (Exception e)
-            {
-                CreateAndShowDialog(e, "Error");
-            }
-        }
 
         public async Task CheckItem(Item item)
         {
@@ -479,7 +324,7 @@ namespace Cheesesquare
         public async Task createDomains(string OwnedByID)
         {
             if (defGroup == null)
-                defGroup = await getDefaultGroup(userID);
+                defGroup = await getDefaultGroup();
 
             Item personal = new Item { Name = "Personal", Type = 1, OwnedBy = OwnedByID, CreatedBy = defGroup.ID};
             Item friends = new Item { Name = "Friends & Family", Type = 1, OwnedBy = OwnedByID, CreatedBy = defGroup.ID };
@@ -508,7 +353,7 @@ namespace Cheesesquare
         //    builder.Create().Show();
         //}
 
-        public async Task<Group> getDefaultGroup(string userID)
+        public async Task<Group> getDefaultGroup()
         {
             var defGroupMembershipList = await userGroupMembershipTable.Where(ugm => ugm.ID == userID).ToListAsync();
             UserGroupMembership defUserGroupMembership = defGroupMembershipList.FirstOrDefault();
@@ -553,7 +398,7 @@ namespace Cheesesquare
                 List<Group> groups = await groupTable.ToListAsync();
 
                 if (defGroup == null)
-                    defGroup = await getDefaultGroup(userID);
+                    defGroup = await getDefaultGroup();
 
                 var queue = new Queue<Group>();
                 queue.Enqueue(defGroup);
@@ -708,57 +553,14 @@ namespace Cheesesquare
             return items;
         }
 
-        //public async Task<IEnumerable<TodoItem>> GetItems()
-        //{
-        //    //lock (locker)
-        //    //{
-        //    //    return (from i in database.Table<TodoItem>() select i).ToList();
-        //    //}
-        //    IEnumerable<TodoItem> items = null;
-
-        //    try
-        //    {
-        //        // Get the items that weren't marked as completed and add them in the adapter
-        //        //await SyncAsync(); // offline sync
-        //        items = await toDoTable.ToListAsync();
-
-
-
-        //        //adapter.Clear();
-
-        //        //foreach (ToDoItem current in list)
-        //        //    adapter.Add(current);
-
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        CreateAndShowDialog(e, "Error");
-        //    }
-        //    return items;
-        //}
-
-
         public async Task<IEnumerable<Item>> GetItemsNotDone()
         {
-            //lock (locker)
-            //{
-            //    return database.Query<TodoItem>("SELECT * FROM [TodoItem] WHERE [Done] = 0");
-            //}
-
             IEnumerable<Item> list = null;
             try
             {
                 // Get the items that weren't marked as completed and add them in the adapter
                 //await SyncAsync(); // offline sync
                 list = await itemTable.Where(item => item.Status != 7).ToListAsync();
-
-
-
-                //adapter.Clear();
-
-                //foreach (ToDoItem current in list)
-                //    adapter.Add(current);
-
             }
             catch (Exception e)
             {
@@ -789,24 +591,6 @@ namespace Cheesesquare
                 Debug.WriteLine(@"ERROR {0}", e.Message);
             }
             return null;
-
-            //try
-            //{
-            //    // Get the items that weren't marked as completed and add them in the adapter
-            //    var list = await toDoTable.Where(item => item.Id == id).FirstOrDefaultAsync();
-
-
-
-            //    //adapter.Clear();
-
-            //    //foreach (ToDoItem current in list)
-            //    //    adapter.Add(current);
-
-            //}
-            //catch (Exception e)
-            //{
-            //    CreateAndShowDialog(e, "Error");
-            //}
         }
 
         public async Task<User> existingUser(User user)
@@ -942,8 +726,9 @@ namespace Cheesesquare
                     else if (existing_user.Count == 1)
                     {
                         string ID = existing_user.FirstOrDefault<User>().ID;
-                        Debug.WriteLine("user exists, exactly one ID found: " + ID);
+                        Debug.WriteLine("user exists, ID found: " + ID);
                         userID = ID;
+                        defGroup = await getDefaultGroup();
                     }
                     else
                     {
@@ -951,34 +736,9 @@ namespace Cheesesquare
                         Debugger.Break();
                     }
 
-
-                    //Debug.WriteLine(
-                    //userGroupMembershipTable.Where(ugm => ugm.ID == microsofID).ToListAsync().Result
-                    //);
-
-                    //await userGroupMembershipTable.LookupAsync
-
-                    //var tmp = await groupTable.ToListAsync();
-
-
-
-                    //await MobileService.GetSyncTable<User>().InsertAsync(user);
-
                     await SyncAsync(); // offline sync
                     //adapter.Clear();
                 }
-                    
-
-
-                //var json = (Newtonsoft.Json.Linq.JObject) await client.InvokeApiAsync("userInfo", HttpMethod.Get, null);
-
-
-
-                //var jsonString = json.ToString();
-                //var results = JsonConvert.DeserializeObject<dynamic>(jsonString);
-                //email = results.emails.account;
-                //userName = results.name;
-
 
             }
             catch (Exception e)
@@ -1096,7 +856,7 @@ namespace Cheesesquare
                 else
                 {
                     if (defGroup == null)
-                        defGroup = await getDefaultGroup(userID);
+                        defGroup = await getDefaultGroup();
 
                     item.CreatedBy = defGroup.ID;
                     await itemTable.InsertAsync(item);

@@ -85,7 +85,7 @@ namespace Cheesesquare
                 {
                     case SHARE_CONTACT:
                         var members = intent.GetStringExtra("members");
-                        Intent myIntent = new Intent(this, typeof(SelectContactsActivity));
+                        Intent myIntent = new Intent();
                         myIntent.PutExtra("members", members);
                         myIntent.PutExtra("groupname", GroupName.Text);
                         SetResult(Result.Ok, myIntent);

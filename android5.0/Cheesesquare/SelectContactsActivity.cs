@@ -263,7 +263,7 @@ namespace Cheesesquare
             }
             else
             {
-                Intent myIntent = new Intent(this, typeof(EditItemActivity));
+                Intent myIntent = new Intent();
                 myIntent.PutExtra("member", JsonConvert.SerializeObject(contact));
                 SetResult(Result.Ok, myIntent);
                 Finish();
@@ -289,7 +289,7 @@ Intent intent)
                         var members = intent.GetStringExtra("members");
                         var groupName = intent.GetStringExtra("groupname");
 
-                        Intent myIntent = new Intent(this, typeof(EditItemActivity));
+                        Intent myIntent = new Intent();
                         myIntent.PutExtra("members", members);
                         myIntent.PutExtra("groupname", groupName);
                         SetResult(Result.Ok, myIntent);

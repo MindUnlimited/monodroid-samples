@@ -34,9 +34,6 @@ namespace Cheesesquare
         {
             base.OnCreate(bundle);
 
-            SetContentView(Resource.Layout.activity_login);
-
-
             var providerIntent = Intent.GetStringExtra("provider");
 
             if (providerIntent != null)
@@ -46,18 +43,22 @@ namespace Cheesesquare
                 {
                     await Authenticate(provider);
 
-                    Intent resultIntent = new Intent(this, typeof(MainActivity));
+                    Intent resultIntent = new Intent();
                     SetResult(Result.Ok, resultIntent);
                     Finish();
                 }
             }
+            else
+            {
+                SetContentView(Resource.Layout.activity_login);
 
-            facebookButton = FindViewById<Button>(Resource.Id.facebook_button);
-            facebookButton.Click += FacebookButton_Click;
-            googleButton = FindViewById<Button>(Resource.Id.google_button);
-            googleButton.Click += GoogleButton_Click;
-            microsoftButton = FindViewById<Button>(Resource.Id.microsoft_button);
-            microsoftButton.Click += MicrosoftButton_Click;
+                facebookButton = FindViewById<Button>(Resource.Id.facebook_button);
+                facebookButton.Click += FacebookButton_Click;
+                googleButton = FindViewById<Button>(Resource.Id.google_button);
+                googleButton.Click += GoogleButton_Click;
+                microsoftButton = FindViewById<Button>(Resource.Id.microsoft_button);
+                microsoftButton.Click += MicrosoftButton_Click;
+            }
         }
 
         public async Task Authenticate(MobileServiceAuthenticationProvider provider)
@@ -198,9 +199,9 @@ namespace Cheesesquare
 
                 await PublicFields.Database.InitLocalStoreAsync();
                 await PublicFields.Database.newUser(PublicFields.Database.mobileServiceUser.UserId, provider);
-                await PublicFields.Database.OnRefreshItemsSelected(); // pull database tables
+                await PublicFields.Database.SyncAsync(); // pull database tables
 
-                await PublicFields.Database.getContactsThatUseApp();
+                //await PublicFields.Database.getContactsThatUseApp();
 
                 message = string.Format("You are now logged in - {0}", user.UserId);
                 //Debug.WriteLine(message);
@@ -214,7 +215,7 @@ namespace Cheesesquare
         {
             Log.Debug("LoginActivity", "Microsoft");
             await Authenticate(MobileServiceAuthenticationProvider.MicrosoftAccount);
-            Intent resultIntent = new Intent(this, typeof(MainActivity));
+            Intent resultIntent = new Intent();
             SetResult(Result.Ok, resultIntent);
             Finish();
         }
@@ -223,7 +224,7 @@ namespace Cheesesquare
         {
             Log.Debug("LoginActivity", "Google");
             await Authenticate(MobileServiceAuthenticationProvider.Google);
-            Intent resultIntent = new Intent(this, typeof(MainActivity));
+            Intent resultIntent = new Intent();
             SetResult(Result.Ok, resultIntent);
             Finish();
         }
@@ -232,7 +233,7 @@ namespace Cheesesquare
         {
             Log.Debug("LoginActivity", "Facebook");
             await Authenticate(MobileServiceAuthenticationProvider.Facebook);
-            Intent resultIntent = new Intent(this, typeof(MainActivity));
+            Intent resultIntent = new Intent();
             SetResult(Result.Ok, resultIntent);
             Finish();
         }

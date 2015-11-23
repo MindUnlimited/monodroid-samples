@@ -18,7 +18,7 @@ namespace Cheesesquare
 {
     public class CheeseListFragment : Android.Support.V4.App.Fragment
     {
-        //private Todo.Item domain;
+        public Todo.Item domain;
         private List<Todo.Item> childItems;
         public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
         private const int ITEMDETAIL = 103;
@@ -28,9 +28,10 @@ namespace Cheesesquare
         //    this.domain = domain;
         //}
 
-        public CheeseListFragment(List<Todo.Item> items)
+        public CheeseListFragment(Todo.Item dom)
         {
-            childItems = items;
+            domain = dom;
+            childItems = dom.SubItems;
         }
 
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -83,17 +84,19 @@ namespace Cheesesquare
             public class ViewHolder : RecyclerView.ViewHolder
             {
                 public View View { get; set; }
+
                 public TextView TextView { get; set; }
                 public ImageView ImageView { get; set; }
+
                 public TextView Importance { get; set; }
                 public TextView DueDate { get; set; }
+
                 public TextView AmountOfSubTasks { get; set; }
                 public LinearLayout SubTasksLinearLayout { get; set; }
                 public TextView MoreThanFiveSubtasks { get; set; }
                 public TextView NoSubTasks { get; set; }
 
-
-                //public List<Todo.Item> SubItems { get; set; }
+                public ImageButton Delete { get; set; }
 
 
                 public ViewHolder(View view) : base(view)
@@ -107,6 +110,7 @@ namespace Cheesesquare
                     SubTasksLinearLayout = view.FindViewById<LinearLayout>(Resource.Id.subtasks_llayout);
                     MoreThanFiveSubtasks = view.FindViewById<TextView>(Resource.Id.more_than_five_subtasks_text);
                     NoSubTasks = view.FindViewById<TextView>(Resource.Id.no_subtasks_text);
+                    Delete = view.FindViewById<ImageButton>(Resource.Id.deleteButton);
                 }
 
                 public override string ToString()
@@ -138,6 +142,12 @@ namespace Cheesesquare
                 NotifyDataSetChanged();
             }
 
+            public void addItem(Todo.Item item)
+            {
+                items.Add(item);
+            }
+
+
             public ItemRecyclerViewAdapter(Android.App.Activity context, List<Todo.Item> items, CheeseListFragment fragm)
             {
                 parent = context;
@@ -161,6 +171,23 @@ namespace Cheesesquare
                 Log.Debug("CheeseListFragment", "checkbox clicked");
             }
 
+            public async void RecursiveDelete(Todo.Item item)
+            {
+                if (item == null)
+                    return;
+
+                foreach (var it in item.SubItems)
+                {
+                    RecursiveDelete(it);
+                }
+
+                // remove memory
+                PublicFields.allItems.Remove(item);
+
+                // remove from db
+                await PublicFields.Database.DeleteItem(item);
+            }
+
             public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
             {
                 var h = holder as ViewHolder;
@@ -173,6 +200,25 @@ namespace Cheesesquare
                     intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
                     parent.StartActivityForResult(intent, ITEMDETAIL);
                     //context.StartActivity(intent);
+                };
+
+                h.Delete.Click += (sender, e) =>
+                {
+                    new Android.Support.V7.App.AlertDialog.Builder(parent)
+                        .SetMessage("Delete this item?")
+                        .SetCancelable(false)
+                        .SetPositiveButton("Yes", delegate
+                        {
+                            var item = items[position];
+                            RecursiveDelete(item);
+
+                            Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", h.TextView.Text));
+                        })
+                       .SetNegativeButton("No", delegate
+                       {
+                           Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", h.TextView.Text));
+                       })
+                       .Show();
                 };
 
 

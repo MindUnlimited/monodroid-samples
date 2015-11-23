@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginLeft="@dimen/card_margin"
     android:layout_marginRight="@dimen/card_margin"
-    android:layout_marginTop="@dimen/card_margin"
+    android:layout_marginBottom="@dimen/card_margin"
     card_view:cardElevation="3dp"
     card_view:cardUseCompatPadding="true"
     card_view:cardCornerRadius="4dp"
@@ -104,6 +104,7 @@
             <ImageView
                 android:layout_width="80dp"
                 android:layout_height="80dp"
+                android:layout_marginLeft="16dp"
                 android:id="@+id/imageView"
                 android:scaleType="fitXY" />
         </LinearLayout>

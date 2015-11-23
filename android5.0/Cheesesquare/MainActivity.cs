@@ -39,8 +39,13 @@ namespace Cheesesquare
         DrawerLayout drawerLayout;
         ViewPager viewPager;
         TabLayout tabLayout;
+        NavigationView navigationView;
+
         private const int LOGIN = 102;
         private const int ITEMDETAIL = 103;
+        private const int EDIT_ITEM = 104;
+
+        private CheeseListFragment currentDomainFragment;
 
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -59,7 +64,7 @@ namespace Cheesesquare
 
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
 
-            var navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
+            navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
             if (navigationView != null)
                 setupDrawerContent(navigationView);
 
@@ -72,7 +77,11 @@ namespace Cheesesquare
                 //        Console.WriteLine ("Action handler");
                 //    })).Show ();
                 var intent = new Intent(this, typeof(EditItemActivity));
-                StartActivity(intent);
+                intent.PutExtra("newItem", true);
+                intent.PutExtra("newItem", true);
+                intent.PutExtra("parentItemID", currentDomainFragment.domain.ID);
+
+                StartActivityForResult(intent, EDIT_ITEM);
             };
 
             viewPager = FindViewById<Android.Support.V4.View.ViewPager>(Resource.Id.viewpager);
@@ -143,13 +152,25 @@ namespace Cheesesquare
             //await Todo.App.selectedDomainPage.Refresh();
 
             //RequestedOrientation = ScreenOrientation.Portrait;
-
-
-
-
         }
 
-        protected override void OnActivityResult(int requestCode, Result resultCode,
+        public override void OnBackPressed()
+        {
+            new Android.Support.V7.App.AlertDialog.Builder(this)
+                .SetMessage("Are you sure you want to exit?")
+                .SetCancelable(false)
+                .SetPositiveButton("Yes", delegate
+                {
+                    Finish();
+                })
+               .SetNegativeButton("No", delegate
+               {
+                   return;
+               })
+               .Show();
+        }
+
+protected override void OnActivityResult(int requestCode, Result resultCode,
         Intent intent)
         {
             base.OnActivityResult(requestCode, resultCode, intent);
@@ -164,6 +185,8 @@ namespace Cheesesquare
 
                         tabLayout.SetupWithViewPager(viewPager);
 
+                        var username = navigationView.FindViewById<TextView>(Resource.Id.username_nav);
+                        username.Text = PublicFields.Database.userName;
                         break;
                     case
                         ITEMDETAIL:
@@ -184,6 +207,11 @@ namespace Cheesesquare
                             
                         break;
 
+                    case EDIT_ITEM:
+                        var itemID = intent.GetStringExtra("itemID");
+                        currentDomainFragment.itemRecyclerViewAdapter.addItem(PublicFields.allItems.Find(it => it.ID == itemID));
+                        currentDomainFragment.itemRecyclerViewAdapter.ApplyChanges();
+                        break;
                     default:
                         break;
                 }
@@ -232,9 +260,19 @@ namespace Cheesesquare
 
             foreach (Todo.Item domain in PublicFields.domains)
             {
-                adapter.AddFragment(new CheeseListFragment(domain.SubItems), domain.Name);
+                adapter.AddFragment(new CheeseListFragment(domain), domain.Name);
             }
             viewPager.Adapter = adapter;
+            currentDomainFragment = ((CheeseListFragment)((MyAdapter)viewPager.Adapter).GetItem(viewPager.CurrentItem));
+
+
+            viewPager.PageSelected += ViewPager_PageSelected;
+        }
+
+        private void ViewPager_PageSelected(object sender, ViewPager.PageSelectedEventArgs e)
+        {
+            var vp = (ViewPager) sender;
+            currentDomainFragment = ((CheeseListFragment)((MyAdapter)vp.Adapter).GetItem(vp.CurrentItem));
         }
 
         void setupDrawerContent(NavigationView navigationView) 

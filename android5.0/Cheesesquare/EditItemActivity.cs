@@ -19,12 +19,16 @@ using Newtonsoft.Json;
 
 namespace Cheesesquare
 {
-    [Activity(Label = "EditItemActivity")]
+    [Activity(Label = "New Item")]
     public class EditItemActivity : AppCompatActivity
     {
         private Android.Support.V7.Widget.Toolbar toolbar;
 
         private Todo.Item item;
+        private Todo.Item parentItem;
+
+        private bool newItem;
+
 
         //public const string EXTRA_NAME = "cheese_name";
         private const int ASSIGN_CONTACT = 100;
@@ -50,6 +54,13 @@ namespace Cheesesquare
             base.OnCreate(bundle);
 
             var itemID = Intent.GetStringExtra("itemID");
+            newItem = Intent.GetBooleanExtra("newItem", false);
+
+            if (itemID != null && itemID != "")
+                item = PublicFields.allItems.Find(it => it.ID == itemID);
+
+            string parentItemID = Intent.GetStringExtra("parentItemID");
+            parentItem = PublicFields.allItems.Find(it => it.ID == parentItemID);
 
             // Create your application here
             SetContentView(Resource.Layout.activity_edit_item);
@@ -57,6 +68,7 @@ namespace Cheesesquare
             Window.SetSoftInputMode(SoftInput.StateHidden);
 
             itemName = FindViewById<EditText>(Resource.Id.item_name);
+            itemName.AfterTextChanged += ItemName_AfterTextChanged;
             itemImportance = FindViewById<RatingBar>(Resource.Id.item_ratingbar);
 
             subTaskList = new List<string>();
@@ -64,8 +76,7 @@ namespace Cheesesquare
             selectedContacts = new List<Contact>();
 
             toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar_edit);
-            if (item != null)
-                toolbar.Title = item.Name;
+                
             toolbar.SetNavigationIcon(Resource.Drawable.ic_clear_white_24dp);
 
             SetSupportActionBar(toolbar);
@@ -128,7 +139,15 @@ namespace Cheesesquare
                 itemName.Text = item.Name;
                 txtDate.Text = item.EndDate;
                 itemImportance.Rating = item.Importance;
+                toolbar.Title = item.Name;
+
+                subTaskArrayAdapter.AddAll(item.SubItems);
             }
+        }
+
+        private void ItemName_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
+        {
+            toolbar.Title = itemName.Text;
         }
 
         private void ShareEditText_Click(object sender, EventArgs e)
@@ -260,15 +279,49 @@ namespace Cheesesquare
                     Finish();
                     return true;
                 case Resource.Id.edit_done:
-                    item.Name = itemName.Text;
-                    item.Importance = (int) itemImportance.Rating;
-
-                    int index = PublicFields.allItems.FindIndex(it => it.ID == item.ID);
-                    PublicFields.allItems[index] = item;
-
                     Intent returnIntent = new Intent();
-                    returnIntent.PutExtra("edited", true);// .PutExtraBoolean(true);// ("passed_item", itemYouJustCreated);
+
+                    if (newItem)
+                    {
+                        item = new Todo.Item();
+                        item.Name = itemName.Text;
+                        item.Importance = (int)itemImportance.Rating;
+                        item.Parent = parentItem.ID;
+                        item.OwnedBy = PublicFields.Database.defGroup.ID;
+
+                        if (parentItem.Type < 4)
+                            item.Type = parentItem.Type + 1;
+                        else // type does not go lower than 4 (task)
+                            item.Type = 4;
+
+                        // add to db
+                        PublicFields.Database.SaveItem(item);
+
+                        // add to local memory
+                        PublicFields.allItems.Add(item);
+
+                        // add to subtasks field of parent item
+                        var parentIndex = PublicFields.allItems.FindIndex(it => it.ID == item.Parent);
+                        var parentUpdated = PublicFields.allItems.Find(it => it.ID == item.Parent);
+                        parentUpdated.SubItems.Add(item);
+                        PublicFields.allItems[parentIndex] = parentUpdated;
+                    }
+                    else
+                    {
+                        item.Name = itemName.Text;
+                        item.Importance = (int)itemImportance.Rating;
+
+                        returnIntent.PutExtra("edited", true);
+                        PublicFields.Database.SaveItem(item);
+
+                        int index = PublicFields.allItems.FindIndex(it => it.ID == item.ID);
+                        PublicFields.allItems[index] = item;
+                    }
+                    
+                    returnIntent.PutExtra("itemID", item.ID);
+
                     SetResult(Result.Ok, returnIntent);
+
                     Finish();
                     return true;
             }

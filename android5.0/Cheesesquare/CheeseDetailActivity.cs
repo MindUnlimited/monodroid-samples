@@ -46,6 +46,7 @@ namespace Cheesesquare
         private CollapsingToolbarLayout collapsingToolbar;
         private DrawerLayout drawerLayout;
         private ViewPager viewPager;
+
         private Todo.Item item;
         private bool itemChanged;
 
@@ -55,9 +56,6 @@ namespace Cheesesquare
             SetContentView(Resource.Layout.activity_detail);
 
             itemChanged = false;
-
-            if (Parent == null)
-                Log.Debug("CheeseDetailAcitivity", "Parent not found");
 
             itemID = Intent.GetStringExtra(ITEM_ID);
             item = PublicFields.allItems.Find(it => it.ID == itemID);
@@ -70,6 +68,9 @@ namespace Cheesesquare
             var navigationView = drawerLayout.FindViewById<NavigationView>(Resource.Id.nav_view_detail);
             if (navigationView != null)
                 setupDrawerContent(navigationView);
+
+            var username = navigationView.FindViewById<TextView>(Resource.Id.username_nav);
+            username.Text = PublicFields.Database.userName;
 
             SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
@@ -146,7 +147,7 @@ namespace Cheesesquare
         {
             var adapter = new MyAdapter(SupportFragmentManager);
 
-            adapter.AddFragment(new CheeseListFragment(item.SubItems), item.Name);
+            adapter.AddFragment(new CheeseListFragment(item), item.Name);
             viewPager.Adapter = adapter;
         }
 
@@ -179,19 +180,29 @@ Intent intent)
                         break;
                     case
                         EDIT_ITEM:
-                        var itemJSON = intent.GetBooleanExtra("edited", false);
-                        if (itemJSON)
+                        var edited = intent.GetBooleanExtra("edited", false);
+                        string itemID = intent.GetStringExtra("itemID");
+                        if (edited) // the detail item
                         {
                             itemChanged = true;
-                            item = PublicFields.allItems.Find(it => it.ID == item.ID);
-                            //Refresh?
-                            //ViewGroup drawerLayout = FindViewById<ViewGroup>(Resource.Id.main_content);
-                            //drawerLayout.Invalidate();
+                            item = PublicFields.allItems.Find(it => it.ID == itemID);
 
-                            //Finish();
-                            //var updateIntent = new Intent();
-                            //updateIntent.PutExtra(itemID, item.ID);
-                            //StartActivity(updateIntent);
+                            // refresh values
+                            collapsingToolbar.SetTitle(item.Name);
+                            importance.Rating = item.Importance;
+                        }
+
+                        else // new subitem
+                        {
+                            itemChanged = true;
+
+                            int index = viewPager.CurrentItem;
+                            var adapter = (MyAdapter)viewPager.Adapter;
+                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                            fragmentAdapter.addItem(PublicFields.allItems.Find(it => it.ID == itemID));
+                            fragmentAdapter.ApplyChanges();
                         }
                         break;
                     default:
@@ -239,7 +250,9 @@ Intent intent)
         private void AddItemFAB_Click(object sender, EventArgs e)
         {
             var intent = new Intent(this, typeof(EditItemActivity));
-            StartActivity(intent);
+            intent.PutExtra("newItem", true);
+            intent.PutExtra("parentItemID", item.ID);
+            StartActivityForResult(intent, EDIT_ITEM);
         }
 
         private void EditFAB_Click(object sender, EventArgs e)
@@ -247,6 +260,7 @@ Intent intent)
             Log.Info(TAG, "edit fab clicked!");
             var intent = new Intent(this, typeof(EditItemActivity));
             intent.PutExtra("itemID", item.ID);
+            intent.PutExtra("parentItemID", item.Parent);
             StartActivityForResult(intent, EDIT_ITEM);
         }
 
