@@ -10,16 +10,20 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Java.Util;
+using Android.Text.Format;
+using Android.Net;
 
 namespace Cheesesquare
 {
     public class DateDialog : DialogFragment, DatePickerDialog.IOnDateSetListener
     {
         EditText txtDate;
+        Todo.Item Item;
 
-        public DateDialog(View view)
+        public DateDialog(View view, Todo.Item item)
         {
             txtDate = (EditText)view;
+            Item = item;
             //txtDate.ClearFocus();
         }
 
@@ -36,8 +40,39 @@ namespace Cheesesquare
         public void OnDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)
         {
             String date = dayOfMonth + "-" + (monthOfYear+1) + "-" + year;
-            txtDate.Text = date;
+            //txtDate.Text = date;
+            
+            Calendar calendar = Calendar.Instance;
+            calendar.Set(year, monthOfYear + 1, dayOfMonth, 0, 0, 0);
+            Item.EndDate = calendar.TimeInMillis.ToString(); // time in milliseconds
+
+            if (Item.EndDate != null && Item.EndDate != "")
+            {
+                //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
+                //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                try
+                {
+                    //Date mDate = sdf.Parse(item.EndDate);
+                    long timeInMilliseconds;
+                    long.TryParse(Item.EndDate, out timeInMilliseconds);
+                    if (timeInMilliseconds > 0)
+                        txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
+                }
+                catch (ParseException e)
+                {
+                    e.PrintStackTrace();
+                }
+            }
+            else
+            {
+                txtDate.Text = "No due date";
+            }
+
             txtDate.ClearFocus();
+
+            //(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth(),
+            //             timePicker.getCurrentHour(), timePicker.getCurrentMinute(), 0);
+            //long startTime = calendar.getTimeInMillis();
         }
     }
 }

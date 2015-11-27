@@ -211,6 +211,8 @@ namespace Cheesesquare
             // Uses the default conflict handler, which fails on conflict
             // To use a different conflict handler, pass a parameter to InitializeAsync. For more details, see http://go.microsoft.com/fwlink/?LinkId=521416
             await client.SyncContext.InitializeAsync(store);
+
+            await client.SyncContext.PushAsync();
         }
 
         public async Task SyncAsync()
@@ -502,15 +504,15 @@ namespace Cheesesquare
 
                 try
                 {
-                    var goals = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent == parent.ID).ToListAsync();
-                    IEnumerable<string> goal_ids = from goal in goals select goal.ID;
+                    var goals = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent == parent.id).ToListAsync();
+                    IEnumerable<string> goal_ids = from goal in goals select goal.id;
 
                     if (goals.Count > 0)
                     {
                         items.AddRange(goals);
 
                         var projects = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy) && goal_ids.Contains(it.Parent)).ToListAsync();
-                        IEnumerable<string> project_ids = from proj in projects select proj.ID;
+                        IEnumerable<string> project_ids = from proj in projects select proj.id;
 
                         if (projects.Count > 0)
                         {
@@ -831,19 +833,6 @@ namespace Cheesesquare
 
         public async Task SaveItem(Item item)
         {
-            //lock (locker)
-            //{
-            //    if (item.ID != 0)
-            //    {
-            //        database.Update(item);
-            //        return item.ID;
-            //    }
-            //    else
-            //    {
-            //        return database.Insert(item);
-            //    }
-            //}
-
             try
             {
                 await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
@@ -859,13 +848,14 @@ namespace Cheesesquare
                         defGroup = await getDefaultGroup();
 
                     item.CreatedBy = defGroup.ID;
+                    //var jObject = JObject.FromObject(item);
+                    //var retJObject = await itemTable.InsertAsync(jObject);// (item);
+                    //item = retJObject.ToObject<Item>();
                     await itemTable.InsertAsync(item);
                 }
-                
 
                 await client.SyncContext.PushAsync();
 
-                
                 //adapter.Clear();
 
                 //foreach (ToDoItem current in list)

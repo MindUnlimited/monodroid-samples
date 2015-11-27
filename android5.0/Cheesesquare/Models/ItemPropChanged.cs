@@ -20,7 +20,7 @@ namespace Todo
             }
         }
 
-        public string ID { get; set; }
+        public string id { get; set; }
 
         [JsonIgnore]
         private String _ownedby;

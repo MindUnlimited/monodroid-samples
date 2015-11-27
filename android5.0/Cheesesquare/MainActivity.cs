@@ -79,7 +79,7 @@ namespace Cheesesquare
                 var intent = new Intent(this, typeof(EditItemActivity));
                 intent.PutExtra("newItem", true);
                 intent.PutExtra("newItem", true);
-                intent.PutExtra("parentItemID", currentDomainFragment.domain.ID);
+                intent.PutExtra("parentItemID", currentDomainFragment.domain.id);
 
                 StartActivityForResult(intent, EDIT_ITEM);
             };
@@ -170,7 +170,7 @@ namespace Cheesesquare
                .Show();
         }
 
-protected override void OnActivityResult(int requestCode, Result resultCode,
+protected async override void OnActivityResult(int requestCode, Result resultCode,
         Intent intent)
         {
             base.OnActivityResult(requestCode, resultCode, intent);
@@ -199,7 +199,7 @@ protected override void OnActivityResult(int requestCode, Result resultCode,
                             var currentFragment = (CheeseListFragment) adapter.GetItem(index);
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            var item = PublicFields.allItems.Find(it => it.ID == ItemID);
+                            var item = PublicFields.allItems.Find(it => it.id == ItemID);
 
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
@@ -207,9 +207,29 @@ protected override void OnActivityResult(int requestCode, Result resultCode,
                             
                         break;
 
-                    case EDIT_ITEM:
+                    case EDIT_ITEM:// new item
                         var itemID = intent.GetStringExtra("itemID");
-                        currentDomainFragment.itemRecyclerViewAdapter.addItem(PublicFields.allItems.Find(it => it.ID == itemID));
+
+                        if (itemID == "temporaryID")
+                        {
+                            var newItem = PublicFields.allItems.Find(it => it.id == itemID);
+                            var indexSubItem = PublicFields.allItems.FindIndex(it => it.id == newItem.id);
+                            newItem.id = null;
+
+                            await PublicFields.Database.SaveItem(newItem);
+                            for (int i = 0; i < newItem.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            {
+                                var it = newItem.SubItems[i];
+                                it.Parent = newItem.id; // change the parent id to the new one
+                                if (string.IsNullOrEmpty(it.id))
+                                    await PublicFields.Database.SaveItem(it);
+                                newItem.SubItems[i] = it; // store with newly acquired id
+                            }
+
+                            PublicFields.allItems[indexSubItem] = newItem;
+                        }
+
+                        currentDomainFragment.itemRecyclerViewAdapter.addItem(PublicFields.allItems.Find(it => it.id == itemID));
                         currentDomainFragment.itemRecyclerViewAdapter.ApplyChanges();
                         break;
                     default:
@@ -239,7 +259,7 @@ protected override void OnActivityResult(int requestCode, Result resultCode,
             IEnumerable<string> groups_ids = from grp in PublicFields.userGroups select grp.ID;
             foreach(Todo.Item item in items)
             {
-                var directSubItems = PublicFields.allItems.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.ID).ToList();
+                var directSubItems = PublicFields.allItems.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.id).ToList();
                 //var directSubItems = (from it in PublicFields.allItems where groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.ID select it).ToList<Todo.Item>();
                 item.SubItems = directSubItems;
 

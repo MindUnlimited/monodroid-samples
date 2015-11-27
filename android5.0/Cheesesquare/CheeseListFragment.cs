@@ -13,6 +13,8 @@ using Newtonsoft.Json;
 using System.Linq;
 using Android.Text.Format;
 using Android.App;
+using Java.Text;
+using Java.Util;
 
 namespace Cheesesquare
 {
@@ -22,11 +24,6 @@ namespace Cheesesquare
         private List<Todo.Item> childItems;
         public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
         private const int ITEMDETAIL = 103;
-
-        //public CheeseListFragment(Todo.Item domain)
-        //{
-        //    this.domain = domain;
-        //}
 
         public CheeseListFragment(Todo.Item dom)
         {
@@ -49,18 +46,8 @@ namespace Cheesesquare
 
         void setupRecyclerView(RecyclerView recyclerView)
         {
-            //if (this.childItems == null || this.childItems.Count == 0)
-            //{
-                recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
+            recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
 
-            //    childItems = (List<Todo.Item>)await PublicFields.Database.GetChildItems(domain);
-
-            //    foreach (Todo.Item it in childItems)
-            //    {
-            //        it.SubItems = (List<Todo.Item>)await PublicFields.Database.GetChildItems(it);
-            //        AddSubTasks(it.SubItems);
-            //    }
-            //}
             itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, childItems, this);
             recyclerView.SetAdapter(itemRecyclerViewAdapter);
         }
@@ -69,7 +56,7 @@ namespace Cheesesquare
         List<String> getRandomSublist(string[] array, int amount)
         {
             var list = new List<string>(amount);
-            var random = new Random();
+            var random = new System.Random();
             while (list.Count < amount)
                 list.Add(array[random.Next(array.Length)]);
             return list;
@@ -121,7 +108,7 @@ namespace Cheesesquare
 
             public void UpdateValue(Todo.Item item)
             {
-                int index = items.FindIndex(it => it.ID == item.ID);
+                int index = items.FindIndex(it => it.id == item.id);
                 if (index >= 0)
                     items[index] = item;
             }
@@ -183,6 +170,8 @@ namespace Cheesesquare
 
                 // remove memory
                 PublicFields.allItems.Remove(item);
+                // remove locally as well
+                items.Remove(item);
 
                 // remove from db
                 await PublicFields.Database.DeleteItem(item);
@@ -192,12 +181,14 @@ namespace Cheesesquare
             {
                 var h = holder as ViewHolder;
 
+                var item = items[position];
+
                 h.View.Click += (sender, e) =>
                 {
                     var context = h.View.Context;
                     var intent = new Intent(context, typeof(CheeseDetailActivity));
-                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, items[position].Name);
-                    intent.PutExtra(CheeseDetailActivity.ITEM_ID, items[position].ID);
+                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Name);
+                    intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.id);
                     parent.StartActivityForResult(intent, ITEMDETAIL);
                     //context.StartActivity(intent);
                 };
@@ -209,8 +200,9 @@ namespace Cheesesquare
                         .SetCancelable(false)
                         .SetPositiveButton("Yes", delegate
                         {
-                            var item = items[position];
                             RecursiveDelete(item);
+
+                            ApplyChanges();
 
                             Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", h.TextView.Text));
                         })
@@ -222,11 +214,36 @@ namespace Cheesesquare
                 };
 
 
-                long current_time_ms = Java.Lang.JavaSystem.CurrentTimeMillis();
-                DateTime time = System.DateTime.UtcNow.AddDays(5);
-                var long_time = time.ToFileTimeUtc();
-                h.DueDate.Text =
-                    DateUtils.GetRelativeTimeSpanString(Application.Context, current_time_ms + 1000 * 60 * 60 * 24 * 2);
+                //long current_time_ms = Java.Lang.JavaSystem.CurrentTimeMillis();
+                //DateTime time = System.DateTime.UtcNow.AddDays(5);
+                //var long_time = time.ToFileTimeUtc();
+
+
+                if (item.EndDate != null && item.EndDate != "")
+                {
+                    //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
+                    //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                    try
+                    {
+                        //Date mDate = sdf.Parse(item.EndDate);
+                        long timeInMilliseconds;
+                        long.TryParse(item.EndDate, out timeInMilliseconds);
+                        if (timeInMilliseconds > 0)
+                            h.DueDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
+                    }
+                    catch (ParseException e)
+                    {
+                        e.PrintStackTrace();
+                    }
+                }
+                else
+                {
+                    h.DueDate.Text = "No due date";
+                }
+
+
+
+                //DateUtils.GetRelativeTimeSpanString(Application.Context, current_time_ms + 1000 * 60 * 60 * 24 * 2);
 
                 //var importance = vh.View.FindViewById<TextView>(Resource.Id.importance_task);
                 //Log.Debug("tag", vh.AdapterPosition.ToString());
@@ -234,7 +251,7 @@ namespace Cheesesquare
 
                 int index = 1;
 
-                if (items[position].SubItems == null || items[position].SubItems.Count == 0)
+                if (item.SubItems == null || item.SubItems.Count == 0)
                 {
                     h.NoSubTasks.Visibility = ViewStates.Visible;
                     h.AmountOfSubTasks.Text = string.Format("{0} subtasks", 0);
@@ -245,7 +262,7 @@ namespace Cheesesquare
                     // that there are more than 5 tasks
                     while (h.SubTasksLinearLayout.ChildCount > 2) 
                         h.SubTasksLinearLayout.RemoveViewAt(1);
-                    foreach (Todo.Item subitem in items[position].SubItems)
+                    foreach (Todo.Item subitem in item.SubItems)
                     {
                         LinearLayout subtaskView = (LinearLayout)LayoutInflater.From(h.SubTasksLinearLayout.Context).Inflate(Resource.Layout.subtask_line, h.SubTasksLinearLayout, false);
                         var subtaskName = subtaskView.FindViewById<TextView>(Resource.Id.subtask_name);
@@ -256,7 +273,7 @@ namespace Cheesesquare
                             var context = h.View.Context;
                             var intent = new Intent(context, typeof(CheeseDetailActivity));
                             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
-                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.ID);
+                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.id);
 
                             parent.StartActivityForResult(intent, ITEMDETAIL);
                             //context.StartActivityForResult(intent);
@@ -276,11 +293,11 @@ namespace Cheesesquare
                             break;
                         }
                     }
-                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", items[position].SubItems.Count.ToString());
+                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", item.SubItems.Count.ToString());
                 }
 
-                h.TextView.Text = items[position].Name;
-                h.Importance.Text = string.Format("{0} stars", items[position].Importance) ?? "0 stars";
+                h.TextView.Text = item.Name;
+                h.Importance.Text = string.Format("{0} stars", item.Importance) ?? "0 stars";
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             }
 
