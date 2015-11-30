@@ -179,7 +179,7 @@ namespace Cheesesquare
         }
 
 
-        protected override void OnActivityResult(int requestCode, Result resultCode,
+        protected async override void OnActivityResult(int requestCode, Result resultCode,
 Intent intent)
         {
             base.OnActivityResult(requestCode, resultCode, intent);
@@ -214,16 +214,21 @@ Intent intent)
                         if (edited) // the detail item
                         {
                             itemChanged = true;
-                            item = PublicFields.allItems.Find(it => it.id == itemID);
+                            var itemAllItems = PublicFields.allItems.Find(it => it.id == itemID);
+                            var itemIndex = PublicFields.allItems.FindIndex(it => it.id == itemID);
 
-                            PublicFields.Database.SaveItem(item);
-                            for (int i = 0; i < item.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            await PublicFields.Database.SaveItem(itemAllItems);
+                            for (int i = 0; i < itemAllItems.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
-                                var it = item.SubItems[i];
+                                var it = itemAllItems.SubItems[i];
                                 if (string.IsNullOrEmpty(it.id))
-                                    PublicFields.Database.SaveItem(it);
-                                item.SubItems[i] = it; // store with newly acquired id
+                                    await PublicFields.Database.SaveItem(it);
+                                itemAllItems.SubItems[i] = it; // store with newly acquired id
                             }
+
+
+                            PublicFields.allItems[itemIndex] = itemAllItems;
+                            item = itemAllItems;
 
                             // refresh values
                             collapsingToolbar.SetTitle(item.Name);

@@ -137,6 +137,8 @@ namespace Cheesesquare
                         subItem.OwnedBy = item.OwnedBy;
 
                         subTaskArrayAdapter.Add(subItem);
+                        item.SubItems.Add(subItem);
+                        //subTaskList.Add(subItem);
 
                         subtaskText.Text = "";
                     }

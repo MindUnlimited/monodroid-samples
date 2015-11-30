@@ -200,6 +200,21 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
                             var item = PublicFields.allItems.Find(it => it.id == ItemID);
+                            var itemIndex = PublicFields.allItems.FindIndex(it => it.id == ItemID);
+
+                            //await PublicFields.Database.SaveItem(item);
+                            //for (int i = 0; i < item.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            //{
+                            //    var it = item.SubItems[i];
+                            //    it.Parent = item.id; // change the parent id to the new one
+                            //    if (string.IsNullOrEmpty(it.id))
+                            //        await PublicFields.Database.SaveItem(it);
+                            //    item.SubItems[i] = it; // store with newly acquired id
+                            //}
+
+
+                            //PublicFields.allItems[itemIndex] = item; 
+                            //changes happen on cheesedetail niveau not here
 
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
