@@ -24,6 +24,14 @@ namespace Cheesesquare
         private List<Todo.Item> childItems;
         public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
         private const int ITEMDETAIL = 103;
+        RecyclerView.AdapterDataObserver dataObserver;
+
+        public CheeseListFragment(Todo.Item dom, RecyclerView.AdapterDataObserver DataObserver)
+        {
+            domain = dom;
+            childItems = dom.SubItems;
+            dataObserver = DataObserver;
+        }
 
         public CheeseListFragment(Todo.Item dom)
         {
@@ -50,6 +58,8 @@ namespace Cheesesquare
 
             itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, childItems, this);
             recyclerView.SetAdapter(itemRecyclerViewAdapter);
+            if (dataObserver != null)
+                itemRecyclerViewAdapter.RegisterAdapterDataObserver(dataObserver);
         }
 
 
@@ -67,6 +77,18 @@ namespace Cheesesquare
             private List<Todo.Item> items;
             private Android.App.Activity parent;
             private CheeseListFragment fragment;
+
+            //Create an Event so that our our clients can act when a user clicks
+            //on each individual item.
+            public event EventHandler<int> ItemClick;
+
+            ////Create an Event so that our our clients can act when a user clicks
+            ////on each individual item.
+            //public event EventHandler<int> SubTaskClick;
+
+            //Create an Event so that our our clients can act when a user clicks
+            //on each individual item.
+            public event EventHandler<int> DeleteClick;
 
             public class ViewHolder : RecyclerView.ViewHolder
             {
@@ -86,7 +108,7 @@ namespace Cheesesquare
                 public ImageButton Delete { get; set; }
 
 
-                public ViewHolder(View view) : base(view)
+                public ViewHolder(View view, Action<int> itemClickListener, Action<int> deleteClickListener) : base(view)
                 {
                     View = view;
                     TextView = view.FindViewById<TextView>(Resource.Id.task_title);
@@ -98,6 +120,14 @@ namespace Cheesesquare
                     MoreThanFiveSubtasks = view.FindViewById<TextView>(Resource.Id.more_than_five_subtasks_text);
                     NoSubTasks = view.FindViewById<TextView>(Resource.Id.no_subtasks_text);
                     Delete = view.FindViewById<ImageButton>(Resource.Id.deleteButton);
+
+                    view.Click += (sender, e) => itemClickListener(base.LayoutPosition);
+                    Delete.Click += (sender, e) => deleteClickListener(base.LayoutPosition);
+
+                    //for(int i = 1; i < SubTasksLinearLayout.ChildCount-1; i++) // skip the first and the last child
+                    //{
+                    //    SubTasksLinearLayout.GetChildAt(i).Click += (sender, e) => subTaskClickListener(base.LayoutPosition);
+                    //}
                 }
 
                 public override string ToString()
@@ -134,6 +164,36 @@ namespace Cheesesquare
                 items.Add(item);
             }
 
+            //This will fire any event handlers that are registered with our ItemClick
+            //event.
+            private void OnClick(int position)
+            {
+                if (ItemClick != null)
+                {
+                    ItemClick(this, position);
+                }
+            }
+
+            ////This will fire any event handlers that are registered with our DeleteItemClick
+            ////event.
+            //private void OnSubTaskClick(int position)
+            //{
+            //    if (SubTaskClick != null)
+            //    {
+            //        SubTaskClick(this, position);
+            //    }
+            //}
+
+            //This will fire any event handlers that are registered with our DeleteItemClick
+            //event.
+            private void OnDeleteClick(int position)
+            {
+                if (DeleteClick != null)
+                {
+                    DeleteClick(this, position);
+                }
+            }
+
 
             public ItemRecyclerViewAdapter(Android.App.Activity context, List<Todo.Item> items, CheeseListFragment fragm)
             {
@@ -141,6 +201,58 @@ namespace Cheesesquare
                 fragment = fragm;
 
                 this.items = items ?? new List<Todo.Item>();
+                this.ItemClick += OnItemClick;
+                //this.SubTaskClick += OnSubTaskClick;
+                this.DeleteClick += OnDeleteClick;
+            }
+
+            //private void OnSubTaskClick(object sender, int e)
+            //{
+            //    var adapter = sender as ItemRecyclerViewAdapter;
+            //    var item = adapter.GetValueAt(e);
+
+            //    var context = fragment.Context;//h.View.Context;
+            //    var intent = new Intent(context, typeof(CheeseDetailActivity));
+            //    //intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.na);
+            //    //intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.id);
+
+            //    //parent.StartActivityForResult(intent, ITEMDETAIL);
+            //}
+
+            private void OnDeleteClick(object sender, int e)
+            {
+                var adapter = sender as ItemRecyclerViewAdapter;
+                var item = adapter.GetValueAt(e);
+
+                new Android.Support.V7.App.AlertDialog.Builder(parent)
+                .SetMessage("Delete this item?")
+                .SetCancelable(false)
+                .SetPositiveButton("Yes", delegate
+                {
+                    RecursiveDelete(item);
+
+                    ApplyChanges();
+
+                    Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Name));
+                })
+               .SetNegativeButton("No", delegate
+               {
+                   Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", item.Name));
+               })
+               .Show();
+            }
+
+            private void OnItemClick(object sender, int e)
+            {
+                var adapter = sender as ItemRecyclerViewAdapter;
+                var item = adapter.GetValueAt(e);
+
+                var context = fragment.Context;//h.View.Context;
+                var intent = new Intent(context, typeof(CheeseDetailActivity));
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Name);
+                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.id);
+                parent.StartActivityForResult(intent, ITEMDETAIL);
+                //context.StartActivity(intent);
             }
 
             public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
@@ -149,7 +261,7 @@ namespace Cheesesquare
                 var view = LayoutInflater.From(parent.Context)
                     .Inflate(Resource.Layout.item_card_view, parent, false);
 
-                var vh = new ViewHolder(view);
+                var vh = new ViewHolder(view, OnClick, OnDeleteClick);
                 return vh;
             }
 
@@ -183,35 +295,35 @@ namespace Cheesesquare
 
                 var item = items[position];
 
-                h.View.Click += (sender, e) =>
-                {
-                    var context = h.View.Context;
-                    var intent = new Intent(context, typeof(CheeseDetailActivity));
-                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Name);
-                    intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.id);
-                    parent.StartActivityForResult(intent, ITEMDETAIL);
-                    //context.StartActivity(intent);
-                };
+                //h.View.Click += (sender, e) =>
+                //{
+                //    var context = h.View.Context;
+                //    var intent = new Intent(context, typeof(CheeseDetailActivity));
+                //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Name);
+                //    intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.id);
+                //    parent.StartActivityForResult(intent, ITEMDETAIL);
+                //    //context.StartActivity(intent);
+                //};
 
-                h.Delete.Click += (sender, e) =>
-                {
-                    new Android.Support.V7.App.AlertDialog.Builder(parent)
-                        .SetMessage("Delete this item?")
-                        .SetCancelable(false)
-                        .SetPositiveButton("Yes", delegate
-                        {
-                            RecursiveDelete(item);
+                //h.Delete.Click += (sender, e) =>
+                //{
+                //    new Android.Support.V7.App.AlertDialog.Builder(parent)
+                //        .SetMessage("Delete this item?")
+                //        .SetCancelable(false)
+                //        .SetPositiveButton("Yes", delegate
+                //        {
+                //            RecursiveDelete(item);
 
-                            ApplyChanges();
+                //            ApplyChanges();
 
-                            Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", h.TextView.Text));
-                        })
-                       .SetNegativeButton("No", delegate
-                       {
-                           Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", h.TextView.Text));
-                       })
-                       .Show();
-                };
+                //            Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", h.TextView.Text));
+                //        })
+                //       .SetNegativeButton("No", delegate
+                //       {
+                //           Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", h.TextView.Text));
+                //       })
+                //       .Show();
+                //};
 
 
                 //long current_time_ms = Java.Lang.JavaSystem.CurrentTimeMillis();
@@ -270,6 +382,7 @@ namespace Cheesesquare
 
                         subtaskName.Click += (sender, e) =>
                         {
+                            Log.Debug("ListFragment", subtaskName.Text + " was clicked");
                             var context = h.View.Context;
                             var intent = new Intent(context, typeof(CheeseDetailActivity));
                             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);

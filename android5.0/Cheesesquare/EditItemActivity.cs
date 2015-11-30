@@ -23,7 +23,7 @@ namespace Cheesesquare
 {
     //public class SubTaskArrayAdapter : ArrayAdapter<>
 
-    [Activity(Label = "New Item")]
+    [Activity]
     public class EditItemActivity : AppCompatActivity
     {
         private Android.Support.V7.Widget.Toolbar toolbar;
@@ -105,6 +105,7 @@ namespace Cheesesquare
             commentText = FindViewById<EditText>(Resource.Id.insert_comment_text);
             if (item != null && item.Notes != null)
                 commentText.Text = item.Notes;
+            commentText.AfterTextChanged += CommentText_AfterTextChanged;
 
             shareListView = FindViewById<ListView>(Resource.Id.user_to_share_listview);
             //shareArrayAdapter = new ArrayAdapter<String>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, shareList);
@@ -131,19 +132,33 @@ namespace Cheesesquare
                 {
                     if (subtaskText.Text != "")
                     {
+                        subtaskText.Text.Trim('\n');
+
                         var subItem = new Todo.Item();
                         subItem.Name = subtaskText.Text;
                         subItem.Parent = item.id;
                         subItem.OwnedBy = item.OwnedBy;
 
-                        subTaskArrayAdapter.Add(subItem);
-                        item.SubItems.Add(subItem);
-                        //subTaskList.Add(subItem);
+                        if (item.Type < 4)
+                            subItem.Type = item.Type + 1;
+                        else
+                            subItem.Type = 4;
 
+                        subTaskArrayAdapter.Add(subItem);
+
+                        if (item.SubItems == null)
+                            item.SubItems = new List<Todo.Item>();
+
+                        item.SubItems.Add(subItem);
+                        subTaskList.Add(subItem);
+
+                        subtaskText.Text.Trim('\n');
                         subtaskText.Text = "";
+                        e.Handled = true;
                     }
                     else // an immediate enter does nothing
                     {
+                        subtaskText.Text = "";
                         e.Handled = true;
                     }
                 }
@@ -151,11 +166,12 @@ namespace Cheesesquare
 
             if (itemID != null)
             {
-                item = PublicFields.allItems.Find(it => it.id == itemID);
+                //item = PublicFields.allItems.Find(it => it.id == itemID);
 
                 itemName.Text = item.Name;
                 itemImportance.Rating = item.Importance;
                 toolbar.Title = item.Name;
+                commentText.Text = item.Notes;
 
                 if (item.EndDate != null && item.EndDate != "")
                 {
@@ -191,11 +207,17 @@ namespace Cheesesquare
                     item.Type = parentItem.Type + 1;
                 else // type does not go lower than 4 (task)
                     item.Type = 4;
+
+                toolbar.Title = "New item";
             }
 
             
         }
 
+        private void CommentText_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
+        {
+            item.Notes = commentText.Text;
+        }
 
         private void ItemImportance_RatingBarChange(object sender, RatingBar.RatingBarChangeEventArgs e)
         {
@@ -350,8 +372,8 @@ namespace Cheesesquare
 
 
 
-                            item.SubItems = subTaskList;
-                            item.Notes = commentText.Text;
+                            //item.SubItems = subTaskList;
+                            //item.Notes = commentText.Text;
 
                             // add to db and update item locally
                             //PublicFields.Database.SaveItem(item);
@@ -376,8 +398,8 @@ namespace Cheesesquare
 
                             returnIntent.PutExtra("edited", true);
 
-                            item.SubItems = subTaskList;
-                            item.Notes = commentText.Text;
+                            //item.SubItems = subTaskList;
+                            //item.Notes = commentText.Text;
 
                             // add to db and update item locally
                             //PublicFields.Database.SaveItem(item);

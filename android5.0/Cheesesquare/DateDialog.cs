@@ -39,11 +39,11 @@ namespace Cheesesquare
 
         public void OnDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)
         {
-            String date = dayOfMonth + "-" + (monthOfYear+1) + "-" + year;
+            //String date = dayOfMonth + "-" + (monthOfYear+1) + "-" + year;
             //txtDate.Text = date;
             
             Calendar calendar = Calendar.Instance;
-            calendar.Set(year, monthOfYear + 1, dayOfMonth, 0, 0, 0);
+            calendar.Set(year, monthOfYear, dayOfMonth, 0, 0, 0);
             Item.EndDate = calendar.TimeInMillis.ToString(); // time in milliseconds
 
             if (Item.EndDate != null && Item.EndDate != "")

@@ -18,6 +18,7 @@ using Xamarin.Contacts;
 using System.Collections.ObjectModel;
 using Android.App;
 using Todo;
+using Android.Util;
 
 namespace Cheesesquare
 {
@@ -212,7 +213,28 @@ namespace Cheesesquare
             // To use a different conflict handler, pass a parameter to InitializeAsync. For more details, see http://go.microsoft.com/fwlink/?LinkId=521416
             await client.SyncContext.InitializeAsync(store);
 
-            await client.SyncContext.PushAsync();
+            String errorString = null;
+            try
+            {
+                await client.SyncContext.PushAsync();
+            }
+            catch (MobileServicePushFailedException ex)
+            {
+                errorString = "Push failed because of sync errors: " +
+                  ex.PushResult.Errors.Count + " errors, message: " + ex.Message + '\t' + ex.PushResult.Status;
+            }
+            catch (Exception ex)
+            {
+                errorString = "Pull failed: " + ex.Message +
+                  "\n\nIf you are still in an offline scenario, " +
+                  "you can try your Pull again when connected with your Mobile Serice.";
+            }
+
+            if (errorString != null)
+            {
+                Log.Debug("DataBase", errorString);
+            }
+            
         }
 
         public async Task SyncAsync()

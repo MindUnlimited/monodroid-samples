@@ -22,6 +22,44 @@ using Android.Net;
 
 namespace Cheesesquare
 {
+    public class DataObserver : RecyclerView.AdapterDataObserver
+    {
+        private CheeseDetailActivity detailActivity;
+
+        public DataObserver(CheeseDetailActivity activity) : base()
+        {
+            detailActivity = activity;
+        }
+
+        public override void OnChanged()
+        {
+            base.OnChanged();
+            detailActivity.itemChanged = true;
+            //CheckAdapterIsEmpty();
+        }
+        //public override void OnItemRangeChanged(int positionStart, int itemCount)
+        //{
+
+        //}
+
+        //public override void OnItemRangeChanged(int positionStart, int itemCount, Java.Lang.Object payload)
+        //{
+
+        //}
+        //public override void OnItemRangeInserted(int positionStart, int itemCount)
+        //{
+
+        //}
+        //public override void OnItemRangeMoved(int fromPosition, int toPosition, int itemCount)
+        //{
+
+        //}
+        //public override void OnItemRangeRemoved(int positionStart, int itemCount)
+        //{
+
+        //}
+    }
+
     [Activity (Label="Details")]
     [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.cheesesquare.MainActivity")]
     public class CheeseDetailActivity : AppCompatActivity
@@ -52,13 +90,16 @@ namespace Cheesesquare
         private ViewPager viewPager;
 
         private Todo.Item item;
-        private bool itemChanged;
+        public bool itemChanged;
 
-        protected override void OnCreate (Bundle savedInstanceState) 
+        private RecyclerView.AdapterDataObserver dataObserver;// = new DataObserver();
+
+    protected override void OnCreate (Bundle savedInstanceState) 
         {
             base.OnCreate (savedInstanceState);
             SetContentView(Resource.Layout.activity_detail);
 
+            dataObserver = new DataObserver(this);
             itemChanged = false;
 
             itemID = Intent.GetStringExtra(ITEM_ID);
@@ -174,7 +215,7 @@ namespace Cheesesquare
         {
             var adapter = new MyAdapter(SupportFragmentManager);
 
-            adapter.AddFragment(new CheeseListFragment(item), item.Name);
+            adapter.AddFragment(new CheeseListFragment(item, dataObserver), item.Name);
             viewPager.Adapter = adapter;
         }
 
@@ -224,6 +265,13 @@ Intent intent)
                                 if (string.IsNullOrEmpty(it.id))
                                     await PublicFields.Database.SaveItem(it);
                                 itemAllItems.SubItems[i] = it; // store with newly acquired id
+                                if (PublicFields.allItems.Exists(item => item.id == it.id))
+                                {
+                                    var subItemIndex = PublicFields.allItems.FindIndex(item => item.id == it.id);
+                                    PublicFields.allItems[subItemIndex] = it;
+                                }
+                                else
+                                    PublicFields.allItems.Add(it);
                             }
 
 
@@ -265,14 +313,22 @@ Intent intent)
                             var indexSubItem = PublicFields.allItems.FindIndex(it => it.id == subItem.id);
                             subItem.id = null;
 
-                            PublicFields.Database.SaveItem(subItem);
+                            await PublicFields.Database.SaveItem(subItem);
                             for(int i = 0; i< subItem.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
                                 var it = subItem.SubItems[i];
                                 it.Parent = subItem.id; // change the parent id to the new one
                                 if(string.IsNullOrEmpty(it.id))
-                                    PublicFields.Database.SaveItem(it);
+                                    await PublicFields.Database.SaveItem(it);
                                 subItem.SubItems[i] = it; // store with newly acquired id
+
+                                if (PublicFields.allItems.Exists(item => item.id == it.id))
+                                {
+                                    var subItemIndex = PublicFields.allItems.FindIndex(item => item.id == it.id);
+                                    PublicFields.allItems[subItemIndex] = it;
+                                }
+                                else
+                                    PublicFields.allItems.Add(it);
                             }
 
                             PublicFields.allItems[indexSubItem] = subItem;

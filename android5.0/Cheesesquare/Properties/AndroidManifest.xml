@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="com.sample.cheesesquare" android:installLocation="auto">
-	<uses-sdk android:targetSdkVersion="21" android:minSdkVersion="19" />
+	<uses-sdk android:targetSdkVersion="22" android:minSdkVersion="19" />
 	<application android:label="Cheesesquare" android:theme="@style/Theme.DesignDemo" android:icon="@drawable/icon"></application>
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.READ_CONTACTS" />

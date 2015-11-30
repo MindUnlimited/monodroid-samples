@@ -21,6 +21,7 @@ using Microsoft.WindowsAzure.MobileServices;
 using Android.Preferences;
 using Newtonsoft.Json;
 using System.Linq;
+using Android.Support.V7.Widget;
 
 namespace Cheesesquare
 {
@@ -46,6 +47,7 @@ namespace Cheesesquare
         private const int EDIT_ITEM = 104;
 
         private CheeseListFragment currentDomainFragment;
+        //private RecyclerView.AdapterDataObserver dataObserver;
 
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -53,6 +55,7 @@ namespace Cheesesquare
             base.OnCreate(savedInstanceState);
 
             PublicFields.Database = new Database();
+            //dataObserver = new DataObserver();
 
             SetContentView(Resource.Layout.activity_main);
 
@@ -218,6 +221,8 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
+
+
                         }
                             
                         break;
@@ -232,16 +237,19 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                             newItem.id = null;
 
                             await PublicFields.Database.SaveItem(newItem);
+                            itemID = newItem.id;
+
                             for (int i = 0; i < newItem.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
                                 var it = newItem.SubItems[i];
-                                it.Parent = newItem.id; // change the parent id to the new one
+                                it.Parent = itemID; // change the parent id to the new one
                                 if (string.IsNullOrEmpty(it.id))
                                     await PublicFields.Database.SaveItem(it);
                                 newItem.SubItems[i] = it; // store with newly acquired id
                             }
 
                             PublicFields.allItems[indexSubItem] = newItem;
+
                         }
 
                         currentDomainFragment.itemRecyclerViewAdapter.addItem(PublicFields.allItems.Find(it => it.id == itemID));
