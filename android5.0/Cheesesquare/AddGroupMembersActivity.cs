@@ -23,15 +23,15 @@ namespace Cheesesquare
 
 
 
-    public class AutocompleteCustomArrayAdapter : ArrayAdapter<Contact> {
+    public class AutocompleteCustomArrayAdapter : ArrayAdapter<Todo.User> {
 
         const string TAG = "AutocompleteCustomArrayAdapter.java";
 
         Context mContext;
         int layoutResourceId;
-        public List<Contact> data;
+        public List<Todo.User> data;
 
-        public AutocompleteCustomArrayAdapter(Context mContext, int layoutResourceId, List<Contact> data) : base(mContext, layoutResourceId, data)
+        public AutocompleteCustomArrayAdapter(Context mContext, int layoutResourceId, List<Todo.User> data) : base(mContext, layoutResourceId, data)
         {
             this.layoutResourceId = layoutResourceId;
             this.mContext = mContext;
@@ -58,15 +58,15 @@ namespace Cheesesquare
 
                 // object item based on the position
 
-                Contact objectItem = GetItem(position);// data[position];
+                Todo.User objectItem = GetItem(position);// data[position];
 
 
                 // get the TextView and then set the text (item name) and tag (item ID) values
                 TextView textViewItem = (TextView)convertView.FindViewById(Resource.Id.ContactName);
-                textViewItem.Text = objectItem.DisplayName;
+                textViewItem.Text = objectItem.Name;
 
                 ImageView imageViewitem = (ImageView)convertView.FindViewById(Resource.Id.ContactImage);
-                var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, objectItem.PhotoThumb);
+                var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, objectItem.Thumbnail);
                 roundedThumbBitmap.Circular = true;
                 imageViewitem.SetImageDrawable(roundedThumbBitmap);               
             }
@@ -92,8 +92,8 @@ namespace Cheesesquare
         private AutoCompleteTextView MembersTxtField;
         private ListView membersLV;
         private string GroupName;
-        private List<Contact> contacts;
-        private List<Contact> selectedContacts;
+        private List<Todo.User> contacts;
+        private List<Todo.User> selectedContacts;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -101,12 +101,12 @@ namespace Cheesesquare
 
             GroupName = Intent.GetStringExtra("GroupName") ?? "Group Name not available";
             var contactsJson = Intent.GetStringExtra("contacts");
-            contacts = JsonConvert.DeserializeObject<List<Contact>>(contactsJson);
+            contacts = JsonConvert.DeserializeObject<List<Todo.User>>(contactsJson);
             contacts.RemoveAt(0); // remove Group
             contacts = CircleBitmap.addPhotoThumbs(contacts); // add all the photo thumbnails to the contacts
 
 
-            selectedContacts = new List<Contact>();
+            selectedContacts = new List<Todo.User>();
 
             this.Title = GroupName;
 
@@ -118,7 +118,7 @@ namespace Cheesesquare
 
             MembersTxtField = FindViewById<AutoCompleteTextView>(Resource.Id.group_members_txt);
             //MembersTxtField.Adapter = new AutocompleteCustomArrayAdapter(this, Resource.Layout.contact_list_item, contacts);
-            ArrayAdapter<Contact> adapter = new AutocompleteCustomArrayAdapter(this, Resource.Layout.contact_list_item, contacts);
+            ArrayAdapter<Todo.User> adapter = new AutocompleteCustomArrayAdapter(this, Resource.Layout.contact_list_item, contacts);
             MembersTxtField.Adapter = adapter;
 
             MembersTxtField.ItemClick += MembersTxtField_ItemClick;
@@ -131,10 +131,10 @@ namespace Cheesesquare
             SupportActionBar.SetHomeButtonEnabled(true);
         }
 
-        public static Contact Cast(Java.Lang.Object obj)
+        public static Todo.User Cast(Java.Lang.Object obj)
         {
             var propertyInfo = obj.GetType().GetProperty("Instance");
-            return propertyInfo == null ? null : propertyInfo.GetValue(obj, null) as Contact;
+            return propertyInfo == null ? null : propertyInfo.GetValue(obj, null) as Todo.User;
         }
 
         private void MembersTxtField_ItemClick(object sender, AdapterView.ItemClickEventArgs e)
@@ -157,10 +157,14 @@ namespace Cheesesquare
                 case Android.Resource.Id.Home:
                     Finish();
                     return true;
-                case Resource.Id.def_group_done:
+                case Resource.Id.def_group_done: // contacts selected
 
                     if (selectedContacts != null && selectedContacts.Count > 0)
                     {
+                        var currentUser = PublicFields.Database.defUser;
+                        if (currentUser != null && !selectedContacts.Contains(currentUser))
+                            selectedContacts.Insert(0, currentUser);// place current user at top
+
                         Intent myIntent = new Intent();
                         var members = JsonConvert.SerializeObject(selectedContacts);
                         myIntent.PutExtra("members", members);

@@ -279,7 +279,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
         public void AddSubTasks(List<Todo.Item> items)
         {
-            IEnumerable<string> groups_ids = from grp in PublicFields.userGroups select grp.ID;
+            IEnumerable<string> groups_ids = from grp in PublicFields.Database.userGroups select grp.ID;
             foreach(Todo.Item item in items)
             {
                 var directSubItems = PublicFields.allItems.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.id).ToList();
@@ -294,7 +294,8 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
         async void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
         {
             PublicFields.allItems = (List<Todo.Item>) await PublicFields.Database.GetItems();
-            PublicFields.userGroups = await PublicFields.Database.getGroups();           
+            if (PublicFields.Database.userGroups == null)
+                PublicFields.Database.userGroups = await PublicFields.Database.getGroups();           
             AddSubTasks(PublicFields.allItems); // links subtasks to the items
 
             PublicFields.domains = PublicFields.allItems.Where(it => it.Type == 1).ToList();

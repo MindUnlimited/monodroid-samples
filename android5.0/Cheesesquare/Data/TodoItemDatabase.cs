@@ -27,11 +27,14 @@ namespace Cheesesquare
         //Mobile Service Client reference
         public MobileServiceClient client;
         public MobileServiceUser mobileServiceUser = null;
+
         public string userName { get; set; }
         public string email { get; set; }
         public string userID { get; set; }
         public Group defGroup { get; set; }
+        public User defUser { get; set; }
         public List<User> contacts { get; set; }
+        public List<Group> userGroups { get; set; }
 
         //Mobile Service sync table used to access data
         //private IMobileServiceSyncTable<TodoItem> toDoTable;
@@ -377,9 +380,14 @@ namespace Cheesesquare
         //    builder.Create().Show();
         //}
 
-        public async Task<Group> getDefaultGroup()
+        public async Task<Group> getDefaultGroup(User user = null)
         {
-            var defGroupMembershipList = await userGroupMembershipTable.Where(ugm => ugm.ID == userID).ToListAsync();
+            List<UserGroupMembership> defGroupMembershipList;
+            if (user == null)
+                defGroupMembershipList = await userGroupMembershipTable.Where(ugm => ugm.ID == userID).ToListAsync();
+            else
+                defGroupMembershipList = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID).ToListAsync();
+
             UserGroupMembership defUserGroupMembership = defGroupMembershipList.FirstOrDefault();
 
             if (defUserGroupMembership != null)
@@ -400,8 +408,10 @@ namespace Cheesesquare
                 return null;
             else
             {
-                var groups = await getGroups();
-                foreach (Group group in groups)
+                if (userGroups == null)
+                    userGroups = await getGroups();
+
+                foreach (Group group in userGroups)
                 {
                     if (group.Name == groupName)
                         return group;
@@ -461,14 +471,101 @@ namespace Cheesesquare
             }
         }
 
+        public async Task<User> GetUser(string email)
+        {
+            var user = await userTable.Where(usr => usr.Email == email).ToListAsync();
+            var test = await userTable.ToListAsync();
+            return user.FirstOrDefault();            
+        }
+
+        public async Task<Group> SaveGroup(List<User> users, String name)
+        {
+            Group newGroup = new Group { Name = name };
+            await groupTable.InsertAsync(newGroup);
+
+            List<Todo.User> newUsers = new List<User>();
+            for (int i = 0; i < users.Count; i++)
+            {
+                // if the user already exists then replace it with the one in the db
+                var userDB = await GetUser(users[i].Email);
+                if (userDB != null)
+                    newUsers.Insert(i, userDB);
+                else // add the user to the db with a temporary connection between the contacts email and a newly created user, the rest will be filled in when the contact starts using the app
+                // TODO: send an email to notify the contact to use the app
+                {
+                    var newUser = users[i]; // should have a name and email
+                    if (!string.IsNullOrEmpty(newUser.Name) && !string.IsNullOrEmpty(newUser.Email))
+                    {
+                        // insert new user
+                        await userTable.InsertAsync(newUser);
+                        //await client.SyncContext.PushAsync();
+
+                        Group group = new Group
+                        {
+                            Name = newUser.Name
+                        };
+
+                        // add default group voor user
+                        await groupTable.InsertAsync(group);
+                        //await client.SyncContext.PushAsync();
+
+                        UserGroupMembership ugm = new UserGroupMembership
+                        {
+                            ID = newUser.ID,
+                            MembershipID = group.ID
+                        };
+
+                        await userGroupMembershipTable.InsertAsync(ugm);
+                        //await client.SyncContext.PushAsync();
+
+                        await createDomains(group.ID);
+
+                        newUsers.Insert(i, newUser);
+                    }
+
+                    await client.SyncContext.PushAsync();
+                }
+            }
+
+            foreach( User usr in newUsers)
+            {
+                Group usrDefGroup = await getDefaultGroup(usr);
+                if(!string.IsNullOrEmpty(usrDefGroup.ID) && !string.IsNullOrEmpty(newGroup.ID))
+                {
+                    var ggm = new GroupGroupMembership { MemberID = usrDefGroup.ID, MembershipID = newGroup.ID };
+                    await groupGroupMembershipTable.InsertAsync(ggm);
+                }
+            }
+
+            await client.SyncContext.PushAsync();
+
+            return newGroup;
+        }
+
+        public async Task SaveGroup(List<Group> groupItems, String name)
+        {
+            Group newGroup = new Group { Name = name };
+            await groupTable.InsertAsync(newGroup);
+
+            foreach (Group grp in groupItems)
+            {
+                var ggm = new GroupGroupMembership { MemberID = grp.ID, MembershipID = newGroup.ID };
+                await groupGroupMembershipTable.InsertAsync(ggm);
+            }
+
+            await client.SyncContext.PushAsync();
+        }
+
         public async Task<IEnumerable<Item>> GetDomains()
         {
             IEnumerable<Item> _domains = null;
             List<Item> sortedDomains = new List<Item>();
             if (userID != null)
             {
-                List<Group> groups = await getGroups();
-                IEnumerable<string> groups_ids = from grp in groups select grp.ID;
+                if (userGroups == null)
+                    userGroups = await getGroups();
+
+                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
 
                 try
                 {
@@ -521,8 +618,10 @@ namespace Cheesesquare
             List<Item> items = new List<Item>();
             if (userID != null)
             {
-                List<Group> groups = await getGroups();
-                IEnumerable<string> groups_ids = from grp in groups select grp.ID;
+                if (userGroups == null)
+                    userGroups = await getGroups();
+
+                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
 
                 try
                 {
@@ -559,10 +658,13 @@ namespace Cheesesquare
         public async Task<IEnumerable<Item>> GetItems()
         {
             IEnumerable<Item> items = null;
+
             if (userID != null)
             {
-                List<Group> groups = await getGroups();
-                IEnumerable<string> groups_ids = from grp in groups select grp.ID;
+                if (userGroups == null)
+                    userGroups = await getGroups();
+
+                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
 
                 try
                 {
@@ -575,23 +677,6 @@ namespace Cheesesquare
             }
 
             return items;
-        }
-
-        public async Task<IEnumerable<Item>> GetItemsNotDone()
-        {
-            IEnumerable<Item> list = null;
-            try
-            {
-                // Get the items that weren't marked as completed and add them in the adapter
-                //await SyncAsync(); // offline sync
-                list = await itemTable.Where(item => item.Status != 7).ToListAsync();
-            }
-            catch (Exception e)
-            {
-                CreateAndShowDialog(e, "Error");
-            }
-
-            return list;
         }
 
         public async Task<Item> GetItem(string id)
@@ -746,13 +831,51 @@ namespace Cheesesquare
                         await client.SyncContext.PushAsync();
 
                         await createDomains(defGroup.ID);
+
+                        defUser = user;
                     }
                     else if (existing_user.Count == 1)
                     {
-                        string ID = existing_user.FirstOrDefault<User>().ID;
-                        Debug.WriteLine("user exists, ID found: " + ID);
-                        userID = ID;
+                        var user = existing_user.FirstOrDefault<User>();
+
+                        if(string.IsNullOrEmpty(user.Email))
+                        {
+                            user.Email = email;
+
+                            await userTable.UpdateAsync(user);
+                            await client.SyncContext.PushAsync();
+                        }
+                        
+                        // if first time logging in with account we already made for sharing then store the provider that the user uses
+                        if (string.IsNullOrEmpty(user.FacebookID) && string.IsNullOrEmpty(user.MicrosoftID) && string.IsNullOrEmpty(user.GoogleID))
+                        {
+                            switch (provider)
+                            {
+                                case MobileServiceAuthenticationProvider.Facebook:
+                                    user.FacebookID = providerID;
+                                    break;
+                                case MobileServiceAuthenticationProvider.Google:
+                                    user.GoogleID = providerID;
+                                    break;
+                                case MobileServiceAuthenticationProvider.MicrosoftAccount:
+                                    user.MicrosoftID = providerID;
+                                    break;
+                                case MobileServiceAuthenticationProvider.Twitter:
+                                    break;
+                                case MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory:
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            await userTable.UpdateAsync(user);
+                            await client.SyncContext.PushAsync();
+                        }
+
+                        Debug.WriteLine("user exists, ID found: " + user.ID);
+                        userID = user.ID;
                         defGroup = await getDefaultGroup();
+                        defUser = user;
                     }
                     else
                     {
@@ -859,8 +982,8 @@ namespace Cheesesquare
             {
                 await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
 
-                // if version is not null then the item already exists, so update is needed instead of insert
-                if (item.Version != null)
+                // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
+                if (item.id != null)
                 {
                     await itemTable.UpdateAsync(item);
                 }

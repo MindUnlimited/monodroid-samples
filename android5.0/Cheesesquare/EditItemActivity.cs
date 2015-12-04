@@ -51,12 +51,15 @@ namespace Cheesesquare
         private AutocompleteCustomArrayAdapter shareArrayAdapter;
         private List<Todo.Item> subTaskList;
         //private List<String> shareList;
-        private List<Contact> selectedContacts;
-        private Contact selectedContact;
+        private List<Todo.User> selectedContacts;
+        private Todo.User selectedContact;
+        private bool groupChanged;
 
         protected override void OnCreate(Bundle bundle)
         {
             base.OnCreate(bundle);
+
+            groupChanged = false;
 
             var itemID = Intent.GetStringExtra("itemID");
             newItem = Intent.GetBooleanExtra("newItem", false);
@@ -79,7 +82,7 @@ namespace Cheesesquare
 
             subTaskList = new List<Todo.Item>();
             //shareList = new List<string>();
-            selectedContacts = new List<Contact>();
+            selectedContacts = new List<Todo.User>();
 
             toolbar = FindViewById<Android.Support.V7.Widget.Toolbar>(Resource.Id.toolbar_edit);
                 
@@ -268,16 +271,16 @@ namespace Cheesesquare
                         if (intent.GetStringExtra("member") != null)
                         {
                             var member = intent.GetStringExtra("member");
-                            selectedContact = JsonConvert.DeserializeObject<Contact>(member);
+                            selectedContact = JsonConvert.DeserializeObject<Todo.User>(member);
                             selectedContact = CircleBitmap.addPhotoThumbs(selectedContact); // add the photo thumbnails to the contact
 
-                            Log.Debug("EditItemActivity", "back to edit item activity! " + selectedContact.DisplayName);
+                            Log.Debug("EditItemActivity", "back to edit item activity! " + selectedContact.Name);
 
-                            var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, selectedContact.PhotoThumb);
+                            var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, selectedContact.Thumbnail);
                             roundedThumbBitmap.Circular = true;
                             assignedThumb.SetImageDrawable(roundedThumbBitmap);
 
-                            assignedTo.Text = selectedContact.DisplayName;
+                            assignedTo.Text = selectedContact.Name;
                         }
                         break;
                     case SHARE_CONTACT:
@@ -291,7 +294,7 @@ namespace Cheesesquare
                         if (intent.GetStringExtra("members") != null)
                         {
                             var members = intent.GetStringExtra("members");
-                            selectedContacts = JsonConvert.DeserializeObject<List<Contact>>(members);
+                            selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(members);
                             selectedContacts = CircleBitmap.addPhotoThumbs(selectedContacts); // add all the photo thumbnails to the contacts
 
                             var groupName = intent.GetStringExtra("groupname");
@@ -301,21 +304,23 @@ namespace Cheesesquare
                             shareArrayAdapter.AddAll(selectedContacts);
                             shareArrayAdapter.NotifyDataSetChanged();
                             shareEditText.Text = groupName;
+
+                            groupChanged = true;
                         }
                         else if (intent.GetStringExtra("member") != null)
                         {
                             var member = intent.GetStringExtra("member");
-                            selectedContact = JsonConvert.DeserializeObject<Contact>(member);
+                            selectedContact = JsonConvert.DeserializeObject<Todo.User>(member);
                             selectedContact = CircleBitmap.addPhotoThumbs(selectedContact); // add the photo thumbnails to the contact
 
-                            Log.Debug("EditItemActivity", "back to edit item activity! " + selectedContact.DisplayName);
+                            Log.Debug("EditItemActivity", "back to edit item activity! " + selectedContact.Name);
 
                             shareArrayAdapter.Clear();
                             selectedContacts.Clear();
                             selectedContacts.Add(selectedContact);
                             //shareArrayAdapter.Add(selectedContact); // don't add anything to the listview
                             shareArrayAdapter.NotifyDataSetChanged();
-                            shareEditText.Text = selectedContact.DisplayName;
+                            shareEditText.Text = selectedContact.Name;
                         }
                         else
                         {
@@ -363,6 +368,13 @@ namespace Cheesesquare
                     else
                     {
                         Intent returnIntent = new Intent();
+
+                        if (selectedContacts != null && selectedContacts.Count > 0)
+                        {
+                            returnIntent.PutExtra("groupChanged", groupChanged);
+                            returnIntent.PutExtra("selectedContacts", JsonConvert.SerializeObject(selectedContacts));
+                            returnIntent.PutExtra("groupName", shareEditText.Text);
+                        }
 
                         if (newItem)
                         {

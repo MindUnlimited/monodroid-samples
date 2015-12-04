@@ -30,38 +30,41 @@ namespace Cheesesquare
 
     public static class CircleBitmap
     {
-        public static List<Contact> addPhotoThumbs(List<Contact> contacts)
+        public static List<Todo.User> addPhotoThumbs(List<Todo.User> contacts)
         {
             var noThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
 
-            foreach (Contact contact in contacts)
+            foreach (Todo.User contact in contacts)
             {
-                if (contact.PhotoId == null)
+                if(contact.Thumbnail == null)
                 {
-                    //h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
-                    //h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
+                    if (contact.PhotoId == null)
+                    {
+                        //h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
+                        //h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
 
-                    contact.PhotoThumb = noThumb;
-                }
-                else
-                {
-                    //var contactUri = ContentUris.WithAppendedId(
-                    //    ContactsContract.Contacts.ContentUri, contact.Id);
-                    //var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
-                    //    Contacts.Photos.ContentDirectory);
+                        contact.Thumbnail = noThumb;
+                    }
+                    else
+                    {
+                        //var contactUri = ContentUris.WithAppendedId(
+                        //    ContactsContract.Contacts.ContentUri, contact.Id);
+                        //var contactPhotoUri = Android.Net.Uri.WithAppendedPath(contactUri,
+                        //    Contacts.Photos.ContentDirectory);
 
-                    var contactPhotoUri = Android.Net.Uri.Parse(contact.PhotoId);
-                    Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(Application.Context.ContentResolver, contactPhotoUri); //.getBitmap(this.getContentResolver(), imageUri);
-                                                                                                                                  //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
-                                                                                                                                  //roundedThumbBitmap.Circular = true;
+                        var contactPhotoUri = Android.Net.Uri.Parse(contact.PhotoId);
+                        Bitmap thumbBitmap = MediaStore.Images.Media.GetBitmap(Application.Context.ContentResolver, contactPhotoUri); //.getBitmap(this.getContentResolver(), imageUri);
+                                                                                                                                      //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
+                                                                                                                                      //roundedThumbBitmap.Circular = true;
 
-                    contact.PhotoThumb = thumbBitmap;
+                        contact.Thumbnail = thumbBitmap;
+                    }
                 }
             }
             return contacts;
         }
 
-        public static Contact addPhotoThumbs(Contact contact)
+        public static Todo.User addPhotoThumbs(Todo.User contact)
         {
             var noThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
 
@@ -70,7 +73,7 @@ namespace Cheesesquare
                     //h.ImageView.SetImageResource(Resource.Drawable.ic_account_circle_black_24dp);
                     //h.ImageView.SetColorFilter(Color.ParseColor("#A9A9A9"));
 
-                    contact.PhotoThumb = noThumb;
+                    contact.Thumbnail = noThumb;
                 }
                 else
                 {
@@ -84,7 +87,7 @@ namespace Cheesesquare
                                                                                                                                   //var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, thumbBitmap);
                                                                                                                                   //roundedThumbBitmap.Circular = true;
 
-                    contact.PhotoThumb = thumbBitmap;
+                    contact.Thumbnail = thumbBitmap;
                 }
             return contact;
         }
@@ -131,36 +134,36 @@ namespace Cheesesquare
         }
     }
 
-    public class Contact : IComparable<Contact>
-    {
+    //public class Contact : IComparable<Contact>
+    //{
 
-        public long Id { get; set; }
-        public string DisplayName { get; set; }
-        public string PhotoId { get; set; }
-        [JsonIgnore]
-        public Bitmap PhotoThumb { get; set; }
-        public string Email { get; set; }
+    //    public long Id { get; set; }
+    //    public string DisplayName { get; set; }
+    //    public string PhotoId { get; set; }
+    //    [JsonIgnore]
+    //    public Bitmap PhotoThumb { get; set; }
+    //    public string Email { get; set; }
 
-        public int CompareTo(Contact other)
-        {
-            if (this.DisplayName != null && other.DisplayName != null)
-            {
-                if (DisplayName.ToUpper()[0] < other.DisplayName.ToUpper()[0])
-                    return -1;
-                if (DisplayName.ToUpper()[0] == other.DisplayName.ToUpper()[0])
-                    return 0;
-                if (DisplayName.ToUpper()[0] > other.DisplayName.ToUpper()[0])
-                    return 1;
-            }
-            return -1;
+    //    public int CompareTo(Contact other)
+    //    {
+    //        if (this.DisplayName != null && other.DisplayName != null)
+    //        {
+    //            if (DisplayName.ToUpper()[0] < other.DisplayName.ToUpper()[0])
+    //                return -1;
+    //            if (DisplayName.ToUpper()[0] == other.DisplayName.ToUpper()[0])
+    //                return 0;
+    //            if (DisplayName.ToUpper()[0] > other.DisplayName.ToUpper()[0])
+    //                return 1;
+    //        }
+    //        return -1;
 
-        }
+    //    }
 
-        public override string ToString()
-        {
-            return DisplayName;//System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
-        }
-    }
+    //    public override string ToString()
+    //    {
+    //        return DisplayName;//System.String.Format("Id: {0}\tName: {1}\tEmail: {2}\tPhotoId: {3}", Id, DisplayName, Email, PhotoId);
+    //    }
+    //}
 
     [Activity(Label = "SelectContactsActivity")]
     public class SelectContactsActivity : AppCompatActivity
@@ -169,7 +172,9 @@ namespace Cheesesquare
         private ContactsRecyclerAdapter recyclerAdapter;
         private RecyclerView.LayoutManager recyclerLayoutManager;
         private const int SHARE_CONTACT = 101;
-        private List<Contact> members;
+        private List<Todo.User> members;
+
+        private Todo.User currentUser;
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -213,13 +218,13 @@ namespace Cheesesquare
             contactsRecyclerView.AddItemDecoration(new DividerItemDecoration(Application.Context, Resource.Drawable.line_divider));
 
             var contactList = Intent.GetStringExtra("members");
-            if (contactList != null)
+            if (contactList != null) // assign operation
             {
-                members = JsonConvert.DeserializeObject<List<Contact>>(contactList);
+                members = JsonConvert.DeserializeObject<List<Todo.User>>(contactList);
                 members = CircleBitmap.addPhotoThumbs(members);
                 recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView, members);
             }
-            else
+            else // share operation
             {
                 recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView);
             }
@@ -243,7 +248,7 @@ namespace Cheesesquare
         {
             var adapter = sender as ContactsRecyclerAdapter;
             var contact = adapter.GetValueAt(e);
-            if (contact.DisplayName == "Group" && contact.Email == null)
+            if (contact.Name == "Group" && contact.Email == null)
             {
                 var intent = new Intent(this, typeof(DefineGroupActivity));
 
@@ -285,7 +290,7 @@ Intent intent)
             {
                 switch (requestCode)
                 {
-                    case SHARE_CONTACT:
+                    case SHARE_CONTACT: // made a new group
                         var members = intent.GetStringExtra("members");
                         var groupName = intent.GetStringExtra("groupname");
 
@@ -322,25 +327,46 @@ Intent intent)
     public class ContactsRecyclerAdapter : BaseRecyclerAdapter
     {
         Activity _activity;
-        List<Contact> _contactList;
+        List<Todo.User> _contactList;
         RecyclerView _recyclerview;
+        Todo.User _currentUser;
+        public Todo.User currentUser
+        {
+	        get
+	        {
+                if (_currentUser == null)
+                {
+                    var currentUserContact = _contactList.Find(contact => contact.Email == PublicFields.Database.defUser.Email);
+                    _currentUser = currentUserContact;
+                    return currentUserContact;
+                }
+	            else
+                    return this._currentUser;
+	        }
+	        set
+	        {
+	            this._currentUser = value;
+	        }
+        }
 
         //Create an Event so that our our clients can act when a user clicks
         //on each individual item.
         public event EventHandler<int> ItemClick;
 
-        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView)
+        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView) // share constructor
         {
             _activity = (SelectContactsActivity)activity;
             _recyclerview = recyclerView;
             FillContacts();
             _contactList.Sort();
 
+            //_contactList.Remove(currentUser);
+
             var groupThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_24dp), Application.Context.Resources.GetColor(Resource.Color.colorAccent));
-            _contactList.Insert(0, new Contact { DisplayName = "Group", PhotoThumb = groupThumb });
+            _contactList.Insert(0, new Todo.User { Name = "Group", Thumbnail = groupThumb });
         }
 
-        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView, List<Contact> contactList)
+        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView, List<Todo.User> contactList) // assign constructor
         {
             _activity = (SelectContactsActivity)activity;
             _recyclerview = recyclerView;
@@ -357,7 +383,7 @@ Intent intent)
             }
         }
 
-        public List<Contact> GetContactList()
+        public List<Todo.User> GetContactList()
         {
             return _contactList;
         }
@@ -379,7 +405,7 @@ Intent intent)
                 null, null);
 
 
-            _contactList = new List<Contact>();
+            _contactList = new List<Todo.User>();
             var noThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_person_white_24dp));
 
             try
@@ -454,15 +480,22 @@ Intent intent)
 
 
                         if (email != null && email.Length > 0)
-                            _contactList.Add(new Contact
+                        {
+                            var contact = new Todo.User
                             {
-                                Id = Id,
+                                //Id = Id,
                                 Email = email,
-                                DisplayName = cursor.GetString(
-                            cursor.GetColumnIndex(projection[1])),
+                                Name = cursor.GetString(cursor.GetColumnIndex(projection[1])),
                                 PhotoId = PhotoId,
-                                PhotoThumb = PhotoThumb
-                            });
+                                Thumbnail = PhotoThumb
+                            };
+
+                            if (email == PublicFields.Database.defUser.Email) // found the current user
+                                currentUser = contact;
+
+                            if (!_contactList.Contains(contact))
+                                _contactList.Insert(0, contact); // insert current user at top
+                        }
                     } while (cursor.MoveToNext());
                 }
             }
@@ -480,7 +513,7 @@ Intent intent)
 
         }
 
-        public Contact GetValueAt(int position)
+        public Todo.User GetValueAt(int position)
         {
             return _contactList[position];
         }
@@ -500,9 +533,9 @@ Intent intent)
             var h = holder as ViewHolder;
             var contact = GetValueAt(h.AdapterPosition);
 
-            h.TextView.Text = contact.DisplayName;
+            h.TextView.Text = contact.Name;
 
-            var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, contact.PhotoThumb);
+            var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, contact.Thumbnail);
             roundedThumbBitmap.Circular = true;
             h.ImageView.SetImageDrawable(roundedThumbBitmap);
 
@@ -536,8 +569,8 @@ Intent intent)
 
         public override string GetTextToShowInBubble(int pos)
         {
-            if (_contactList[pos].DisplayName != null)
-                return _contactList[pos].DisplayName.ToUpper()[0].ToString();
+            if (_contactList[pos].Name != null)
+                return _contactList[pos].Name.ToUpper()[0].ToString();
             return "";
         }
 

@@ -251,10 +251,34 @@ Intent intent)
                         EDIT_ITEM:
                         var edited = intent.GetBooleanExtra("edited", false);
                         string itemID = intent.GetStringExtra("itemID");
+                        bool groupChanged = intent.GetBooleanExtra("groupChanged", false);
+
+                        if (groupChanged)
+                        {
+                            List<Todo.User> selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(intent.GetStringExtra("selectedContacts"));
+                            string groupName = intent.GetStringExtra("groupName");
+                            //TODO: check if group already exists
+
+                            if (selectedContacts != null && selectedContacts.Count > 0) // contacts selected so make a group for them
+                            {
+                                // make a new group
+                                var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
+                                if (ownedByGroupResult != null)
+                                {
+                                    item.OwnedBy = ownedByGroupResult.ID;
+                                    var itemAllItems = PublicFields.allItems.Find(it => it.id == itemID);
+                                    var itemIndex = PublicFields.allItems.FindIndex(it => it.id == itemID);
+
+                                    PublicFields.allItems[itemIndex].OwnedBy = ownedByGroupResult.ID;
+                                }
+                            }
+                        }
+
 
                         if (edited) // the detail item
                         {
                             itemChanged = true;
+
                             var itemAllItems = PublicFields.allItems.Find(it => it.id == itemID);
                             var itemIndex = PublicFields.allItems.FindIndex(it => it.id == itemID);
 
