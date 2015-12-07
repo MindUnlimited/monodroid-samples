@@ -382,27 +382,24 @@ namespace Cheesesquare
 
         public async Task<Group> getDefaultGroup(User user = null)
         {
-            List<UserGroupMembership> defGroupMembershipList;
             if (user == null)
-                defGroupMembershipList = await userGroupMembershipTable.Where(ugm => ugm.ID == userID).ToListAsync();
-            else
-                defGroupMembershipList = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID).ToListAsync();
+                user = defUser;
 
-            UserGroupMembership defUserGroupMembership = defGroupMembershipList.FirstOrDefault();
+            var groups = await groupTable.ToListAsync();
 
-            if (defUserGroupMembership != null)
+            var userGroups = new List<Group>();
+            foreach (var grp in groups)
             {
-                string defGroupID = defUserGroupMembership.MembershipID;
-                // default's group ID to it's actual group
-                List<Group> defGroupList = await groupTable.Where(grp => grp.ID == defGroupID).ToListAsync();
-                Group defGroup = defGroupList.FirstOrDefault();
-                return defGroup;
+                List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == grp.ID).ToListAsync();
+                if (ugms.Count == 1)
+                    return grp;
             }
+
             return null;
         }
 
 
-        public async Task<Group> getGroup(string groupName)
+        public async Task<Group> GetGroupByName(string groupName)
         {
             if (userID == null)
                 return null;
@@ -418,6 +415,19 @@ namespace Cheesesquare
                 }
             }
             return null;
+        }
+
+        public async Task<Group> GetGroupByID(string groupID)
+        {
+            if (userID == null)
+                return null;
+            else
+            {
+                if (userGroups == null)
+                    userGroups = await getGroups();
+
+                return userGroups.Find(grp => grp.ID == groupID); 
+            }
         }
 
 
@@ -471,71 +481,216 @@ namespace Cheesesquare
             }
         }
 
+        public async Task<bool> MemberOfGroup(User user, Group group)
+        {
+            var defGroupUser = await getDefaultGroup(user);
+            List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == group.ID).ToListAsync();
+
+            return ugms.Count == 1; // there should be only one item satisfying this query
+        }
+
         public async Task<User> GetUser(string email)
         {
             var user = await userTable.Where(usr => usr.Email == email).ToListAsync();
-            var test = await userTable.ToListAsync();
             return user.FirstOrDefault();            
+        }
+
+        public async Task<Group> GroupExists(List<User> groupmembers, string name = null)
+        {
+            Group groupWithCorrectName;
+
+            if (userGroups == null)
+            {
+                userGroups = await getGroups();
+            }
+
+            if (name != null) // real group
+            {
+                groupWithCorrectName = userGroups.Find(grp => grp.Name == name);
+            }  
+            else if (groupmembers.Count == 2) // group invisible to the users containing only two members
+            {
+                var defGroupUser1 = await getDefaultGroup(groupmembers[0]);
+                var defGroupUser2 = await getDefaultGroup(groupmembers[1]);
+
+                if (defGroupUser1 == null || defGroupUser2 == null)
+                    return null;
+
+                groupWithCorrectName = userGroups.Find(grp => (grp.Name == defGroupUser1.ID + "+" + defGroupUser2.ID) || (grp.Name == defGroupUser2.ID + "+" + defGroupUser1.ID));
+            }
+            else // something has gone wrong
+            {
+                Log.Debug("Database", string.Format("Group with name {} was not found", name));
+                groupWithCorrectName = null;
+            }
+                
+            var membersInGroup = true;
+            foreach (var member in groupmembers)
+            {
+                if (! await (MemberOfGroup(member, groupWithCorrectName)))
+                {
+                    membersInGroup = false;
+                    break;
+                }
+            }
+
+            if (membersInGroup)
+                return groupWithCorrectName;
+
+            return null;
+        }
+
+
+        public async Task newUser(User user)
+        {
+            try
+            {
+                // insert new user
+                await userTable.InsertAsync(user);
+                //await client.SyncContext.PushAsync();
+
+                Group group = new Group
+                {
+                    Name = user.Name
+                };
+
+                // add default group voor user
+                await groupTable.InsertAsync(group);
+                //await client.SyncContext.PushAsync();
+
+                UserGroupMembership ugm = new UserGroupMembership
+                {
+                    ID = user.ID,
+                    MembershipID = group.ID
+                };
+
+                await userGroupMembershipTable.InsertAsync(ugm);
+                await client.SyncContext.PushAsync();
+
+                await createDomains(group.ID);
+
+                await SyncAsync(); // offline sync
+            }
+            catch (Exception e)
+            {
+                CreateAndShowDialog(e, "Error: " + e.Message);
+            }
         }
 
         public async Task<Group> SaveGroup(List<User> users, String name)
         {
-            Group newGroup = new Group { Name = name };
+            Group newGroup;
+
+            // check whether the group already exists, if so return with that group
+            var groupFound = await GroupExists(users, name);
+            if (groupFound != null)
+                return groupFound;
+
+            var usersUpdated = new List<User>();
+            // check whether the users in users already use the app
+            foreach (var usr in users)
+            {
+                
+                if (usr != defUser) // on all users except for the one currently logged in
+                {
+                    var retrievedUser = await GetUser(usr.Email);
+                    if (retrievedUser == null) // not in db (sqlite and azure)
+                    {
+                        await newUser(usr);
+                        usersUpdated.Add(usr);
+                    }
+                    else
+                        usersUpdated.Add(retrievedUser);
+                }
+                else
+                    usersUpdated.Add(usr);
+            }
+
+            users = usersUpdated;
+
+
+            // no name and a group with two users signalizes that two users are sharing with each other, the fact that that makes a group is unknown to them
+            // the name of this bond will be the default groups id's of the two users concatenated with a plus sign in the middle
+            if (string.IsNullOrEmpty(name) && users.Count == 2)
+            {
+                var currentUser = await getDefaultGroup(users[0]);
+                var shareWithUser = await getDefaultGroup(users[1]);
+
+                //if (currentUser == null) // make new temporary user for 1
+                //{
+                //    await newUser(users[0]);
+                //    currentUser = await getDefaultGroup(users[0]);
+                //}
+                //else if (shareWithUser == null) //make new temporary user for 2
+                //{
+                //    await newUser(users[1]);
+                //    shareWithUser = await getDefaultGroup(users[1]);
+                //}
+                //else // if users are already using app
+                //{
+
+                var groupGUIDCombined = currentUser.ID + "+" + shareWithUser.ID;
+                newGroup = new Group { Name = groupGUIDCombined };
+                //}
+            }
+            else
+                newGroup = new Group { Name = name };
+
             await groupTable.InsertAsync(newGroup);
 
-            List<Todo.User> newUsers = new List<User>();
-            for (int i = 0; i < users.Count; i++)
-            {
-                // if the user already exists then replace it with the one in the db
-                var userDB = await GetUser(users[i].Email);
-                if (userDB != null)
-                    newUsers.Insert(i, userDB);
-                else // add the user to the db with a temporary connection between the contacts email and a newly created user, the rest will be filled in when the contact starts using the app
-                // TODO: send an email to notify the contact to use the app
-                {
-                    var newUser = users[i]; // should have a name and email
-                    if (!string.IsNullOrEmpty(newUser.Name) && !string.IsNullOrEmpty(newUser.Email))
-                    {
-                        // insert new user
-                        await userTable.InsertAsync(newUser);
-                        //await client.SyncContext.PushAsync();
+            //List<Todo.User> newUsers = new List<User>();
+            //for (int i = 0; i < users.Count; i++)
+            //{
+            //    // if the user already exists then replace it with the one in the db
+            //    var userDB = await GetUser(users[i].Email);
+            //    if (userDB != null)
+            //        newUsers.Insert(i, userDB);
+            //    else // add the user to the db with a temporary connection between the contacts email and a newly created user, the rest will be filled in when the contact starts using the app
+            //    // TODO: send an email to notify the contact to use the app
+            //    {
+            //        var newUser = users[i]; // should have a name and email
+            //        if (!string.IsNullOrEmpty(newUser.Name) && !string.IsNullOrEmpty(newUser.Email))
+            //        {
+            //            // insert new user
+            //            await userTable.InsertAsync(newUser);
+            //            //await client.SyncContext.PushAsync();
 
-                        Group group = new Group
-                        {
-                            Name = newUser.Name
-                        };
+            //            Group group = new Group
+            //            {
+            //                Name = newUser.Name
+            //            };
 
-                        // add default group voor user
-                        await groupTable.InsertAsync(group);
-                        //await client.SyncContext.PushAsync();
+            //            // add default group voor user
+            //            await groupTable.InsertAsync(group);
+            //            //await client.SyncContext.PushAsync();
 
-                        UserGroupMembership ugm = new UserGroupMembership
-                        {
-                            ID = newUser.ID,
-                            MembershipID = group.ID
-                        };
+            //            UserGroupMembership ugm = new UserGroupMembership
+            //            {
+            //                ID = newUser.ID,
+            //                MembershipID = group.ID
+            //            };
 
-                        await userGroupMembershipTable.InsertAsync(ugm);
-                        //await client.SyncContext.PushAsync();
+            //            await userGroupMembershipTable.InsertAsync(ugm);
+            //            //await client.SyncContext.PushAsync();
 
-                        await createDomains(group.ID);
+            //            await createDomains(group.ID);
 
-                        newUsers.Insert(i, newUser);
-                    }
+            //            newUsers.Insert(i, newUser);
+            //        }
 
-                    await client.SyncContext.PushAsync();
-                }
-            }
+            //        await client.SyncContext.PushAsync();
+            //    }
+            //}
 
-            foreach( User usr in newUsers)
-            {
-                Group usrDefGroup = await getDefaultGroup(usr);
-                if(!string.IsNullOrEmpty(usrDefGroup.ID) && !string.IsNullOrEmpty(newGroup.ID))
-                {
-                    var ggm = new GroupGroupMembership { MemberID = usrDefGroup.ID, MembershipID = newGroup.ID };
-                    await groupGroupMembershipTable.InsertAsync(ggm);
-                }
-            }
+            //foreach( User usr in users)
+            //{
+            //    Group usrDefGroup = await getDefaultGroup(usr);
+            //    if(!string.IsNullOrEmpty(usrDefGroup.ID) && !string.IsNullOrEmpty(newGroup.ID))
+            //    {
+            //        var ggm = new GroupGroupMembership { MemberID = usrDefGroup.ID, MembershipID = newGroup.ID }; // membership is what they are part of memberid the group they came from
+            //        await groupGroupMembershipTable.InsertAsync(ggm);
+            //    }
+            //}
 
             await client.SyncContext.PushAsync();
 
@@ -729,18 +884,11 @@ namespace Cheesesquare
             try
             {
                 await SyncAsync();
-                //userTable = client.GetSyncTable<User>();
-                //await userTable.PullAsync(null, userTable.CreateQuery());
-                // does the user already exist?
-
-                // fetch username not just the id
-                //Newtonsoft.Json.Linq.JObject userInfo = (Newtonsoft.Json.Linq.JObject) await client.InvokeApiAsync("userInfo", HttpMethod.Get, null);
-                //userName = userInfo.Value<string>("name");
-                //var emails = userInfo.Value<strting>("emails");
 
                 var usr = client.CurrentUser;
                 JObject userObject = (JObject) await client.InvokeApiAsync("userInfo", HttpMethod.Get, null);
 
+                // does the user already exist?
                 if (userObject != null)
                 {
                     userName = (string)userObject["name"];
@@ -873,9 +1021,10 @@ namespace Cheesesquare
                         }
 
                         Debug.WriteLine("user exists, ID found: " + user.ID);
+                        
                         userID = user.ID;
-                        defGroup = await getDefaultGroup();
                         defUser = user;
+                        defGroup = await getDefaultGroup();
                     }
                     else
                     {

@@ -221,6 +221,7 @@ namespace Cheesesquare
             if (contactList != null) // assign operation
             {
                 members = JsonConvert.DeserializeObject<List<Todo.User>>(contactList);
+                members.Insert(0, PublicFields.Database.defUser);
                 members = CircleBitmap.addPhotoThumbs(members);
                 recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView, members);
             }

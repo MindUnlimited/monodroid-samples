@@ -105,6 +105,14 @@ namespace Cheesesquare
             shareEditText = FindViewById<EditText>(Resource.Id.user_to_share_name);
             shareEditText.Click += ShareEditText_Click;
 
+            if (item != null && item.OwnedBy != PublicFields.Database.defGroup.ID)
+            {
+                var ownedByGroupTask = PublicFields.Database.GetGroupByID(item.OwnedBy);
+                Todo.Group ownedByGroup = ownedByGroupTask.Result;
+                shareEditText.Text = ownedByGroup.Name;
+            }
+                
+
             commentText = FindViewById<EditText>(Resource.Id.insert_comment_text);
             if (item != null && item.Notes != null)
                 commentText.Text = item.Notes;
@@ -321,6 +329,8 @@ namespace Cheesesquare
                             //shareArrayAdapter.Add(selectedContact); // don't add anything to the listview
                             shareArrayAdapter.NotifyDataSetChanged();
                             shareEditText.Text = selectedContact.Name;
+
+                            groupChanged = true;
                         }
                         else
                         {
@@ -369,12 +379,26 @@ namespace Cheesesquare
                     {
                         Intent returnIntent = new Intent();
 
-                        if (selectedContacts != null && selectedContacts.Count > 0)
+                        if (selectedContacts != null && selectedContacts.Count >= 2) // need at least two other users to make a group
+                        {
+                            if (selectedContacts.Count > 0)
+                            {
+                                returnIntent.PutExtra("groupChanged", groupChanged);
+                                selectedContacts.Insert(0, PublicFields.Database.defUser); // add the current user to the group
+                                returnIntent.PutExtra("selectedContacts", JsonConvert.SerializeObject(selectedContacts));
+                                returnIntent.PutExtra("groupName", shareEditText.Text);
+                            }
+                        }
+                        else if (selectedContact != null) // invisible group containing only two members
                         {
                             returnIntent.PutExtra("groupChanged", groupChanged);
+                            selectedContacts.Clear();
+                            selectedContacts.Add(PublicFields.Database.defUser);
+                            selectedContacts.Add(selectedContact);
                             returnIntent.PutExtra("selectedContacts", JsonConvert.SerializeObject(selectedContacts));
-                            returnIntent.PutExtra("groupName", shareEditText.Text);
+                            // keep the groupname empty if group to be generated
                         }
+
 
                         if (newItem)
                         {

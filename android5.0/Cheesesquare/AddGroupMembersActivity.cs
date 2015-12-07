@@ -161,9 +161,9 @@ namespace Cheesesquare
 
                     if (selectedContacts != null && selectedContacts.Count > 0)
                     {
-                        var currentUser = PublicFields.Database.defUser;
-                        if (currentUser != null && !selectedContacts.Contains(currentUser))
-                            selectedContacts.Insert(0, currentUser);// place current user at top
+                        //var currentUser = PublicFields.Database.defUser;
+                        //if (currentUser != null && !selectedContacts.Contains(currentUser))
+                        //    selectedContacts.Insert(0, currentUser);// place current user at top
 
                         Intent myIntent = new Intent();
                         var members = JsonConvert.SerializeObject(selectedContacts);

@@ -230,7 +230,7 @@ Intent intent)
                 switch (requestCode)
                 {
                     case
-                        ITEMDETAIL:
+                        ITEMDETAIL: // back from other detail activity
                         if (intent.GetBooleanExtra("itemChanged", false))
                         {
                             string ItemID = intent.GetStringExtra("itemID");
@@ -248,7 +248,7 @@ Intent intent)
 
                         break;
                     case
-                        EDIT_ITEM:
+                        EDIT_ITEM: // edited the detail item itself
                         var edited = intent.GetBooleanExtra("edited", false);
                         string itemID = intent.GetStringExtra("itemID");
                         bool groupChanged = intent.GetBooleanExtra("groupChanged", false);
@@ -270,6 +270,8 @@ Intent intent)
                                     var itemIndex = PublicFields.allItems.FindIndex(it => it.id == itemID);
 
                                     PublicFields.allItems[itemIndex].OwnedBy = ownedByGroupResult.ID;
+
+                                    await PublicFields.Database.SaveItem(item);
                                 }
                             }
                         }
@@ -330,7 +332,7 @@ Intent intent)
 
                         }
 
-                        else // new subitem
+                        else // added a new subitem
                         {
                             itemChanged = true;
                             var subItem = PublicFields.allItems.Find(it => it.id == itemID);
