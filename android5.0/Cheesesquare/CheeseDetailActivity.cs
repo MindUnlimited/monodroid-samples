@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Android.Text.Format;
 using Android.Net;
+using Java.Lang.Reflect;
 
 namespace Cheesesquare
 {
@@ -82,6 +83,10 @@ namespace Cheesesquare
         private TextView progressPercentText;
 
         private TextView comment;
+        private TextView status;
+        private ImageView statusIcon;
+
+        private Android.Support.V7.Widget.PopupMenu statusMenu;
 
         private FloatingActionButton editFAB;
         private FloatingActionButton addItemFAB;
@@ -157,6 +162,11 @@ namespace Cheesesquare
             comment = FindViewById<TextView>(Resource.Id.comment_text);
             comment.Text = item.Notes ?? "no notes";
 
+            status = FindViewById<TextView>(Resource.Id.status_text);
+            status.Click += statusClick;
+
+            statusIcon = FindViewById<ImageView>(Resource.Id.status_icon);
+
             editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
             editFAB.Click += EditFAB_Click;
 
@@ -167,6 +177,51 @@ namespace Cheesesquare
             setupViewPager(viewPager);
 
             loadBackdrop();
+        }
+
+        private void statusClick(object sender, EventArgs e)
+        {
+            statusMenu = new Android.Support.V7.Widget.PopupMenu(this, comment);
+            statusMenu.Inflate(Resource.Menu.status_popup_menu);
+
+            Field field = statusMenu.Class.GetDeclaredField("mPopup");
+            field.Accessible = true;
+            Java.Lang.Object menuPopupHelper = field.Get(statusMenu);
+            Method setForceIcons = menuPopupHelper.Class.GetDeclaredMethod("setForceShowIcon", Java.Lang.Boolean.Type);
+            setForceIcons.Invoke(menuPopupHelper, true);
+
+            statusMenu.MenuItemClick += (s1, arg1) => {
+                Console.WriteLine("{0} selected", arg1.Item.TitleFormatted);
+                status.Text = arg1.Item.TitleFormatted.ToString();
+                statusIcon.SetImageDrawable(arg1.Item.Icon);
+
+                switch (status.Text)
+                {
+                    case "Cancelled":
+                        item.Status = -1;
+                        break;
+                    case "Backlog":
+                        item.Status = 0;
+                        break;
+                    case "On Hold":
+                        item.Status = 6;
+                        break;
+                    case "Completed":
+                        item.Status = 7;
+                        break;
+                    default:
+                        item.Status = 2;
+                        break;
+                }
+
+                itemChanged = true;
+            };
+
+            statusMenu.DismissEvent += (s2, arg2) => {
+                Console.WriteLine("menu dismissed");
+            };
+
+            statusMenu.Show();
         }
 
         private void Importance_RatingBarChange(object sender, RatingBar.RatingBarChangeEventArgs e)
@@ -437,6 +492,41 @@ Intent intent)
             base.OnStart();
             //txtDate = (TextView)FindViewById(Resource.Id.txtdate);
 
+
+            //-1: Abandoned(Cancelled)
+            //0: Backlog(Conceived = voor inbox, cq mind sweep)
+            //1: Planned
+            //Skip        2: Initiated
+            //Skip        3: < 25 % completed
+            //4: In progress (< 50 %)
+            //Skip        5: < 75 %
+            //6: On hold / Blocked
+            //7: Completed
+
+            switch (item.Status)
+            {
+                case -1:
+                    status.Text = "Cancelled";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
+                    break;
+                case 0:
+                    status.Text = "Backlog";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
+                    break;
+                case 6:
+                    status.Text = "On Hold";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
+                    break;
+                case 7:
+                    status.Text = "Completed";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
+                    break;
+                default:
+                    status.Text = "Started";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
+                    break;
+
+            }
         }
 
         public override void Finish()

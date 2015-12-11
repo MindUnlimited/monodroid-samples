@@ -97,6 +97,7 @@ namespace Cheesesquare
                 public TextView TextView { get; set; }
                 public ImageView ImageView { get; set; }
 
+                public TextView Status { get; set; }
                 public TextView Importance { get; set; }
                 public TextView DueDate { get; set; }
 
@@ -113,6 +114,7 @@ namespace Cheesesquare
                     View = view;
                     TextView = view.FindViewById<TextView>(Resource.Id.task_title);
                     ImageView = view.FindViewById<ImageView>(Resource.Id.imageView);
+                    Status = view.FindViewById<TextView>(Resource.Id.status_task);
                     Importance = view.FindViewById<TextView>(Resource.Id.importance_task);
                     DueDate = view.FindViewById<TextView>(Resource.Id.due_date_task);
                     AmountOfSubTasks = view.FindViewById<TextView>(Resource.Id.amountOfSubTasks);
@@ -295,6 +297,27 @@ namespace Cheesesquare
 
                 var item = items[position];
 
+
+                switch (item.Status)
+                {
+                    case -1:
+                        h.Status.Text = "Cancelled";
+                        break;
+                    case 0:
+                        h.Status.Text = "Backlog";
+                        break;
+                    case 6:
+                        h.Status.Text = "On Hold";
+                        break;
+                    case 7:
+                        h.Status.Text = "Completed";
+                        break;
+                    default:
+                        h.Status.Text = "Started";
+                        break;
+
+                }
+
                 //h.View.Click += (sender, e) =>
                 //{
                 //    var context = h.View.Context;
@@ -412,7 +435,7 @@ namespace Cheesesquare
                 h.TextView.Text = item.Name;
                 h.Importance.Text = string.Format("{0} stars", item.Importance) ?? "0 stars";
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
-            }
+            } 
 
             public override int ItemCount
             {

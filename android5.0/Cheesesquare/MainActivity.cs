@@ -22,12 +22,14 @@ using Android.Preferences;
 using Newtonsoft.Json;
 using System.Linq;
 using Android.Support.V7.Widget;
+using Todo;
 
 namespace Cheesesquare
 {
     public static class PublicFields
     {
         public static Database Database;
+
         public static List<Todo.Item> allItems { get; set; }
         public static List<Todo.Item> domains { get; set; }
         public static List<Todo.Group> userGroups { get; set; }
@@ -53,6 +55,19 @@ namespace Cheesesquare
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+
+            Tree<string> root = new Tree<string>(null);
+            root.Value = "zero";
+            int d0 = root.Depth;
+            TreeNode<string> one = root.Children.Add("one");
+            int d1 = one.Depth;
+            TreeNode<string> twoa = one.Children.Add("two - a");
+            TreeNode <string> twob = one.Children.Add("two - b");
+            TreeNode <string> twoc = one.Children.Add("two - c");
+            string twocstr = twoc.Value;
+            int d2 = twoa.Depth;
+
+            root.
 
             PublicFields.Database = new Database();
             //dataObserver = new DataObserver();

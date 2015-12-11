@@ -422,6 +422,33 @@
 
             </RelativeLayout>
 
+            <!-- Status -->
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
+
+              <ImageView
+                android:id="@+id/status_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_insert_comment_black_24dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:layout_alignBottom="@+id/status_text"/>
+              <TextView
+                  android:id="@+id/status_text"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_marginLeft="16dp"
+                  android:background="@android:color/transparent"
+                  android:layout_toRightOf="@+id/status_icon"
+                  android:layout_alignParentBottom="true"
+                  android:text="Status"/>
+
+            </RelativeLayout>
+
           </LinearLayout>
 
         </android.support.v7.widget.CardView>
