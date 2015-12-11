@@ -94,7 +94,7 @@ namespace Cheesesquare
         private DrawerLayout drawerLayout;
         private ViewPager viewPager;
 
-        private Todo.Item item;
+        private Todo.TreeNode<Todo.Item> item;
         public bool itemChanged;
 
         private RecyclerView.AdapterDataObserver dataObserver;// = new DataObserver();
@@ -108,7 +108,8 @@ namespace Cheesesquare
             itemChanged = false;
 
             itemID = Intent.GetStringExtra(ITEM_ID);
-            item = PublicFields.allItems.Find(it => it.id == itemID);
+            var test = PublicFields.ItemTree.Descendants();
+            item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
 
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_detail);
 
@@ -126,10 +127,10 @@ namespace Cheesesquare
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
-            collapsingToolbar.SetTitle (item.Name);
+            collapsingToolbar.SetTitle (item.Value.Name);
 
             txtDate = FindViewById<TextView>(Resource.Id.txtdate);
-            if (item.EndDate != null && item.EndDate != "")
+            if (item.Value.EndDate != null && item.Value.EndDate != "")
             {
                 //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                 //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
@@ -137,7 +138,7 @@ namespace Cheesesquare
                 {
                     //Date mDate = sdf.Parse(item.EndDate);
                     long timeInMilliseconds;
-                    long.TryParse(item.EndDate, out timeInMilliseconds);
+                    long.TryParse(item.Value.EndDate, out timeInMilliseconds);
                     if (timeInMilliseconds > 0)
                         txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                 }
@@ -157,10 +158,10 @@ namespace Cheesesquare
 
             importance = FindViewById<RatingBar>(Resource.Id.ratingbar);
             importance.RatingBarChange += Importance_RatingBarChange;
-            importance.Rating = item.Importance;
+            importance.Rating = item.Value.Importance;
 
             comment = FindViewById<TextView>(Resource.Id.comment_text);
-            comment.Text = item.Notes ?? "no notes";
+            comment.Text = item.Value.Notes ?? "no notes";
 
             status = FindViewById<TextView>(Resource.Id.status_text);
             status.Click += statusClick;
@@ -198,19 +199,19 @@ namespace Cheesesquare
                 switch (status.Text)
                 {
                     case "Cancelled":
-                        item.Status = -1;
+                        item.Value.Status = -1;
                         break;
                     case "Backlog":
-                        item.Status = 0;
+                        item.Value.Status = 0;
                         break;
                     case "On Hold":
-                        item.Status = 6;
+                        item.Value.Status = 6;
                         break;
                     case "Completed":
-                        item.Status = 7;
+                        item.Value.Status = 7;
                         break;
                     default:
-                        item.Status = 2;
+                        item.Value.Status = 2;
                         break;
                 }
 
@@ -229,8 +230,9 @@ namespace Cheesesquare
             var ratingbar = (RatingBar) sender;
             int rating = (int)ratingbar.Rating;
 
-            item.Importance = rating;
-            PublicFields.allItems.Where(it => it.id == item.id).FirstOrDefault().Importance = rating;
+            item.Value.Importance = rating;
+            PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == item.Value.id).Value.Importance = rating;
+            //PublicFields.ItemDictionary[item.Value.id].Value.Importance = rating;
             itemChanged = true;
         }
 
@@ -270,7 +272,7 @@ namespace Cheesesquare
         {
             var adapter = new MyAdapter(SupportFragmentManager);
 
-            adapter.AddFragment(new CheeseListFragment(item, dataObserver), item.Name);
+            adapter.AddFragment(new CheeseListFragment(item, dataObserver), item.Value.Name);
             viewPager.Adapter = adapter;
         }
 
@@ -295,7 +297,7 @@ Intent intent)
                             var currentFragment = (CheeseListFragment)adapter.GetItem(index);
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            var item = PublicFields.allItems.Find(it => it.id == ItemID);
+                            var item = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
 
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
@@ -320,13 +322,8 @@ Intent intent)
                                 var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
                                 if (ownedByGroupResult != null)
                                 {
-                                    item.OwnedBy = ownedByGroupResult.ID;
-                                    var itemAllItems = PublicFields.allItems.Find(it => it.id == itemID);
-                                    var itemIndex = PublicFields.allItems.FindIndex(it => it.id == itemID);
-
-                                    PublicFields.allItems[itemIndex].OwnedBy = ownedByGroupResult.ID;
-
-                                    await PublicFields.Database.SaveItem(item);
+                                    item.Value.OwnedBy = ownedByGroupResult.ID;
+                                    await PublicFields.Database.SaveItem(item.Value);
                                 }
                             }
                         }
@@ -336,35 +333,39 @@ Intent intent)
                         {
                             itemChanged = true;
 
-                            var itemAllItems = PublicFields.allItems.Find(it => it.id == itemID);
-                            var itemIndex = PublicFields.allItems.FindIndex(it => it.id == itemID);
+                            var detailItem = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == itemID);
 
-                            await PublicFields.Database.SaveItem(itemAllItems);
-                            for (int i = 0; i < itemAllItems.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            await PublicFields.Database.SaveItem(detailItem.Value);
+                            for (int i = 0; i < detailItem.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
-                                var it = itemAllItems.SubItems[i];
-                                if (string.IsNullOrEmpty(it.id))
-                                    await PublicFields.Database.SaveItem(it);
-                                itemAllItems.SubItems[i] = it; // store with newly acquired id
-                                if (PublicFields.allItems.Exists(item => item.id == it.id))
+                                var it = detailItem.Children[i];
+                                if (string.IsNullOrEmpty(it.Value.id))
+                                    await PublicFields.Database.SaveItem(it.Value);
+
+                                detailItem.Children[i] = it; // store with newly acquired id
+
+                                if (PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == it.Value.id) != null)
                                 {
-                                    var subItemIndex = PublicFields.allItems.FindIndex(item => item.id == it.id);
-                                    PublicFields.allItems[subItemIndex] = it;
+                                    PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
                                 }
                                 else
-                                    PublicFields.allItems.Add(it);
+                                {
+                                    //?
+                                }
+                                    //PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
+                                //PublicFields.ItemDictionary[it.Value.id] = it;
                             }
 
 
-                            PublicFields.allItems[itemIndex] = itemAllItems;
-                            item = itemAllItems;
+                            //PublicFields.ItemDictionary[detailItem.Value.id] = detailItem;
+                            item = detailItem;
 
                             // refresh values
-                            collapsingToolbar.SetTitle(item.Name);
-                            importance.Rating = item.Importance;
-                            comment.Text = item.Notes ?? "no notes";
+                            collapsingToolbar.SetTitle(item.Value.Name);
+                            importance.Rating = item.Value.Importance;
+                            comment.Text = item.Value.Notes ?? "no notes";
 
-                            if (item.EndDate != null && item.EndDate != "")
+                            if (item.Value.EndDate != null && item.Value.EndDate != "")
                             {
                                 //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                                 //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
@@ -372,7 +373,7 @@ Intent intent)
                                 {
                                     //Date mDate = sdf.Parse(item.EndDate);
                                     long timeInMilliseconds;
-                                    long.TryParse(item.EndDate, out timeInMilliseconds);
+                                    long.TryParse(item.Value.EndDate, out timeInMilliseconds);
                                     if (timeInMilliseconds > 0)
                                         txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                                 }
@@ -387,39 +388,45 @@ Intent intent)
 
                         }
 
-                        else // added a new subitem
+                        else // added a new cardview (subItem)
                         {
                             itemChanged = true;
-                            var subItem = PublicFields.allItems.Find(it => it.id == itemID);
-                            var indexSubItem = PublicFields.allItems.FindIndex(it => it.id == subItem.id);
-                            subItem.id = null;
+                            var itemCard = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+                            itemCard.Value.id = null;
 
-                            await PublicFields.Database.SaveItem(subItem);
-                            for(int i = 0; i< subItem.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            await PublicFields.Database.SaveItem(itemCard.Value);
+
+                            for(int i = 0; i< itemCard.Children.Count; i++) // check if the subitems of the new card are new as well, if so save them
                             {
-                                var it = subItem.SubItems[i];
-                                it.Parent = subItem.id; // change the parent id to the new one
-                                if(string.IsNullOrEmpty(it.id))
-                                    await PublicFields.Database.SaveItem(it);
-                                subItem.SubItems[i] = it; // store with newly acquired id
+                                var it = itemCard.Children[i];
+                                it.Value.Parent = itemCard.Value.id; // change the parent id to the new one
 
-                                if (PublicFields.allItems.Exists(item => item.id == it.id))
-                                {
-                                    var subItemIndex = PublicFields.allItems.FindIndex(item => item.id == it.id);
-                                    PublicFields.allItems[subItemIndex] = it;
-                                }
-                                else
-                                    PublicFields.allItems.Add(it);
+                                if(string.IsNullOrEmpty(it.Value.id))
+                                    await PublicFields.Database.SaveItem(it.Value);
+
+                                itemCard.Children[i] = it; // store with newly acquired id
+
+                                //// exists already so update
+                                //if (PublicFields.ItemDictionary.Exists(item => item.id == it.id))
+                                //{
+                                //    var subItemIndex = PublicFields.ItemDictionary.FindIndex(item => item.id == it.id);
+                                //    PublicFields.ItemDictionary[subItemIndex] = it;
+                                //}
+                                //else // new so add
+                                //    PublicFields.ItemDictionary.Add(it);
+
+                                PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
                             }
 
-                            PublicFields.allItems[indexSubItem] = subItem;
+                            PublicFields.ItemTree.FindAndReplace(itemCard.Value.id, itemCard);
+                            //PublicFields.ItemDictionary[indexSubItem] = itemCard;
 
                             int index = viewPager.CurrentItem;
                             var adapter = (MyAdapter)viewPager.Adapter;
                             var currentFragment = (CheeseListFragment)adapter.GetItem(index);
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            fragmentAdapter.addItem(subItem);//PublicFields.allItems.Find(it => it.id == itemID));
+                            fragmentAdapter.addItem(itemCard);//PublicFields.allItems.Find(it => it.id == itemID));
                             fragmentAdapter.ApplyChanges();
                         }
                         break;
@@ -469,7 +476,7 @@ Intent intent)
         {
             var intent = new Intent(this, typeof(EditItemActivity));
             intent.PutExtra("newItem", true);
-            intent.PutExtra("parentItemID", item.id);
+            intent.PutExtra("parentItemID", item.Value.id);
             StartActivityForResult(intent, EDIT_ITEM);
         }
 
@@ -477,8 +484,8 @@ Intent intent)
         {
             Log.Info(TAG, "edit fab clicked!");
             var intent = new Intent(this, typeof(EditItemActivity));
-            intent.PutExtra("itemID", item.id);
-            intent.PutExtra("parentItemID", item.Parent);
+            intent.PutExtra("itemID", item.Value.id);
+            intent.PutExtra("parentItemID", item.Parent.Value.id);
             StartActivityForResult(intent, EDIT_ITEM);
         }
 
@@ -503,7 +510,7 @@ Intent intent)
             //6: On hold / Blocked
             //7: Completed
 
-            switch (item.Status)
+            switch (item.Value.Status)
             {
                 case -1:
                     status.Text = "Cancelled";
@@ -534,7 +541,7 @@ Intent intent)
             Intent returnIntent = new Intent();
             returnIntent.PutExtra("itemChanged", itemChanged);// ("passed_item", itemYouJustCreated);
             if (itemChanged)
-                returnIntent.PutExtra("itemID", item.id);// ("passed_item", itemYouJustCreated);
+                returnIntent.PutExtra("itemID", item.Value.id);// ("passed_item", itemYouJustCreated);
             SetResult(Result.Ok, returnIntent);
             base.Finish();
         }

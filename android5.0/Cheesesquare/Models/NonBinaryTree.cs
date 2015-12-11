@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using Microsoft.WindowsAzure.MobileServices;
+using Android.Util;
 
 namespace Todo
 {
-    public class Tree<T> : TreeNode<T>
+    public class Tree<T> : TreeNode<T> where T : Item
     {
         //public Tree<T>() { }
         public Tree(T RootValue) : base(RootValue)
@@ -15,8 +16,35 @@ namespace Todo
         }
     }
 
+    //public class ItemTree<T> : TreeNode<T> where T : Item
+    //{
+    //    //public Tree<T>() { }
+    //    public ItemTree(T RootValue) : base(RootValue)
+    //    {
+    //        Value = RootValue;
+    //    }
 
-    public class TreeNodeList<T> : List<TreeNode<T>>
+
+    //}
+
+    //public class ItemTreeNode<T> : TreeNode<T> where T : Item
+    //{
+    //    public ItemTreeNode(T Value) : base(Value)
+    //    {
+    //        this.Value = Value;
+    //        Parent = null;
+    //        Children = new TreeNodeList<T>(this);
+    //    }
+
+    //    public ItemTreeNode(T Value, TreeNode<T> Parent): base(Value)
+    //    {
+    //    }
+
+
+    //}
+
+
+    public class TreeNodeList<T> : List<TreeNode<T>> where T : Item
     {
         public TreeNode<T> Parent;
         public TreeNodeList(TreeNode<T> Parent)
@@ -27,19 +55,58 @@ namespace Todo
         {
             base.Add(Node);
             Node.Parent = Parent;
+
+            Parent.AmountOfChildrenChanged(1);
+
+            if (Node.Value.Status == 7) // Node is already completed, count its children and that value plus one is the amount of children completed
+            {
+                Parent.AmountOfChildrenCompletedChanged(Node.AmountOfChildrenCompleted + 1);
+            }
+
             return Node;
         }
         public TreeNode<T> Add(T Value)
         {
             return Add(new TreeNode<T>(Value));
         }
+
+        public void RemoveAllChildren()
+        {
+            foreach (var child in Parent.Children)
+            {
+                child.Children.RemoveAllChildren();
+                Remove(child);
+                base.Remove(child);
+
+                Parent.AmountOfChildrenChanged(-1);
+            }
+        }
+
+        public new void Remove(TreeNode<T> Node)
+        {
+            if (this.Contains(Node))
+            {
+                foreach (var child in Node.Children)
+                {
+                    child.Children.RemoveAllChildren();
+                }
+                base.Remove(Node);
+
+                Parent.AmountOfChildrenChanged(-1);
+            }
+            else
+            {
+                Log.Debug("Tree", string.Format("tried to remove node that was not there {0}", Node));
+            }
+        }
+
         public override string ToString()
         {
             return "Count =" +Count.ToString();
         }
     }
 
-    public interface ITreeNodeAware<T>
+    public interface ITreeNodeAware<T> where T : Item
     {
         TreeNode<T> Node { get; set; }
     }
@@ -71,14 +138,15 @@ namespace Todo
     //    }
     //}
 
-        public class TreeNode<T> : IDisposable
-
+    public class TreeNode<T> : IDisposable where T : Item //:IDisposable// where T is Item
     {
         public TreeNode(T Value)
         {
             this.Value = Value;
             Parent = null;
             Children = new TreeNodeList<T>(this);
+            AmountOfChildren = Children.Count;
+            AmountOfChildrenCompleted = 0;
         }
 
         public TreeNode(T Value, TreeNode<T> Parent)
@@ -86,6 +154,110 @@ namespace Todo
             this.Value = Value;
             this.Parent = Parent;
             Children = new TreeNodeList<T>(this);
+            AmountOfChildren = Children.Count;
+            AmountOfChildrenCompleted = 0;
+        }
+
+        private int _AmountOfChildren;
+        public int AmountOfChildren
+        {
+            get { return _AmountOfChildren; }
+            set
+            {
+                if (value == _AmountOfChildren)
+                {
+                    return;
+                }
+                if (value >= 0)
+                {
+                    _AmountOfChildren = value;
+                }
+            }
+        }
+
+        private int _AmountOfChildrenCompleted;
+        public int AmountOfChildrenCompleted
+        {
+            get { return _AmountOfChildrenCompleted; }
+            set
+            {
+                if (value == _AmountOfChildrenCompleted)
+                {
+                    return;
+                }
+                if (value >= 0)
+                {
+                    _AmountOfChildrenCompleted = value;
+                }
+            }
+        }
+
+        public IEnumerable<TreeNode<T>> Descendants()
+        {
+            var nodes = new Stack<TreeNode<T>>( (new[] { Root }));
+            while (nodes.Count > 0)
+            {
+                TreeNode<T> node = nodes.Pop();
+                yield return node;
+                foreach (var n in node.Children) nodes.Push(n);
+            }
+        }
+
+        public bool FindAndReplace(string ID, TreeNode<T> newNode)
+        {
+            var nodes = new Stack<TreeNode<T>>((new[] { Root }));
+            while (nodes.Count > 0)
+            {
+                TreeNode<T> node = nodes.Pop();
+
+                if (node.Value.id == ID)
+                {
+                    //var foundNodeIndex = node.Parent.Children.FindIndex(nod => nod.Value.id == ID);
+                    node = newNode;
+                    return true; // node found and has been replaced
+                }
+                    
+                //yield return node;
+                foreach (var n in node.Children) nodes.Push(n);
+            }
+            return false; // node could not be found
+        }
+
+
+
+        public void AmountOfChildrenCompletedChanged(int Amount) // amount equals how many children haven been added or removed, can be -1 or 1
+        {
+            TreeNode<T> node = this;
+            while (node.Parent != null)
+            {
+                node.AmountOfChildrenCompleted = node.AmountOfChildrenCompleted + Amount;
+                node = node.Parent;
+            }
+            // for root node
+            node.AmountOfChildrenCompleted = node.AmountOfChildrenCompleted + Amount;
+        }
+
+        public void AmountOfChildrenChanged(int Amount) // amount equals how many children haven been added or removed, can be -1 or 1
+        {
+            TreeNode<T> node = this;
+            while (node.Parent != null)
+            {
+                node.AmountOfChildren = node.AmountOfChildren + Amount;
+                node = node.Parent;
+            }
+            // for root node
+            node.AmountOfChildren = node.AmountOfChildren + Amount;
+        }
+
+        public void Complete()
+        {
+            foreach (var child in Children)
+            {
+                child.Complete();
+                AmountOfChildrenCompletedChanged(1);
+            }
+
+            Value.Status = 7; // complete own value
         }
 
         private bool _IsDisposed;

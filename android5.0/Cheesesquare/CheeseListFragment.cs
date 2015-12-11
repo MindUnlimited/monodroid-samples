@@ -20,23 +20,21 @@ namespace Cheesesquare
 {
     public class CheeseListFragment : Android.Support.V4.App.Fragment
     {
-        public Todo.Item domain;
-        private List<Todo.Item> childItems;
+        public Todo.TreeNode<Todo.Item> domain;
+
         public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
         private const int ITEMDETAIL = 103;
         RecyclerView.AdapterDataObserver dataObserver;
 
-        public CheeseListFragment(Todo.Item dom, RecyclerView.AdapterDataObserver DataObserver)
+        public CheeseListFragment(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver)
         {
             domain = dom;
-            childItems = dom.SubItems;
             dataObserver = DataObserver;
         }
 
-        public CheeseListFragment(Todo.Item dom)
+        public CheeseListFragment(Todo.TreeNode<Todo.Item> dom)
         {
             domain = dom;
-            childItems = dom.SubItems;
         }
 
         public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -56,7 +54,7 @@ namespace Cheesesquare
         {
             recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
 
-            itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, childItems, this);
+            itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, domain.Children, this);
             recyclerView.SetAdapter(itemRecyclerViewAdapter);
             if (dataObserver != null)
                 itemRecyclerViewAdapter.RegisterAdapterDataObserver(dataObserver);
@@ -74,7 +72,7 @@ namespace Cheesesquare
 
         public class ItemRecyclerViewAdapter : RecyclerView.Adapter
         {
-            private List<Todo.Item> items;
+            private Todo.TreeNodeList<Todo.Item> items;
             private Android.App.Activity parent;
             private CheeseListFragment fragment;
 
@@ -138,30 +136,30 @@ namespace Cheesesquare
                 }
             }
 
-            public void UpdateValue(Todo.Item item)
+            public void UpdateValue(Todo.TreeNode<Todo.Item> item)
             {
-                int index = items.FindIndex(it => it.id == item.id);
+                int index = items.FindIndex(it => it.Value.id == item.Value.id);
                 if (index >= 0)
                     items[index] = item;
             }
 
-            public Todo.Item GetValueAt(int position)
+            public Todo.TreeNode<Todo.Item> GetValueAt(int position)
             {
                 return items[position];
             }
 
             public void ChangeValueAt(int position, Todo.Item item)
             {
-                items[position] = item;
+                items[position].Value = item;
             }
 
             public void ApplyChanges()
             {
-                fragment.childItems = items;
+                //fragment.childItems = items;
                 NotifyDataSetChanged();
             }
 
-            public void addItem(Todo.Item item)
+            public void addItem(Todo.TreeNode<Todo.Item> item)
             {
                 items.Add(item);
             }
@@ -197,12 +195,13 @@ namespace Cheesesquare
             }
 
 
-            public ItemRecyclerViewAdapter(Android.App.Activity context, List<Todo.Item> items, CheeseListFragment fragm)
+            public ItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, CheeseListFragment fragm)
             {
                 parent = context;
                 fragment = fragm;
 
-                this.items = items ?? new List<Todo.Item>();
+                this.items = items ?? new Todo.TreeNodeList<Todo.Item>(fragment.domain);
+
                 this.ItemClick += OnItemClick;
                 //this.SubTaskClick += OnSubTaskClick;
                 this.DeleteClick += OnDeleteClick;
@@ -235,11 +234,11 @@ namespace Cheesesquare
 
                     ApplyChanges();
 
-                    Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Name));
+                    Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Value.Name));
                 })
                .SetNegativeButton("No", delegate
                {
-                   Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", item.Name));
+                   Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", item.Value.Name));
                })
                .Show();
             }
@@ -251,8 +250,8 @@ namespace Cheesesquare
 
                 var context = fragment.Context;//h.View.Context;
                 var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Name);
-                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.id);
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Value.Name);
+                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
                 parent.StartActivityForResult(intent, ITEMDETAIL);
                 //context.StartActivity(intent);
             }
@@ -272,23 +271,25 @@ namespace Cheesesquare
                 Log.Debug("CheeseListFragment", "checkbox clicked");
             }
 
-            public async void RecursiveDelete(Todo.Item item)
+            public async void RecursiveDelete(Todo.TreeNode<Todo.Item> item)
             {
                 if (item == null)
                     return;
 
-                foreach (var it in item.SubItems)
-                {
-                    RecursiveDelete(it);
-                }
+                item.Parent.Children.Remove(item);
 
-                // remove memory
-                PublicFields.allItems.Remove(item);
-                // remove locally as well
-                items.Remove(item);
+                //foreach (var it in item.SubItems)
+                //{
+                //    RecursiveDelete(it);
+                //}
+
+                //// remove memory
+                //PublicFields.allItems.Remove(item);
+                //// remove locally as well
+                //items.Remove(item);
 
                 // remove from db
-                await PublicFields.Database.DeleteItem(item);
+                await PublicFields.Database.DeleteItem(item.Value);
             }
 
             public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)
@@ -298,7 +299,7 @@ namespace Cheesesquare
                 var item = items[position];
 
 
-                switch (item.Status)
+                switch (item.Value.Status)
                 {
                     case -1:
                         h.Status.Text = "Cancelled";
@@ -354,7 +355,7 @@ namespace Cheesesquare
                 //var long_time = time.ToFileTimeUtc();
 
 
-                if (item.EndDate != null && item.EndDate != "")
+                if (item.Value.EndDate != null && item.Value.EndDate != "")
                 {
                     //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                     //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
@@ -362,7 +363,7 @@ namespace Cheesesquare
                     {
                         //Date mDate = sdf.Parse(item.EndDate);
                         long timeInMilliseconds;
-                        long.TryParse(item.EndDate, out timeInMilliseconds);
+                        long.TryParse(item.Value.EndDate, out timeInMilliseconds);
                         if (timeInMilliseconds > 0)
                             h.DueDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                     }
@@ -385,8 +386,7 @@ namespace Cheesesquare
                 //importance.Text = string.Format("{0} stars", GetValueAt(vh.AdapterPosition).Importance) ?? "0 stars";
 
                 int index = 1;
-
-                if (item.SubItems == null || item.SubItems.Count == 0)
+                if (item.Children == null || item.Children.Count == 0)
                 {
                     h.NoSubTasks.Visibility = ViewStates.Visible;
                     h.AmountOfSubTasks.Text = string.Format("{0} subtasks", 0);
@@ -397,11 +397,11 @@ namespace Cheesesquare
                     // that there are more than 5 tasks
                     while (h.SubTasksLinearLayout.ChildCount > 2) 
                         h.SubTasksLinearLayout.RemoveViewAt(1);
-                    foreach (Todo.Item subitem in item.SubItems)
+                    foreach (var subitem in item.Children)
                     {
                         LinearLayout subtaskView = (LinearLayout)LayoutInflater.From(h.SubTasksLinearLayout.Context).Inflate(Resource.Layout.subtask_line, h.SubTasksLinearLayout, false);
                         var subtaskName = subtaskView.FindViewById<TextView>(Resource.Id.subtask_name);
-                        subtaskName.Text = subitem.Name;
+                        subtaskName.Text = subitem.Value.Name;
 
                         subtaskName.Click += (sender, e) =>
                         {
@@ -409,7 +409,7 @@ namespace Cheesesquare
                             var context = h.View.Context;
                             var intent = new Intent(context, typeof(CheeseDetailActivity));
                             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
-                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.id);
+                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.Value.id);
 
                             parent.StartActivityForResult(intent, ITEMDETAIL);
                             //context.StartActivityForResult(intent);
@@ -429,11 +429,11 @@ namespace Cheesesquare
                             break;
                         }
                     }
-                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", item.SubItems.Count.ToString());
+                    h.AmountOfSubTasks.Text = string.Format("{0} subtasks", item.Children.Count.ToString());
                 }
 
-                h.TextView.Text = item.Name;
-                h.Importance.Text = string.Format("{0} stars", item.Importance) ?? "0 stars";
+                h.TextView.Text = item.Value.Name;
+                h.Importance.Text = string.Format("{0} stars", item.Value.Importance) ?? "0 stars";
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             } 
 

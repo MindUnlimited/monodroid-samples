@@ -30,9 +30,11 @@ namespace Cheesesquare
     {
         public static Database Database;
 
-        public static List<Todo.Item> allItems { get; set; }
-        public static List<Todo.Item> domains { get; set; }
-        public static List<Todo.Group> userGroups { get; set; }
+        public static Tree<Item> ItemTree { get; set; }
+        //public static Dictionary<string, TreeNode<Item>> ItemDictionary { get; set; }
+        public static List<Item> ItemList { get; set; }
+        public static List<TreeNode<Item>> domains { get; set; }
+        public static List<Group> userGroups { get; set; }
     }
 
 
@@ -55,19 +57,6 @@ namespace Cheesesquare
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
-
-            Tree<string> root = new Tree<string>(null);
-            root.Value = "zero";
-            int d0 = root.Depth;
-            TreeNode<string> one = root.Children.Add("one");
-            int d1 = one.Depth;
-            TreeNode<string> twoa = one.Children.Add("two - a");
-            TreeNode <string> twob = one.Children.Add("two - b");
-            TreeNode <string> twoc = one.Children.Add("two - c");
-            string twocstr = twoc.Value;
-            int d2 = twoa.Depth;
-
-            root.
 
             PublicFields.Database = new Database();
             //dataObserver = new DataObserver();
@@ -97,7 +86,7 @@ namespace Cheesesquare
                 var intent = new Intent(this, typeof(EditItemActivity));
                 intent.PutExtra("newItem", true);
                 intent.PutExtra("newItem", true);
-                intent.PutExtra("parentItemID", currentDomainFragment.domain.id);
+                intent.PutExtra("parentItemID", currentDomainFragment.domain.Value.id);
 
                 StartActivityForResult(intent, EDIT_ITEM);
             };
@@ -217,8 +206,10 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                             var currentFragment = (CheeseListFragment) adapter.GetItem(index);
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            var item = PublicFields.allItems.Find(it => it.id == ItemID);
-                            var itemIndex = PublicFields.allItems.FindIndex(it => it.id == ItemID);
+                            var item = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+
+                            //var item = PublicFields.allItems.Find(it => it.id == ItemID);
+                            //var itemIndex = PublicFields.allItems.FindIndex(it => it.id == ItemID);
 
                             //await PublicFields.Database.SaveItem(item);
                             //for (int i = 0; i < item.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
@@ -236,8 +227,6 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
-
-
                         }
                             
                         break;
@@ -245,30 +234,38 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                     case EDIT_ITEM:// new item
                         var itemID = intent.GetStringExtra("itemID");
 
+                        TreeNode<Item> newItem;
                         if (itemID == "temporaryID")
                         {
-                            var newItem = PublicFields.allItems.Find(it => it.id == itemID);
-                            var indexSubItem = PublicFields.allItems.FindIndex(it => it.id == newItem.id);
-                            newItem.id = null;
+                            newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+                            newItem.Value.id = null;
 
-                            await PublicFields.Database.SaveItem(newItem);
-                            itemID = newItem.id;
+                            await PublicFields.Database.SaveItem(newItem.Value);
 
-                            for (int i = 0; i < newItem.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            itemID = newItem.Value.id;
+
+                            for (int i = 0; i < newItem.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
-                                var it = newItem.SubItems[i];
-                                it.Parent = itemID; // change the parent id to the new one
-                                if (string.IsNullOrEmpty(it.id))
-                                    await PublicFields.Database.SaveItem(it);
-                                newItem.SubItems[i] = it; // store with newly acquired id
+                                var it = newItem.Children[i];
+                                it.Value.Parent = itemID; // change the parent id to the new one
+                                if (string.IsNullOrEmpty(it.Value.id))
+                                    await PublicFields.Database.SaveItem(it.Value);
+                                newItem.Children[i] = it; // store with newly acquired id
                             }
 
-                            PublicFields.allItems[indexSubItem] = newItem;
+                            //PublicFields.ItemDictionary.Remove("temporaryID");
+                            //PublicFields.ItemDictionary[itemID] = newItem;
+                            var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
+                            domain.Children.Add(newItem);
 
+                            PublicFields.ItemTree.FindAndReplace(domain.Value.id, domain);
                         }
 
-                        currentDomainFragment.itemRecyclerViewAdapter.addItem(PublicFields.allItems.Find(it => it.id == itemID));
+                        newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+
+                        currentDomainFragment.itemRecyclerViewAdapter.addItem(newItem);
                         currentDomainFragment.itemRecyclerViewAdapter.ApplyChanges();
+
                         break;
                     default:
                         break;
@@ -292,34 +289,67 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
             return base.OnOptionsItemSelected(item);
         }
 
-        public void AddSubTasks(List<Todo.Item> items)
-        {
-            IEnumerable<string> groups_ids = from grp in PublicFields.Database.userGroups select grp.ID;
-            foreach(Todo.Item item in items)
-            {
-                var directSubItems = PublicFields.allItems.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.id).ToList();
-                //var directSubItems = (from it in PublicFields.allItems where groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.ID select it).ToList<Todo.Item>();
-                item.SubItems = directSubItems;
+        //public void AddSubTasks(List<Todo.Item> items)
+        //{
+        //    IEnumerable<string> groups_ids = from grp in PublicFields.Database.userGroups select grp.ID;
+        //    foreach(Todo.Item item in items)
+        //    {
+        //        var directSubItems = PublicFields.allItems.Where(it.Value.Parent != null && it.Value.Parent == item.id).ToList();
+        //        //var directSubItems = (from it in PublicFields.allItems where groups_ids.Contains(it.OwnedBy) && it.Parent != null && it.Parent == item.ID select it).ToList<Todo.Item>();
+        //        item.SubItems = directSubItems;
 
-                //if (directSubItems != null && directSubItems.Count != 0)
-                //    AddSubTasks(item.SubItems);
+        //        //if (directSubItems != null && directSubItems.Count != 0)
+        //        //    AddSubTasks(item.SubItems);
+        //    }
+        //}
+
+        public void attachChildren(TreeNode<Item> node, IEnumerable<Item> children = null)
+        {
+
+            if (children == null)
+                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id);
+
+            foreach (var child in children)
+            {
+                var childNode = node.Children.Add(child);
+                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id);
+
+                if (childrenOfChild != null)
+                {
+                    attachChildren(childNode, childrenOfChild);
+                }
             }
         }
 
         async void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
         {
-            PublicFields.allItems = (List<Todo.Item>) await PublicFields.Database.GetItems();
             if (PublicFields.Database.userGroups == null)
-                PublicFields.Database.userGroups = await PublicFields.Database.getGroups();           
-            AddSubTasks(PublicFields.allItems); // links subtasks to the items
+                PublicFields.Database.userGroups = await PublicFields.Database.getGroups();
 
-            PublicFields.domains = PublicFields.allItems.Where(it => it.Type == 1).ToList();
+            PublicFields.ItemTree = new Tree<Item>(new Item { Name = "ROOT" });
+            PublicFields.ItemList = (List<Todo.Item>) await PublicFields.Database.GetItems();
+
+            PublicFields.domains = new List<TreeNode<Item>>();
+            foreach (var domain in PublicFields.ItemList.Where(it => it.Type == 1).ToList())
+            {
+                var domainNode = PublicFields.ItemTree.Children.Add(domain);
+                attachChildren(domainNode);
+                PublicFields.domains.Add(domainNode);
+            }
+
+
+                    
+            //AddSubTasks(PublicFields.ItemList); // links subtasks to the items
+
+
+
+            
             
             var adapter = new MyAdapter(SupportFragmentManager);
 
-            foreach (Todo.Item domain in PublicFields.domains)
+            foreach (TreeNode<Item> domain in PublicFields.domains)
             {
-                adapter.AddFragment(new CheeseListFragment(domain), domain.Name);
+                adapter.AddFragment(new CheeseListFragment(domain), domain.Value.Name);
             }
             viewPager.Adapter = adapter;
             currentDomainFragment = ((CheeseListFragment)((MyAdapter)viewPager.Adapter).GetItem(viewPager.CurrentItem));

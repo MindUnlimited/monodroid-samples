@@ -404,8 +404,8 @@ namespace Todo
         //        handler(this, new PropertyChangedEventArgs(propertyName));
         //}
 
-        [JsonIgnore]
-        public List<Todo.Item> SubItems { get; set; }
+        //[JsonIgnore]
+        //public List<Todo.Item> SubItems { get; set; }
 
         [Version]
         public string Version { get; set; }

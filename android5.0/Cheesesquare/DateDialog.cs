@@ -18,9 +18,9 @@ namespace Cheesesquare
     public class DateDialog : DialogFragment, DatePickerDialog.IOnDateSetListener
     {
         EditText txtDate;
-        Todo.Item Item;
+        Todo.TreeNode<Todo.Item> Item;
 
-        public DateDialog(View view, Todo.Item item)
+        public DateDialog(View view, Todo.TreeNode<Todo.Item> item)
         {
             txtDate = (EditText)view;
             Item = item;
@@ -44,9 +44,9 @@ namespace Cheesesquare
             
             Calendar calendar = Calendar.Instance;
             calendar.Set(year, monthOfYear, dayOfMonth, 0, 0, 0);
-            Item.EndDate = calendar.TimeInMillis.ToString(); // time in milliseconds
+            Item.Value.EndDate = calendar.TimeInMillis.ToString(); // time in milliseconds
 
-            if (Item.EndDate != null && Item.EndDate != "")
+            if (Item.Value.EndDate != null && Item.Value.EndDate != "")
             {
                 //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                 //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
@@ -54,7 +54,7 @@ namespace Cheesesquare
                 {
                     //Date mDate = sdf.Parse(item.EndDate);
                     long timeInMilliseconds;
-                    long.TryParse(Item.EndDate, out timeInMilliseconds);
+                    long.TryParse(Item.Value.EndDate, out timeInMilliseconds);
                     if (timeInMilliseconds > 0)
                         txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                 }

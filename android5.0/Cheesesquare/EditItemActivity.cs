@@ -28,8 +28,7 @@ namespace Cheesesquare
     {
         private Android.Support.V7.Widget.Toolbar toolbar;
 
-        private Todo.Item item;
-        private Todo.Item parentItem;
+        private Todo.TreeNode<Todo.Item> item;
 
         private bool newItem;
 
@@ -65,10 +64,7 @@ namespace Cheesesquare
             newItem = Intent.GetBooleanExtra("newItem", false);
 
             if (itemID != null && itemID != "")
-                item = PublicFields.allItems.Find(it => it.id == itemID);
-
-            string parentItemID = Intent.GetStringExtra("parentItemID");
-            parentItem = PublicFields.allItems.Find(it => it.id == parentItemID);
+                item = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == itemID);
 
             // Create your application here
             SetContentView(Resource.Layout.activity_edit_item);
@@ -80,7 +76,6 @@ namespace Cheesesquare
             itemImportance = FindViewById<RatingBar>(Resource.Id.item_ratingbar);
             itemImportance.RatingBarChange += ItemImportance_RatingBarChange;
 
-            subTaskList = new List<Todo.Item>();
             //shareList = new List<string>();
             selectedContacts = new List<Todo.User>();
 
@@ -92,12 +87,12 @@ namespace Cheesesquare
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
             SupportActionBar.SetDisplayShowHomeEnabled(true);
 
+            subTaskList = new List<Todo.Item>();
+
             subTaskListView = FindViewById<ListView>(Resource.Id.subtask_lists);
             subTaskArrayAdapter = new ArrayAdapter<Todo.Item>(this, Android.Resource.Layout.SimpleListItem1, Android.Resource.Id.Text1, subTaskList);
             subTaskArrayAdapter.SetNotifyOnChange(true);
             subTaskListView.Adapter = subTaskArrayAdapter;
-
-            
 
             txtDate = (EditText)FindViewById(Resource.Id.item_date);
             txtDate.FocusChange += TxtDate_FocusChange;
@@ -105,17 +100,17 @@ namespace Cheesesquare
             shareEditText = FindViewById<EditText>(Resource.Id.user_to_share_name);
             shareEditText.Click += ShareEditText_Click;
 
-            if (item != null && item.OwnedBy != PublicFields.Database.defGroup.ID)
+            if (item != null && item.Value.OwnedBy != PublicFields.Database.defGroup.ID)
             {
-                var ownedByGroupTask = PublicFields.Database.GetGroupByID(item.OwnedBy);
+                var ownedByGroupTask = PublicFields.Database.GetGroupByID(item.Value.OwnedBy);
                 Todo.Group ownedByGroup = ownedByGroupTask.Result;
                 shareEditText.Text = ownedByGroup.Name;
             }
                 
 
             commentText = FindViewById<EditText>(Resource.Id.insert_comment_text);
-            if (item != null && item.Notes != null)
-                commentText.Text = item.Notes;
+            if (item != null && item.Value.Notes != null)
+                commentText.Text = item.Value.Notes;
             commentText.AfterTextChanged += CommentText_AfterTextChanged;
 
             shareListView = FindViewById<ListView>(Resource.Id.user_to_share_listview);
@@ -147,20 +142,17 @@ namespace Cheesesquare
 
                         var subItem = new Todo.Item();
                         subItem.Name = subtaskText.Text;
-                        subItem.Parent = item.id;
-                        subItem.OwnedBy = item.OwnedBy;
+                        subItem.Parent = item.Value.id;
+                        subItem.OwnedBy = item.Value.OwnedBy;
 
-                        if (item.Type < 4)
-                            subItem.Type = item.Type + 1;
+                        if (item.Value.Type < 4)
+                            subItem.Type = item.Value.Type + 1;
                         else
                             subItem.Type = 4;
 
                         subTaskArrayAdapter.Add(subItem);
 
-                        if (item.SubItems == null)
-                            item.SubItems = new List<Todo.Item>();
-
-                        item.SubItems.Add(subItem);
+                        item.Children.Add(subItem);
                         subTaskList.Add(subItem);
 
                         subtaskText.Text.Trim('\n');
@@ -179,12 +171,12 @@ namespace Cheesesquare
             {
                 //item = PublicFields.allItems.Find(it => it.id == itemID);
 
-                itemName.Text = item.Name;
-                itemImportance.Rating = item.Importance;
-                toolbar.Title = item.Name;
-                commentText.Text = item.Notes;
+                itemName.Text = item.Value.Name;
+                itemImportance.Rating = item.Value.Importance;
+                toolbar.Title = item.Value.Name;
+                commentText.Text = item.Value.Notes;
 
-                if (item.EndDate != null && item.EndDate != "")
+                if (item.Value.EndDate != null && item.Value.EndDate != "")
                 {
                     //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                     //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
@@ -193,7 +185,7 @@ namespace Cheesesquare
                         //DateTime dt = new DateTime();
                         //Date mDate = sdf.Parse(item.EndDate);
                         long timeInMilliseconds;
-                        long.TryParse(item.EndDate, out timeInMilliseconds);
+                        long.TryParse(item.Value.EndDate, out timeInMilliseconds);
                         if (timeInMilliseconds > 0)
                             txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                     }
@@ -203,21 +195,25 @@ namespace Cheesesquare
                     }
                 }
 
-                subTaskList.AddRange(item.SubItems);
-                subTaskArrayAdapter.AddAll(item.SubItems);
-            }
+                
 
-            item = item ?? new Todo.Item(); // if no item yet, make a new one
+                subTaskList.AddRange(from x in item.Children select x.Value);
+                subTaskArrayAdapter.AddAll(item.Children);
+            }
 
             if(newItem)
             {
-                item.Parent = parentItem.id;
-                item.OwnedBy = PublicFields.Database.defGroup.ID;
+                item.Value.Parent = Intent.GetStringExtra("parentItemID");
+                var parentNode = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == item.Value.Parent);
 
-                if (parentItem.Type < 4)
-                    item.Type = parentItem.Type + 1;
+                item = item ?? new Todo.TreeNode<Todo.Item>(new Todo.Item(), parentNode); // if no item yet, make a new one
+
+                item.Value.OwnedBy = parentNode.Value.OwnedBy;
+
+                if (parentNode.Value.Type < 4)
+                    item.Value.Type = parentNode.Value.Type + 1;
                 else // type does not go lower than 4 (task)
-                    item.Type = 4;
+                    item.Value.Type = 4;
 
                 toolbar.Title = "New item";
             }
@@ -227,18 +223,18 @@ namespace Cheesesquare
 
         private void CommentText_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
         {
-            item.Notes = commentText.Text;
+            item.Value.Notes = commentText.Text;
         }
 
         private void ItemImportance_RatingBarChange(object sender, RatingBar.RatingBarChangeEventArgs e)
         {
-            item.Importance = (int) itemImportance.Rating;
+            item.Value.Importance = (int) itemImportance.Rating;
         }
 
         private void ItemName_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
         {
             toolbar.Title = itemName.Text;
-            item.Name = itemName.Text;
+            item.Value.Name = itemName.Text;
         }
 
         private void ShareEditText_Click(object sender, EventArgs e)
@@ -367,7 +363,7 @@ namespace Cheesesquare
                     return true;
                 case Resource.Id.edit_done:
 
-                    if (string.IsNullOrEmpty(item.Name))
+                    if (string.IsNullOrEmpty(item.Value.Name))
                     {
                         new Android.Support.V7.App.AlertDialog.Builder(this)
                         .SetMessage("Name is empty!")
@@ -418,14 +414,21 @@ namespace Cheesesquare
                             //item = getItemTask.Result;
                             //item.SubItems = subTaskList;
 
-                            // add to local memory
-                            PublicFields.allItems.Add(item);
+                            //// add to local memory
+                            //PublicFields.ItemDictionary.Add(item);
+
+
 
                             // add to subtasks field of parent item
-                            var parentIndex = PublicFields.allItems.FindIndex(it => it.id == item.Parent);
-                            var parentUpdated = PublicFields.allItems.Find(it => it.id == item.Parent);
-                            parentUpdated.SubItems.Add(item);
-                            PublicFields.allItems[parentIndex] = parentUpdated;
+                            var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == item.Value.Parent);
+                            parent.Children.Add(item);
+
+                            PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
+
+                            //var parentIndex = PublicFields.ItemDictionary.FindIndex(it => it.id == item.Parent);
+                            //var parentUpdated = PublicFields.ItemDictionary.Find(it => it.id == item.Parent);
+                            //parentUpdated.SubItems.Add(item);
+                            //PublicFields.ItemDictionary[parentIndex] = parentUpdated;
                         }
                         else
                         {
@@ -443,21 +446,28 @@ namespace Cheesesquare
                             //item = getItemTask.Result;
                             //item.SubItems = subTaskList;
 
-                            int index = PublicFields.allItems.FindIndex(it => it.id == item.id);
-                            PublicFields.allItems[index] = item;
 
-                            // update in subitems of parent
-                            var parentIndex = PublicFields.allItems.FindIndex(it => it.id == item.Parent);
-                            var parent = PublicFields.allItems.Find(it => it.id == item.Parent);
-                            var itemIndexInSubItems = parent.SubItems.FindIndex(it => it.id == item.id);
-                            parent.SubItems[itemIndexInSubItems] = item;
-                            PublicFields.allItems[parentIndex] = parent;
+                            var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == item.Value.Parent);
+                            parent.Children.Add(item);
+
+                            PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
+
+
+                            //int index = PublicFields.ItemDictionary.FindIndex(it => it.id == item.id);
+                            //PublicFields.ItemDictionary[index] = item;
+
+                            //// update in subitems of parent
+                            //var parentIndex = PublicFields.ItemDictionary.FindIndex(it => it.id == item.Parent);
+                            //var parent = PublicFields.ItemDictionary.Find(it => it.id == item.Parent);
+                            //var itemIndexInSubItems = parent.SubItems.FindIndex(it => it.id == item.id);
+                            //parent.SubItems[itemIndexInSubItems] = item;
+                            //PublicFields.ItemDictionary[parentIndex] = parent;
                         }
 
-                        if (string.IsNullOrEmpty(item.id))
-                            item.id = "temporaryID";
+                        if (string.IsNullOrEmpty(item.Value.id))
+                            item.Value.id = "temporaryID";
 
-                        returnIntent.PutExtra("itemID", item.id);
+                        returnIntent.PutExtra("itemID", item.Value.id);
 
 
                         SetResult(Result.Ok, returnIntent);
