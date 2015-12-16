@@ -35,13 +35,13 @@
                     android:textAppearance="?android:attr/textAppearanceLarge"
                     android:textColor="#333333"
                     android:text="Caption"
-                    android:id="@+id/task_title" />
-                <LinearLayout
+                    android:id="@+id/task_title"
+                    android:layout_marginBottom="4dp" />
+                <com.sample.cheesesquare.FlowLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="8dp">
+                    android:layout_marginBottom="8dp">
                     <TextView
                         android:id="@+id/status_task"
                         android:layout_width="wrap_content"
@@ -99,7 +99,7 @@
                         android:textColor="#565656"
                         android:text="5 stars"
                         android:padding="2dp" />
-                </LinearLayout>
+                </com.sample.cheesesquare.FlowLayout>
             </LinearLayout>
             <ImageView
                 android:layout_width="80dp"

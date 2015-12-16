@@ -129,44 +129,44 @@ namespace Cheesesquare
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
             collapsingToolbar.SetTitle (item.Value.Name);
 
-            txtDate = FindViewById<TextView>(Resource.Id.txtdate);
-            if (item.Value.EndDate != null && item.Value.EndDate != "")
-            {
-                //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
-                //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-                try
-                {
-                    //Date mDate = sdf.Parse(item.EndDate);
-                    long timeInMilliseconds;
-                    long.TryParse(item.Value.EndDate, out timeInMilliseconds);
-                    if (timeInMilliseconds > 0)
-                        txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
-                }
-                catch (ParseException e)
-                {
-                    e.PrintStackTrace();
-                }
-            }
-            else
-            {
-                txtDate.Text = "No due date";
-            }
+            //txtDate = FindViewById<TextView>(Resource.Id.txtdate);
+            //if (item.Value.EndDate != null && item.Value.EndDate != "")
+            //{
+            //    //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
+            //    //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+            //    try
+            //    {
+            //        //Date mDate = sdf.Parse(item.EndDate);
+            //        long timeInMilliseconds;
+            //        long.TryParse(item.Value.EndDate, out timeInMilliseconds);
+            //        if (timeInMilliseconds > 0)
+            //            txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
+            //    }
+            //    catch (ParseException e)
+            //    {
+            //        e.PrintStackTrace();
+            //    }
+            //}
+            //else
+            //{
+            //    txtDate.Text = "No due date";
+            //}
 
-            progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
-            progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
-            progressSlider.ProgressChanged += ProgressSlider_ProgressChanged;
+            //progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
+            //progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
+            //progressSlider.ProgressChanged += ProgressSlider_ProgressChanged;
 
-            importance = FindViewById<RatingBar>(Resource.Id.ratingbar);
-            importance.RatingBarChange += Importance_RatingBarChange;
-            importance.Rating = item.Value.Importance;
+            //importance = FindViewById<RatingBar>(Resource.Id.ratingbar);
+            //importance.RatingBarChange += Importance_RatingBarChange;
+            //importance.Rating = item.Value.Importance;
 
-            comment = FindViewById<TextView>(Resource.Id.comment_text);
-            comment.Text = item.Value.Notes ?? "no notes";
+            //comment = FindViewById<TextView>(Resource.Id.comment_text);
+            //comment.Text = item.Value.Notes ?? "no notes";
 
-            status = FindViewById<TextView>(Resource.Id.status_text);
-            status.Click += statusClick;
+            //status = FindViewById<TextView>(Resource.Id.status_text);
+            //status.Click += statusClick;
 
-            statusIcon = FindViewById<ImageView>(Resource.Id.status_icon);
+            //statusIcon = FindViewById<ImageView>(Resource.Id.status_icon);
 
             editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
             editFAB.Click += EditFAB_Click;
@@ -510,30 +510,30 @@ Intent intent)
             //6: On hold / Blocked
             //7: Completed
 
-            switch (item.Value.Status)
-            {
-                case -1:
-                    status.Text = "Cancelled";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
-                    break;
-                case 0:
-                    status.Text = "Backlog";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
-                    break;
-                case 6:
-                    status.Text = "On Hold";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
-                    break;
-                case 7:
-                    status.Text = "Completed";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
-                    break;
-                default:
-                    status.Text = "Started";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
-                    break;
+            //switch (item.Value.Status)
+            //{
+            //    case -1:
+            //        status.Text = "Cancelled";
+            //        statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
+            //        break;
+            //    case 0:
+            //        status.Text = "Backlog";
+            //        statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
+            //        break;
+            //    case 6:
+            //        status.Text = "On Hold";
+            //        statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
+            //        break;
+            //    case 7:
+            //        status.Text = "Completed";
+            //        statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
+            //        break;
+            //    default:
+            //        status.Text = "Started";
+            //        statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
+            //        break;
 
-            }
+            //}
         }
 
         public override void Finish()

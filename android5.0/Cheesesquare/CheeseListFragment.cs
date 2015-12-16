@@ -15,9 +15,66 @@ using Android.Text.Format;
 using Android.App;
 using Java.Text;
 using Java.Util;
+using Android.Support.V4.View;
 
 namespace Cheesesquare
 {
+    [Register("com.sample.cheesesquare.ScrollForwardingRecyclerView")]
+    public class ScrollForwardingRecyclerView : RecyclerView//, GestureDetector.IOnGestureListener
+    {
+        //private GestureDetectorCompat mDetector;
+
+        public ScrollForwardingRecyclerView(Context context): base(context)
+        {
+            NestedScrollingEnabled = true;
+            //mDetector = new GestureDetectorCompat(context, this);
+        }
+
+        public ScrollForwardingRecyclerView(Context context, IAttributeSet attributes) : base(context, attributes)
+        {
+            NestedScrollingEnabled = true;
+            //mDetector = new GestureDetectorCompat(context, this);
+        }
+
+        //public override bool OnTouchEvent(MotionEvent e)
+        //{
+        //    Boolean handled = mDetector.OnTouchEvent(e);
+        //    if (!handled && e.Action == MotionEventActions.Up) {
+        //        StopNestedScroll();
+        //    }
+        //    return true;
+        //}
+
+        //public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
+        //{
+        //    //throw new NotImplementedException();
+        //    return true;
+        //}
+
+        //public void OnLongPress(MotionEvent e)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
+        //{
+        //    DispatchNestedPreScroll(0, (int)distanceY, null, null);
+        //    DispatchNestedScroll(0, 0, 0, 0, null);
+        //    return true;
+        //}
+
+        //public void OnShowPress(MotionEvent e)
+        //{
+        //    //throw new NotImplementedException();
+        //}
+
+        //public bool OnSingleTapUp(MotionEvent e)
+        //{
+        //    return true;
+        //    //throw new NotImplementedException();
+        //}
+    }
+
     public class CheeseListFragment : Android.Support.V4.App.Fragment
     {
         public Todo.TreeNode<Todo.Item> domain;
@@ -41,9 +98,10 @@ namespace Cheesesquare
         {
             var v = inflater.Inflate(
                 Resource.Layout.fragment_cheese_list, container, false);
-            var rv = v.JavaCast<RecyclerView>();
+            var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
 
             setupRecyclerView(rv);
+            rv.NestedScrollingEnabled = true;
 
             return rv;
         }

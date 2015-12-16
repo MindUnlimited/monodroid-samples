@@ -107,6 +107,7 @@
     <Compile Include="FastScroller Code\Adapters\LargeAdapter.cs" />
     <Compile Include="FastScroller Code\DividerItemDecoration.cs" />
     <Compile Include="FastScroller Code\FastScroller.cs" />
+    <Compile Include="FlowLayout.cs" />
     <Compile Include="LoginActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Models\Contact.cs" />

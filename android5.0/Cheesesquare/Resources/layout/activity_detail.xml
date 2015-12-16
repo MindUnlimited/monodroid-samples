@@ -195,9 +195,6 @@
 
       </android.support.design.widget.CollapsingToolbarLayout>
 
-
-
-
     </android.support.design.widget.AppBarLayout>
 
 
@@ -400,7 +397,8 @@
                 android:id="@+id/txt_date_lin_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
 
               <ImageView
                 android:id="@+id/comment_icon"
@@ -436,7 +434,7 @@
                 android:src="@drawable/ic_insert_comment_black_24dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
-                android:layout_alignBottom="@+id/status_text"/>
+                android:layout_alignBottom="@+id/comment_text"/>
               <TextView
                   android:id="@+id/status_text"
                   android:layout_width="wrap_content"
