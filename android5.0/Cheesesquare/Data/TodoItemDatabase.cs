@@ -94,7 +94,7 @@ namespace Cheesesquare
                     var contactsString = "";
                     foreach (User contact in contactList)
                     {
-                        contactsString += "'" + contact.Email + "'" + ",";
+                        contactsString += "'" + contact.Email.ToLower() + "'" + ",";
                     }
                     contactsString = contactsString.TrimEnd(',');
 
@@ -187,7 +187,7 @@ namespace Cheesesquare
                 if (emailAddress != null)
                 {
                     User user = new User();
-                    user.Email = emailAddress;
+                    user.Email = emailAddress.ToLower();
                     user.Name = contact.FirstName + " " + contact.LastName;
                     contacts.Add(user);
                 }
@@ -491,7 +491,7 @@ namespace Cheesesquare
 
         public async Task<User> GetUser(string email)
         {
-            var user = await userTable.Where(usr => usr.Email == email).ToListAsync();
+            var user = await userTable.Where(usr => usr.Email.ToLower() == email.ToLower()).ToListAsync();
             return user.FirstOrDefault();            
         }
 
@@ -593,7 +593,7 @@ namespace Cheesesquare
                 
                 if (usr != defUser) // on all users except for the one currently logged in
                 {
-                    var retrievedUser = await GetUser(usr.Email);
+                    var retrievedUser = await GetUser(usr.Email.ToLower());
                     if (retrievedUser == null) // not in db (sqlite and azure)
                     {
                         await newUser(usr);
@@ -867,7 +867,23 @@ namespace Cheesesquare
                 //var users = await userTable.ToListAsync();
                 //var all_users = await userTable.ToListAsync();
 
-                var existingUserList = await userTable.Where(u => u.MicrosoftID == user.Email).ToListAsync();
+                //List<User> existingUserList = new List<User>();
+                //foreach (MobileServiceAuthenticationProvider prov in Enum.GetValues(typeof(MobileServiceAuthenticationProvider)))
+                //{
+                //    switch (prov)
+                //    {
+                //        case MobileServiceAuthenticationProvider.Facebook:
+                //            await userTable.Where(u => u.Email== user.Email.ToLower()).ToListAsync();
+                //            break;
+                //        default:
+
+                //            break;
+                //    }
+                //    await userTable.Where(u => u.MicrosoftID.ToLower() == user.Email.ToLower()).ToListAsync();
+                //    existingUserList.AddRange
+                //}
+
+                var existingUserList = await userTable.Where(u => u.Email.ToLower() == user.Email.ToLower()).ToListAsync();
                 User foundUser = existingUserList.FirstOrDefault();
                 return foundUser;
             }
@@ -888,7 +904,7 @@ namespace Cheesesquare
                 var usr = client.CurrentUser;
                 JObject userObject = (JObject) await client.InvokeApiAsync("userInfo", HttpMethod.Get, null);
 
-                // does the user already exist?
+                // properly logged in?
                 if (userObject != null)
                 {
                     userName = (string)userObject["name"];
@@ -899,20 +915,16 @@ namespace Cheesesquare
                     //var users = await userTable.ToListAsync();
                     //var all_users = await userTable.ToListAsync();
 
-                    List<User> existing_user = new List<User>();
                     switch (provider)
                     {
                         case MobileServiceAuthenticationProvider.Facebook:
                             email = (string)userObject["email"];
-                            existing_user = await userTable.Where(u => u.FacebookID == providerID).ToListAsync();
                             break;
                         case MobileServiceAuthenticationProvider.Google:
                             email = (string)userObject["email"];
-                            existing_user = await userTable.Where(u => u.GoogleID == providerID).ToListAsync();
                             break;
                         case MobileServiceAuthenticationProvider.MicrosoftAccount:
                             email = (string)userObject["emails"]["account"];
-                            existing_user = await userTable.Where(u => u.MicrosoftID == providerID).ToListAsync();
                             break;
                         case MobileServiceAuthenticationProvider.Twitter:
                             break;
@@ -922,6 +934,11 @@ namespace Cheesesquare
                             break;
                     }
 
+                    List<User> existing_user = new List<User>();
+                    existing_user = await userTable.Where(u => u.Email.ToLower() == email.ToLower()).ToListAsync();
+
+
+
                     //var existing_user = await userTable.Where(u => u.MicrosoftID == userID).ToListAsync();
                     //var groups = await groupTable.ToListAsync();
 
@@ -930,7 +947,7 @@ namespace Cheesesquare
                         User user = new User
                         {
                             Name = userName,
-                            Email = email
+                            Email = email.ToLower()
                         };
 
                         switch (provider)
@@ -982,46 +999,50 @@ namespace Cheesesquare
 
                         defUser = user;
                     }
-                    else if (existing_user.Count == 1)
+                    else if (existing_user.Count == 1) // found a user with the right email address but do the providers match?
                     {
-                        var user = existing_user.FirstOrDefault<User>();
+                        var user = existing_user[0];
 
-                        if(string.IsNullOrEmpty(user.Email))
-                        {
-                            user.Email = email;
-
-                            await userTable.UpdateAsync(user);
-                            await client.SyncContext.PushAsync();
-                        }
-                        
                         // if first time logging in with account we already made for sharing then store the provider that the user uses
-                        if (string.IsNullOrEmpty(user.FacebookID) && string.IsNullOrEmpty(user.MicrosoftID) && string.IsNullOrEmpty(user.GoogleID))
+                        // or add another provider on the same email account
+                        switch (provider)
                         {
-                            switch (provider)
-                            {
-                                case MobileServiceAuthenticationProvider.Facebook:
+                            case MobileServiceAuthenticationProvider.Facebook:
+                                if (string.IsNullOrEmpty(user.FacebookID))
+                                {
                                     user.FacebookID = providerID;
-                                    break;
-                                case MobileServiceAuthenticationProvider.Google:
+                                    Debug.WriteLine("adding new provider ID to user: " + providerID);
+                                    await userTable.UpdateAsync(user);
+                                    await client.SyncContext.PushAsync();
+                                }
+                                break;
+                            case MobileServiceAuthenticationProvider.Google:
+                                if (string.IsNullOrEmpty(user.GoogleID))
+                                {
                                     user.GoogleID = providerID;
-                                    break;
-                                case MobileServiceAuthenticationProvider.MicrosoftAccount:
+                                    Debug.WriteLine("adding new provider ID to user: " + providerID);
+                                    await userTable.UpdateAsync(user);
+                                    await client.SyncContext.PushAsync();
+                                }
+                                break;
+                            case MobileServiceAuthenticationProvider.MicrosoftAccount:
+                                if (string.IsNullOrEmpty(user.MicrosoftID))
+                                {
                                     user.MicrosoftID = providerID;
-                                    break;
-                                case MobileServiceAuthenticationProvider.Twitter:
-                                    break;
-                                case MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory:
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                            await userTable.UpdateAsync(user);
-                            await client.SyncContext.PushAsync();
+                                    Debug.WriteLine("adding new provider ID to user: " + providerID);
+                                    await userTable.UpdateAsync(user);
+                                    await client.SyncContext.PushAsync();
+                                }
+                                break;
+                            case MobileServiceAuthenticationProvider.Twitter:
+                                break;
+                            case MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory:
+                                break;
+                            default:
+                                break;
                         }
-
                         Debug.WriteLine("user exists, ID found: " + user.ID);
-                        
+
                         userID = user.ID;
                         defUser = user;
                         defGroup = await getDefaultGroup();

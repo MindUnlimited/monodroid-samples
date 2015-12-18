@@ -203,8 +203,8 @@ namespace Cheesesquare
 
             if(newItem)
             {
-                item.Value.Parent = Intent.GetStringExtra("parentItemID");
-                var parentNode = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == item.Value.Parent);
+                var parentItemId = Intent.GetStringExtra("parentItemID");
+                var parentNode = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == parentItemId);
 
                 item = item ?? new Todo.TreeNode<Todo.Item>(new Todo.Item(), parentNode); // if no item yet, make a new one
 
@@ -217,8 +217,6 @@ namespace Cheesesquare
 
                 toolbar.Title = "New item";
             }
-
-            
         }
 
         private void CommentText_AfterTextChanged(object sender, Android.Text.AfterTextChangedEventArgs e)
