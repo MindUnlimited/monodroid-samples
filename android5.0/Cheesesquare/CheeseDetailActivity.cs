@@ -306,59 +306,48 @@ Intent intent)
                         break;
                     case
                         EDIT_ITEM: // edited the detail item itself
-                        var edited = intent.GetBooleanExtra("edited", false);
+
+                        var edited = intent.GetBooleanExtra("edited", false); // pressed the edit button or added new one
                         string itemID = intent.GetStringExtra("itemID");
                         bool groupChanged = intent.GetBooleanExtra("groupChanged", false);
+
+                        item = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == itemID);
 
                         if (groupChanged)
                         {
                             List<Todo.User> selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(intent.GetStringExtra("selectedContacts"));
-                            string groupName = intent.GetStringExtra("groupName");
+                            string groupName = intent.GetStringExtra("groupName"); // only has a name if user generated group
                             //TODO: check if group already exists
 
                             if (selectedContacts != null && selectedContacts.Count > 0) // contacts selected so make a group for them
                             {
-                                // make a new group
                                 var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
                                 if (ownedByGroupResult != null)
                                 {
                                     item.Value.OwnedBy = ownedByGroupResult.ID;
-                                    await PublicFields.Database.SaveItem(item.Value);
+                                    PublicFields.ItemTree.FindAndReplace(item.Value.id, item);
                                 }
                             }
                         }
 
-
                         if (edited) // the detail item
                         {
                             itemChanged = true;
+                            await PublicFields.Database.SaveItem(item.Value);
 
-                            var detailItem = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == itemID);
-
-                            await PublicFields.Database.SaveItem(detailItem.Value);
-                            for (int i = 0; i < detailItem.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            for (int i = 0; i < item.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
-                                var it = detailItem.Children[i];
+                                var it = item.Children[i];
                                 if (string.IsNullOrEmpty(it.Value.id))
                                     await PublicFields.Database.SaveItem(it.Value);
 
-                                detailItem.Children[i] = it; // store with newly acquired id
+                                item.Children[i] = it; // store with newly acquired id
 
                                 if (PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == it.Value.id) != null)
                                 {
                                     PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
                                 }
-                                else
-                                {
-                                    //?
-                                }
-                                    //PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
-                                //PublicFields.ItemDictionary[it.Value.id] = it;
                             }
-
-
-                            //PublicFields.ItemDictionary[detailItem.Value.id] = detailItem;
-                            item = detailItem;
 
                             // refresh values
                             collapsingToolbar.SetTitle(item.Value.Name);

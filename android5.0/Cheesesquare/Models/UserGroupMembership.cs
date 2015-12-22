@@ -6,10 +6,12 @@ using Microsoft.WindowsAzure.MobileServices;
 
 namespace Todo
 {
-    public class UserGroupMembership
+    public class UserGroupMembership // only used for pointing to default group from user, connecting user id with def group id
     {
-        public string ID { get; set; }
+        public string ID { get; set; } // user id
 
-        public string MembershipID { get; set; }
+        //public string MemberID { get; set; } 
+
+        public string MembershipID { get; set; } // group id
     }
 }

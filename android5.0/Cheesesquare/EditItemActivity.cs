@@ -383,7 +383,7 @@ namespace Cheesesquare
                                 returnIntent.PutExtra("groupName", shareEditText.Text);
                             }
                         }
-                        else if (selectedContact != null) // invisible group containing only two members
+                        else if (selectedContact != null) // invisible group containing only two members (selected user and self)
                         {
                             returnIntent.PutExtra("groupChanged", groupChanged);
                             selectedContacts.Clear();

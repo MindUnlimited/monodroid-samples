@@ -350,13 +350,13 @@ namespace Cheesesquare
 
         public async Task createDomains(string OwnedByID)
         {
-            if (defGroup == null)
-                defGroup = await getDefaultGroup();
+            //if (defGroup == null)
+            //    defGroup = await getDefaultGroup();
 
-            Item personal = new Item { Name = "Personal", Type = 1, OwnedBy = OwnedByID, CreatedBy = defGroup.ID};
-            Item friends = new Item { Name = "Friends & Family", Type = 1, OwnedBy = OwnedByID, CreatedBy = defGroup.ID };
-            Item work = new Item { Name = "Work", Type = 1, OwnedBy = OwnedByID, CreatedBy = defGroup.ID };
-            Item community = new Item { Name = "Community", Type = 1, OwnedBy = OwnedByID, CreatedBy = defGroup.ID };
+            Item personal = new Item { Name = "Personal", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
+            Item friends = new Item { Name = "Friends & Family", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
+            Item work = new Item { Name = "Work", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
+            Item community = new Item { Name = "Community", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
 
             await itemTable.InsertAsync(personal);
             await itemTable.InsertAsync(friends);
@@ -510,13 +510,17 @@ namespace Cheesesquare
             }  
             else if (groupmembers.Count == 2) // group invisible to the users containing only two members
             {
-                var defGroupUser1 = await getDefaultGroup(groupmembers[0]);
-                var defGroupUser2 = await getDefaultGroup(groupmembers[1]);
+                var user1 = await GetUser(groupmembers[0].Email.ToLower());
+                var user2 = await GetUser(groupmembers[1].Email.ToLower());
+
+                var defGroupUser1 = await getDefaultGroup(user1);
+                var defGroupUser2 = await getDefaultGroup(user2);
 
                 if (defGroupUser1 == null || defGroupUser2 == null)
                     return null;
 
                 groupWithCorrectName = userGroups.Find(grp => (grp.Name == defGroupUser1.ID + "+" + defGroupUser2.ID) || (grp.Name == defGroupUser2.ID + "+" + defGroupUser1.ID));
+                return groupWithCorrectName;
             }
             else // something has gone wrong
             {
@@ -590,7 +594,6 @@ namespace Cheesesquare
             // check whether the users in users already use the app
             foreach (var usr in users)
             {
-                
                 if (usr != defUser) // on all users except for the one currently logged in
                 {
                     var retrievedUser = await GetUser(usr.Email.ToLower());
@@ -638,62 +641,34 @@ namespace Cheesesquare
 
             await groupTable.InsertAsync(newGroup);
 
-            //List<Todo.User> newUsers = new List<User>();
-            //for (int i = 0; i < users.Count; i++)
-            //{
-            //    // if the user already exists then replace it with the one in the db
-            //    var userDB = await GetUser(users[i].Email);
-            //    if (userDB != null)
-            //        newUsers.Insert(i, userDB);
-            //    else // add the user to the db with a temporary connection between the contacts email and a newly created user, the rest will be filled in when the contact starts using the app
-            //    // TODO: send an email to notify the contact to use the app
-            //    {
-            //        var newUser = users[i]; // should have a name and email
-            //        if (!string.IsNullOrEmpty(newUser.Name) && !string.IsNullOrEmpty(newUser.Email))
-            //        {
-            //            // insert new user
-            //            await userTable.InsertAsync(newUser);
-            //            //await client.SyncContext.PushAsync();
+            try
+            {
+                await client.SyncContext.PushAsync();
+            }
+            catch(MobileServicePushFailedException ex)
+            {
+                Log.Debug("Database", "push of new group failed");
+            }
 
-            //            Group group = new Group
-            //            {
-            //                Name = newUser.Name
-            //            };
+            foreach (User usr in users)
+            {
+                Group usrDefGroup = await getDefaultGroup(usr);
+                if (!string.IsNullOrEmpty(usrDefGroup.ID) && !string.IsNullOrEmpty(newGroup.ID))
+                {
+                    var ggm = new GroupGroupMembership { MemberID = usrDefGroup.ID, MembershipID = newGroup.ID };
+                    await groupGroupMembershipTable.InsertAsync(ggm);
+                }
 
-            //            // add default group voor user
-            //            await groupTable.InsertAsync(group);
-            //            //await client.SyncContext.PushAsync();
+            }
 
-            //            UserGroupMembership ugm = new UserGroupMembership
-            //            {
-            //                ID = newUser.ID,
-            //                MembershipID = group.ID
-            //            };
-
-            //            await userGroupMembershipTable.InsertAsync(ugm);
-            //            //await client.SyncContext.PushAsync();
-
-            //            await createDomains(group.ID);
-
-            //            newUsers.Insert(i, newUser);
-            //        }
-
-            //        await client.SyncContext.PushAsync();
-            //    }
-            //}
-
-            //foreach( User usr in users)
-            //{
-            //    Group usrDefGroup = await getDefaultGroup(usr);
-            //    if(!string.IsNullOrEmpty(usrDefGroup.ID) && !string.IsNullOrEmpty(newGroup.ID))
-            //    {
-            //        var ggm = new GroupGroupMembership { MemberID = usrDefGroup.ID, MembershipID = newGroup.ID }; // membership is what they are part of memberid the group they came from
-            //        await groupGroupMembershipTable.InsertAsync(ggm);
-            //    }
-            //}
-
-            await client.SyncContext.PushAsync();
-
+            try
+            {
+                await client.SyncContext.PushAsync();
+            }
+            catch (MobileServicePushFailedException ex)
+            {
+                Log.Debug("Database", "push of groupgroupmembership failed");
+            }
             return newGroup;
         }
 

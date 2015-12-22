@@ -336,14 +336,6 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                 attachChildren(domainNode);
                 PublicFields.domains.Add(domainNode);
             }
-
-
-                    
-            //AddSubTasks(PublicFields.ItemList); // links subtasks to the items
-
-
-
-            
             
             var adapter = new MyAdapter(SupportFragmentManager);
 
