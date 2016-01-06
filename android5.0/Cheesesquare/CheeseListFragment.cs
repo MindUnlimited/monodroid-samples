@@ -215,9 +215,10 @@ namespace Cheesesquare
                 NotifyDataSetChanged();
             }
 
-            public void addItem(Todo.TreeNode<Todo.Item> item)
+            public void AddItem(Todo.TreeNode<Todo.Item> item)
             {
                 items.Add(item);
+                NotifyItemInserted(items.Count);
             }
 
             //This will fire any event handlers that are registered with our ItemClick
@@ -263,6 +264,12 @@ namespace Cheesesquare
                 this.DeleteClick += OnDeleteClick;
             }
 
+            public void ChangeDateSet(Todo.TreeNodeList<Todo.Item> items)
+            {
+                this.items = items ?? new Todo.TreeNodeList<Todo.Item>(fragment.domain);
+                NotifyDataSetChanged();
+            }
+
             //private void OnSubTaskClick(object sender, int e)
             //{
             //    var adapter = sender as ItemRecyclerViewAdapter;
@@ -286,9 +293,14 @@ namespace Cheesesquare
                 .SetCancelable(false)
                 .SetPositiveButton("Yes", delegate
                 {
+                    var dataSetID = item.Parent.Value.id;
                     RecursiveDelete(item);
 
-                    ApplyChanges();
+                    var dataset = PublicFields.ItemTree.Descendants().First(it => it.Value.id == dataSetID).Children;
+                    ChangeDateSet(dataset);
+
+                    //NotifyItemRemoved(e);
+                    //NotifyDataSetChanged();
 
                     Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Value.Name));
                 })
@@ -332,20 +344,12 @@ namespace Cheesesquare
                 if (item == null)
                     return;
 
-                item.Parent.Children.Remove(item);
+                // remove from tree and db
+                var parent = await item.Parent.Children.Remove(item); // return the parent so we can update the value in the tree
+                PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
 
-                //foreach (var it in item.SubItems)
-                //{
-                //    RecursiveDelete(it);
-                //}
-
-                //// remove memory
-                //PublicFields.allItems.Remove(item);
-                //// remove locally as well
-                //items.Remove(item);
-
-                // remove from db
-                await PublicFields.Database.DeleteItem(item.Value);
+                //// remove from db
+                //await PublicFields.Database.DeleteItem(item.Value);
             }
 
             public override void OnBindViewHolder(RecyclerView.ViewHolder holder, int position)

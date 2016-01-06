@@ -36,8 +36,9 @@ namespace Cheesesquare
             var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
 
             setupRecyclerView(rv);
-            rv.NestedScrollingEnabled = false;
+            
             rv.SetLayoutManager(new RecyclerViewLinearLayoutManager(Context));
+            rv.NestedScrollingEnabled = false;
             rv.HasFixedSize = false;
 
 

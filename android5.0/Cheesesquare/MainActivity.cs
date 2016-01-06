@@ -208,23 +208,6 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                             var item = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
 
-                            //var item = PublicFields.allItems.Find(it => it.id == ItemID);
-                            //var itemIndex = PublicFields.allItems.FindIndex(it => it.id == ItemID);
-
-                            //await PublicFields.Database.SaveItem(item);
-                            //for (int i = 0; i < item.SubItems.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
-                            //{
-                            //    var it = item.SubItems[i];
-                            //    it.Parent = item.id; // change the parent id to the new one
-                            //    if (string.IsNullOrEmpty(it.id))
-                            //        await PublicFields.Database.SaveItem(it);
-                            //    item.SubItems[i] = it; // store with newly acquired id
-                            //}
-
-
-                            //PublicFields.allItems[itemIndex] = item; 
-                            //changes happen on cheesedetail niveau not here
-
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
                         }
@@ -233,38 +216,48 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                     case EDIT_ITEM:// new item
                         var itemID = intent.GetStringExtra("itemID");
+                        var tempID = "temporaryID";
 
                         TreeNode<Item> newItem;
-                        if (itemID == "temporaryID")
+                        if (itemID == tempID)
                         {
                             newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
                             newItem.Value.id = null;
 
                             await PublicFields.Database.SaveItem(newItem.Value);
 
-                            itemID = newItem.Value.id;
+                            itemID = newItem.Value.id; // the newly acquired item id
 
-                            for (int i = 0; i < newItem.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            // check if the subitems of the new card are new as well, if so save them
+                            for (int i = 0; i < newItem.Children.Count; i++)
                             {
                                 var it = newItem.Children[i];
                                 it.Value.Parent = itemID; // change the parent id to the new one
+
                                 if (string.IsNullOrEmpty(it.Value.id))
                                     await PublicFields.Database.SaveItem(it.Value);
+
                                 newItem.Children[i] = it; // store with newly acquired id
                             }
 
                             //PublicFields.ItemDictionary.Remove("temporaryID");
                             //PublicFields.ItemDictionary[itemID] = newItem;
-                            var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
-                            domain.Children.Add(newItem);
+                            //var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
+                            //domain.Children.Add(newItem);
 
-                            PublicFields.ItemTree.FindAndReplace(domain.Value.id, domain);
+                            PublicFields.ItemTree.FindAndReplace(tempID, newItem);
                         }
 
-                        newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+                        //newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
 
-                        currentDomainFragment.itemRecyclerViewAdapter.addItem(newItem);
-                        currentDomainFragment.itemRecyclerViewAdapter.ApplyChanges();
+                        //currentDomainFragment.itemRecyclerViewAdapter.NotifyItemInserted(currentDomainFragment.itemRecyclerViewAdapter.ItemCount);
+
+
+                        var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
+                        currentDomainFragment.itemRecyclerViewAdapter.ChangeDateSet(domain.Children);
+                        //currentDomainFragment.itemRecyclerViewAdapter.NotifyDataSetChanged();
+                        //currentDomainFragment.itemRecyclerViewAdapter.AddItem(newItem);
+                        //currentDomainFragment.itemRecyclerViewAdapter.ApplyChanges();
 
                         break;
                     default:

@@ -130,6 +130,7 @@
     <Compile Include="CheeseListFragment.cs" />
     <Compile Include="CheeseDetailActivity.cs" />
     <Compile Include="SelectContactsActivity.cs" />
+    <Compile Include="WrapContentHeightViewPager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

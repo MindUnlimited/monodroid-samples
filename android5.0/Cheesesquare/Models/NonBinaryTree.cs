@@ -4,6 +4,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Microsoft.WindowsAzure.MobileServices;
 using Android.Util;
+using Cheesesquare;
+using System.Threading.Tasks;
 
 namespace Todo
 {
@@ -70,19 +72,23 @@ namespace Todo
             return Add(new TreeNode<T>(Value));
         }
 
-        public void RemoveAllChildren()
+        public async void RemoveAllChildren()
         {
-            foreach (var child in Parent.Children)
+            for(int i = 0; i < Parent.AmountOfChildren; i++)
             {
-                child.Children.RemoveAllChildren();
-                Remove(child);
-                base.Remove(child);
+                var child = Parent.Children[i];
+                if (child.AmountOfChildren > 0)
+                    child.Children.RemoveAllChildren();
+
+                await PublicFields.Database.DeleteItem(child.Value);
+                await Remove(child);
+                base.Remove(child);                
 
                 Parent.AmountOfChildrenChanged(-1);
             }
         }
 
-        public new void Remove(TreeNode<T> Node)
+        public async new Task<TreeNode<T>> Remove(TreeNode<T> Node)
         {
             if (this.Contains(Node))
             {
@@ -90,13 +96,17 @@ namespace Todo
                 {
                     child.Children.RemoveAllChildren();
                 }
+
+                await PublicFields.Database.DeleteItem(Node.Value);
                 base.Remove(Node);
 
                 Parent.AmountOfChildrenChanged(-1);
+                return Parent;
             }
             else
             {
                 Log.Debug("Tree", string.Format("tried to remove node that was not there {0}", Node));
+                return null;
             }
         }
 
@@ -214,6 +224,7 @@ namespace Todo
                 {
                     //var foundNodeIndex = node.Parent.Children.FindIndex(nod => nod.Value.id == ID);
                     node = newNode;
+                    Log.Info("Tree", string.Format("found item with ID: {0}, replaced it with item {1}", ID, newNode.Value.Name));
                     return true; // node found and has been replaced
                 }
                     

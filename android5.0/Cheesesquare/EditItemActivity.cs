@@ -395,73 +395,17 @@ namespace Cheesesquare
                         }
 
 
-                        if (newItem)
+                        if (!newItem)
                         {
-                            //item = new Todo.Item();
-                            //item.Name = itemName.Text;
-                            //item.Importance = (int)itemImportance.Rating;
-
-
-
-                            //item.SubItems = subTaskList;
-                            //item.Notes = commentText.Text;
-
-                            // add to db and update item locally
-                            //PublicFields.Database.SaveItem(item);
-
-                            //var getItemTask = PublicFields.Database.GetItem(item.id);
-                            //item = getItemTask.Result;
-                            //item.SubItems = subTaskList;
-
-                            //// add to local memory
-                            //PublicFields.ItemDictionary.Add(item);
-
-
-
-                            // add to subtasks field of parent item
-                            var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == item.Value.Parent);
-                            parent.Children.Add(item);
-
-                            PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
-
-                            //var parentIndex = PublicFields.ItemDictionary.FindIndex(it => it.id == item.Parent);
-                            //var parentUpdated = PublicFields.ItemDictionary.Find(it => it.id == item.Parent);
-                            //parentUpdated.SubItems.Add(item);
-                            //PublicFields.ItemDictionary[parentIndex] = parentUpdated;
-                        }
-                        else
-                        {
-                            //item.Name = itemName.Text;
-                            //item.Importance = (int)itemImportance.Rating;
-
                             returnIntent.PutExtra("edited", true);
-
-                            //item.SubItems = subTaskList;
-                            //item.Notes = commentText.Text;
-
-                            // add to db and update item locally
-                            //PublicFields.Database.SaveItem(item);
-                            //var getItemTask = PublicFields.Database.GetItem(item.id);
-                            //item = getItemTask.Result;
-                            //item.SubItems = subTaskList;
-
-
-                            var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == item.Value.Parent);
-                            parent.Children.Add(item);
-
-                            PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
-
-
-                            //int index = PublicFields.ItemDictionary.FindIndex(it => it.id == item.id);
-                            //PublicFields.ItemDictionary[index] = item;
-
-                            //// update in subitems of parent
-                            //var parentIndex = PublicFields.ItemDictionary.FindIndex(it => it.id == item.Parent);
-                            //var parent = PublicFields.ItemDictionary.Find(it => it.id == item.Parent);
-                            //var itemIndexInSubItems = parent.SubItems.FindIndex(it => it.id == item.id);
-                            //parent.SubItems[itemIndexInSubItems] = item;
-                            //PublicFields.ItemDictionary[parentIndex] = parent;
                         }
+
+                        // add to subtasks field of parent item
+                        var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == item.Value.Parent);
+                        parent.Children.Add(item);
+
+                        //PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
+
 
                         if (string.IsNullOrEmpty(item.Value.id))
                             item.Value.id = "temporaryID";
