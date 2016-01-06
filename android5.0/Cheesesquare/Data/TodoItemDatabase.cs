@@ -507,6 +507,9 @@ namespace Cheesesquare
             if (name != null) // real group
             {
                 groupWithCorrectName = userGroups.Find(grp => grp.Name == name);
+
+                if (groupWithCorrectName == null)
+                    return null;
             }  
             else if (groupmembers.Count == 2) // group invisible to the users containing only two members
             {

@@ -101,14 +101,12 @@ namespace Cheesesquare
             var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
 
             setupRecyclerView(rv);
-            rv.NestedScrollingEnabled = true;
-
             return rv;
         }
 
 
 
-        void setupRecyclerView(RecyclerView recyclerView)
+        protected void setupRecyclerView(RecyclerView recyclerView)
         {
             recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
 

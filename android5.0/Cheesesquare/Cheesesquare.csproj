@@ -97,6 +97,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheeseListFragmentDetail.cs" />
     <Compile Include="Data\SQLite_bak.cs" />
     <Compile Include="Data\TodoItemDatabase.cs" />
     <Compile Include="DateDialog.cs" />
@@ -122,6 +123,7 @@
     <Compile Include="Models\TodoItem_bak.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\UserGroupMembership.cs" />
+    <Compile Include="RecyclerViewLinearLayoutManager.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Cheeses.cs" />

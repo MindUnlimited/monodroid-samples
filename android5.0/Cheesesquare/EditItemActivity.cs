@@ -209,6 +209,7 @@ namespace Cheesesquare
                 item = item ?? new Todo.TreeNode<Todo.Item>(new Todo.Item(), parentNode); // if no item yet, make a new one
 
                 item.Value.OwnedBy = parentNode.Value.OwnedBy;
+                item.Value.Parent = parentItemId;
 
                 if (parentNode.Value.Type < 4)
                     item.Value.Type = parentNode.Value.Type + 1;

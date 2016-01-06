@@ -272,7 +272,7 @@ namespace Cheesesquare
         {
             var adapter = new MyAdapter(SupportFragmentManager);
 
-            adapter.AddFragment(new CheeseListFragment(item, dataObserver), item.Value.Name);
+            adapter.AddFragment(new CheeseListFragmentDetail(item, dataObserver), item.Value.Name);
             viewPager.Adapter = adapter;
         }
 
