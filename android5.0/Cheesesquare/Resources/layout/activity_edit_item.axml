@@ -267,6 +267,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="add subtask"
+                        android:inputType="text"
+                        android:imeOptions="actionSend"
                         app:hintTextAppearance="@style/TextAppearence.App.TextInputLayout"
                         android:layout_alignParentRight="true"
                         android:layout_toRightOf="@+id/add_subtask_icon"

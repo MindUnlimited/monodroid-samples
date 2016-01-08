@@ -1137,10 +1137,14 @@ namespace Cheesesquare
                 }
                 else
                 {
-                    if (defGroup == null)
-                        defGroup = await getDefaultGroup();
+                    if(string.IsNullOrEmpty(item.CreatedBy))
+                    {
+                        if (defGroup == null)
+                            defGroup = await getDefaultGroup();
 
-                    item.CreatedBy = defGroup.ID;
+                        item.CreatedBy = defGroup.ID;
+                    }
+
                     //var jObject = JObject.FromObject(item);
                     //var retJObject = await itemTable.InsertAsync(jObject);// (item);
                     //item = retJObject.ToObject<Item>();

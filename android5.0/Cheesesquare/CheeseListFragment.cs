@@ -197,6 +197,7 @@ namespace Cheesesquare
                 int index = items.FindIndex(it => it.Value.id == item.Value.id);
                 if (index >= 0)
                     items[index] = item;
+                NotifyItemChanged(index);
             }
 
             public Todo.TreeNode<Todo.Item> GetValueAt(int position)
@@ -288,19 +289,25 @@ namespace Cheesesquare
                 var adapter = sender as ItemRecyclerViewAdapter;
                 var item = adapter.GetValueAt(e);
 
+
                 new Android.Support.V7.App.AlertDialog.Builder(parent)
                 .SetMessage("Delete this item?")
                 .SetCancelable(false)
-                .SetPositiveButton("Yes", delegate
+                .SetPositiveButton("Yes", async delegate
                 {
                     var dataSetID = item.Parent.Value.id;
-                    RecursiveDelete(item);
+                    var parent = await adapter.items.Remove(item);
+
+                    //RecursiveDelete(item);
+
+                    //var itemInTree = PublicFields.ItemTree.Descendants().First(it => it.Value.id == item.Value.id);
+                    //await itemInTree.Parent.Children.Remove(itemInTree);
 
                     var dataset = PublicFields.ItemTree.Descendants().First(it => it.Value.id == dataSetID).Children;
                     ChangeDateSet(dataset);
 
                     //NotifyItemRemoved(e);
-                    //NotifyDataSetChanged();
+                    NotifyDataSetChanged();
 
                     Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Value.Name));
                 })
@@ -346,7 +353,7 @@ namespace Cheesesquare
 
                 // remove from tree and db
                 var parent = await item.Parent.Children.Remove(item); // return the parent so we can update the value in the tree
-                PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
+                //PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
 
                 //// remove from db
                 //await PublicFields.Database.DeleteItem(item.Value);
@@ -379,42 +386,6 @@ namespace Cheesesquare
 
                 }
 
-                //h.View.Click += (sender, e) =>
-                //{
-                //    var context = h.View.Context;
-                //    var intent = new Intent(context, typeof(CheeseDetailActivity));
-                //    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Name);
-                //    intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.id);
-                //    parent.StartActivityForResult(intent, ITEMDETAIL);
-                //    //context.StartActivity(intent);
-                //};
-
-                //h.Delete.Click += (sender, e) =>
-                //{
-                //    new Android.Support.V7.App.AlertDialog.Builder(parent)
-                //        .SetMessage("Delete this item?")
-                //        .SetCancelable(false)
-                //        .SetPositiveButton("Yes", delegate
-                //        {
-                //            RecursiveDelete(item);
-
-                //            ApplyChanges();
-
-                //            Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", h.TextView.Text));
-                //        })
-                //       .SetNegativeButton("No", delegate
-                //       {
-                //           Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", h.TextView.Text));
-                //       })
-                //       .Show();
-                //};
-
-
-                //long current_time_ms = Java.Lang.JavaSystem.CurrentTimeMillis();
-                //DateTime time = System.DateTime.UtcNow.AddDays(5);
-                //var long_time = time.ToFileTimeUtc();
-
-
                 if (item.Value.EndDate != null && item.Value.EndDate != "")
                 {
                     //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
@@ -437,22 +408,21 @@ namespace Cheesesquare
                     h.DueDate.Text = "No due date";
                 }
 
-
-
-                //DateUtils.GetRelativeTimeSpanString(Application.Context, current_time_ms + 1000 * 60 * 60 * 24 * 2);
-
-                //var importance = vh.View.FindViewById<TextView>(Resource.Id.importance_task);
-                //Log.Debug("tag", vh.AdapterPosition.ToString());
-                //importance.Text = string.Format("{0} stars", GetValueAt(vh.AdapterPosition).Importance) ?? "0 stars";
-
                 int index = 1;
                 if (item.Children == null || item.Children.Count == 0)
                 {
                     h.NoSubTasks.Visibility = ViewStates.Visible;
                     h.AmountOfSubTasks.Text = string.Format("{0} subtasks", 0);
+                    h.MoreThanFiveSubtasks.Visibility = ViewStates.Gone;
+
+                    while (h.SubTasksLinearLayout.ChildCount > 2)
+                        h.SubTasksLinearLayout.RemoveViewAt(1);
                 }
                 else
                 {
+                    h.NoSubTasks.Visibility = ViewStates.Gone;
+                    h.MoreThanFiveSubtasks.Visibility = ViewStates.Gone;
+
                     // more items than the item signaling that there are no tasks and the item signaling
                     // that there are more than 5 tasks
                     while (h.SubTasksLinearLayout.ChildCount > 2) 
@@ -483,12 +453,22 @@ namespace Cheesesquare
 
                         index++;
 
-                        if (index > 5) // 5 items displayed as maximum
+                        if (index > 5) // 5 items max
                         {
-                            h.MoreThanFiveSubtasks.Visibility = ViewStates.Visible;
                             break;
                         }
+
                     }
+
+                    if (item.Children.Count > 5) // 5 items max
+                    {
+                        h.MoreThanFiveSubtasks.Visibility = ViewStates.Visible;
+                    }
+                    else
+                    {
+                        h.MoreThanFiveSubtasks.Visibility = ViewStates.Gone;
+                    }
+
                     h.AmountOfSubTasks.Text = string.Format("{0} subtasks", item.Children.Count.ToString());
                 }
 

@@ -150,6 +150,21 @@ namespace Cheesesquare
         {
             base.OnStart();
 
+            var adapter = (MyAdapter)viewPager.Adapter;
+            int index = viewPager.CurrentItem;
+            if (adapter != null && index >= 0)
+            {
+                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                if(fragmentAdapter != null)
+                {
+                    var domain = currentFragment.domain;
+
+                    fragmentAdapter.ChangeDateSet(domain.Children);
+                    fragmentAdapter.NotifyDataSetChanged();
+                }
+            }
 
             //else
             //{
@@ -206,7 +221,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                             var currentFragment = (CheeseListFragment) adapter.GetItem(index);
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            var item = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+                            var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
 
                             fragmentAdapter.UpdateValue(item);
                             fragmentAdapter.ApplyChanges();
@@ -245,7 +260,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                             //var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
                             //domain.Children.Add(newItem);
 
-                            PublicFields.ItemTree.FindAndReplace(tempID, newItem);
+                            //PublicFields.ItemTree.FindAndReplace(tempID, newItem);
                         }
 
                         //newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);

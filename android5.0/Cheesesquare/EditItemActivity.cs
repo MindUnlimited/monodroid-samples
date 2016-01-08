@@ -128,13 +128,12 @@ namespace Cheesesquare
             thumbAndName.Click += ThumbAndName_Click;
 
             subtaskText = FindViewById<EditText>(Resource.Id.add_subtask_text);
-
             subtaskText.KeyPress += (object sender, View.KeyEventArgs e) =>
             {
                 e.Handled = false;
 
                 // If the event is a key-down event on the "enter" button
-                if (e.Event.Action == KeyEventActions.Down && e.KeyCode == Keycode.Enter)
+                if (e.Event.Action == KeyEventActions.Down && (e.KeyCode == Keycode.Enter || e.KeyCode == Keycode.DpadCenter))
                 {
                     if (subtaskText.Text != "")
                     {
@@ -144,13 +143,14 @@ namespace Cheesesquare
                         subItem.Name = subtaskText.Text;
                         subItem.Parent = item.Value.id;
                         subItem.OwnedBy = item.Value.OwnedBy;
+                        subItem.Status = 2; // default status = started
 
                         if (item.Value.Type < 4)
                             subItem.Type = item.Value.Type + 1;
                         else
                             subItem.Type = 4;
 
-                        subTaskArrayAdapter.Add(subItem);
+                        subTaskArrayAdapter.Add(subItem); 
 
                         item.Children.Add(subItem);
                         subTaskList.Add(subItem);
@@ -210,6 +210,7 @@ namespace Cheesesquare
 
                 item.Value.OwnedBy = parentNode.Value.OwnedBy;
                 item.Value.Parent = parentItemId;
+                item.Value.Status = 2; // started status
 
                 if (parentNode.Value.Type < 4)
                     item.Value.Type = parentNode.Value.Type + 1;
@@ -353,6 +354,24 @@ namespace Cheesesquare
             //item.EndDate = editText.Text;
         }
 
+        public override void Finish()
+        {
+            if (string.IsNullOrEmpty(item.Value.Name))
+            {
+                for(int i = 0; i< item.Parent.Children.Count; i++)
+                {
+                    if (string.IsNullOrEmpty(item.Parent.Children[i].Value.Name))
+                    {
+                        item.Parent.Children.RemoveAt(i);
+                        break;
+                    }
+                }
+                SetResult(Result.Canceled);
+            }
+
+            base.Finish();
+        }
+
         public override bool OnOptionsItemSelected(IMenuItem menuItem)
         {
             switch (menuItem.ItemId)
@@ -402,7 +421,7 @@ namespace Cheesesquare
 
                         // add to subtasks field of parent item
                         var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == item.Value.Parent);
-                        parent.Children.Add(item);
+                        //parent.Children.Add(item);
 
                         //PublicFields.ItemTree.FindAndReplace(parent.Value.id, parent);
 

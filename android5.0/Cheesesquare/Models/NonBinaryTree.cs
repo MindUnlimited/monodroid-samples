@@ -387,15 +387,20 @@ namespace Todo
             }
         }
 
+        //public override string ToString()
+        //{
+        //    string Description = string.Empty;
+        //    if (Value != null)
+        //    {
+        //        Description = "[" + Value.ToString() + "] ";
+        //    }
+        //    return Description + "Depth=" + Depth.ToString() + ", Children= "
+        //      + Children.Count.ToString();
+        //}
+
         public override string ToString()
         {
-            string Description = string.Empty;
-            if (Value != null)
-            {
-                Description = "[" + Value.ToString() + "] ";
-            }
-            return Description + "Depth=" + Depth.ToString() + ", Children= "
-              + Children.Count.ToString();
+            return Value.Name;
         }
 
 

@@ -86,6 +86,7 @@ namespace Cheesesquare
         private TextView comment;
         private TextView status;
         private ImageView statusIcon;
+        private RelativeLayout statusRelLayout;
 
         private Android.Support.V7.Widget.PopupMenu statusMenu;
 
@@ -162,12 +163,51 @@ namespace Cheesesquare
             importance.Rating = item.Value.Importance;
 
             comment = FindViewById<TextView>(Resource.Id.comment_text);
-            comment.Text = item.Value.Notes ?? "no notes";
+            if (string.IsNullOrEmpty(item.Value.Notes))
+            {
+                comment.Text = "No comments";
+            }
+            else
+            {
+                comment.Text = item.Value.Notes;
+            }
 
-            status = FindViewById<TextView>(Resource.Id.status_text);
-            status.Click += statusClick;
+
 
             statusIcon = FindViewById<ImageView>(Resource.Id.status_icon);
+            status = FindViewById<TextView>(Resource.Id.status_text);
+            statusRelLayout = FindViewById<RelativeLayout>(Resource.Id.status_rel_layout);
+            statusRelLayout.Clickable = true;
+
+            statusRelLayout.Click += statusClick;
+
+            //statusIcon.Click += statusClick;
+            //status.Click += statusClick;
+
+            switch (item.Value.Status)
+            {
+                case -1:
+                    status.Text = "Cancelled";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
+                    break;
+                case 0:
+                    status.Text = "Backlog";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
+                    break;
+                case 6:
+                    status.Text = "On Hold";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
+                    break;
+                case 7:
+                    status.Text = "Completed";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
+                    break;
+                default:
+                    status.Text = "Started";
+                    statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
+                    break;
+
+            }
 
             editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
             editFAB.Click += EditFAB_Click;
@@ -183,7 +223,7 @@ namespace Cheesesquare
 
         private void statusClick(object sender, EventArgs e)
         {
-            statusMenu = new Android.Support.V7.Widget.PopupMenu(this, comment);
+            statusMenu = new Android.Support.V7.Widget.PopupMenu(this, statusIcon);
             statusMenu.Inflate(Resource.Menu.status_popup_menu);
 
             Field field = statusMenu.Class.GetDeclaredField("mPopup");
@@ -210,6 +250,9 @@ namespace Cheesesquare
                         break;
                     case "Completed":
                         item.Value.Status = 7;
+                        break;
+                    case "Started":
+                        item.Value.Status = 2;
                         break;
                     default:
                         item.Value.Status = 2;
@@ -339,9 +382,9 @@ Intent intent)
                             }
                         }
 
-                        if (edited) // the detail item
+                        if (edited && this.item != null) // the detail item
                         {
-                            await PublicFields.Database.SaveItem(item.Value);
+                            await PublicFields.Database.SaveItem(this.item.Value);
 
                             for (int i = 0; i < item.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
                             {
@@ -351,10 +394,10 @@ Intent intent)
 
                                 item.Children[i] = it; // store with newly acquired id
 
-                                if (PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == it.Value.id) != null)
-                                {
-                                    PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
-                                }
+                                //if (PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == it.Value.id) != null)
+                                //{
+                                //    PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
+                                //}
                             }
 
                             // refresh values
@@ -401,21 +444,22 @@ Intent intent)
                                 //PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
                             }
 
-                            PublicFields.ItemTree.FindAndReplace(tempID, itemCard); //replace this detail item by searching from this detail item and replacing the one with the temp id
+                            //PublicFields.ItemTree.FindAndReplace(tempID, itemCard); //replace this detail item by searching from this detail item and replacing the one with the temp id
 
                             //PublicFields.ItemTree.FindAndReplace(tempID, itemCard);
                             //PublicFields.ItemDictionary[indexSubItem] = itemCard;
 
-                            int index = viewPager.CurrentItem;
-                            var adapter = (MyAdapter)viewPager.Adapter;
-                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
-                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+                            //int index = viewPager.CurrentItem;
+                            //var adapter = (MyAdapter)viewPager.Adapter;
+                            //var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                            //var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            //fragmentAdapter.ChangeDateSet(item.Children);
-                            fragmentAdapter.NotifyDataSetChanged();
+                            ////fragmentAdapter.ChangeDateSet(item.Children);
+                            //fragmentAdapter.NotifyDataSetChanged();
                             //fragmentAdapter.addItem(itemCard);//PublicFields.allItems.Find(it => it.id == itemID));
                             //fragmentAdapter.ApplyChanges();
                         }
+                        this.item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == item.Value.id);
                         break;
                     default:
                         break;
@@ -525,6 +569,8 @@ Intent intent)
 
         public override void Finish()
         {
+            //itemChanged = true;
+
             Intent returnIntent = new Intent();
             returnIntent.PutExtra("itemChanged", itemChanged);// ("passed_item", itemYouJustCreated);
             if (itemChanged)

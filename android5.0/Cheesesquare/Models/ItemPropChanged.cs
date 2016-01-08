@@ -260,9 +260,9 @@ namespace Todo
         }
 
         [JsonIgnore]
-        private string enddate;
+        private DateTime enddate;
 
-        public string EndDate
+        public DateTime EndDate
         {
             get { return enddate; }
             set

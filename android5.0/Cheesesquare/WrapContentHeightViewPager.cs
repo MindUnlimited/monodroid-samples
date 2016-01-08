@@ -37,6 +37,8 @@ namespace Cheesesquare
                 if (h > height) height = h;
             }
 
+            height += 666;
+
             heightMeasureSpec = MeasureSpec.MakeMeasureSpec(height, MeasureSpecMode.Exactly);
 
             base.OnMeasure(widthMeasureSpec, heightMeasureSpec);
