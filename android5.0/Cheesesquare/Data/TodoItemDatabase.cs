@@ -496,14 +496,27 @@ namespace Cheesesquare
 
         public async Task<List<String>> MembersOfGroup(Group group)
         {
-            List<String> ugms = await userGroupMembershipTable.Where(ugm => ugm.MembershipID == group.ID).Select(ugm => ugm.ID).ToListAsync();
-            return ugms; // there should be only one item satisfying this query
+            var test = await userGroupMembershipTable.Where(ugm => ugm.MembershipID == group.ID).ToListAsync();
+            List<String> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MembershipID == group.ID).Select(ggm => ggm.MemberID).ToListAsync();
+            return ggms; // there should be only one item satisfying this query
         }
 
         public async Task<User> GetUser(string email)
         {
             var user = await userTable.Where(usr => usr.Email.ToLower() == email.ToLower()).ToListAsync();
             return user.FirstOrDefault();            
+        }
+
+        public async Task<User> GetUser(Group defGroup)
+        {
+            List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.MembershipID == defGroup.ID).ToListAsync();
+            var ugmExtracted = ugms.FirstOrDefault();
+            if (ugmExtracted != null)
+            {
+                var user = await userTable.Where(usr => usr.ID == ugmExtracted.ID).ToListAsync();
+                return user[0];
+            }
+            else return null;
         }
 
         public async Task<Group> GroupExists(List<User> groupmembers, string name = null)
@@ -1221,7 +1234,7 @@ namespace Cheesesquare
 
                 await client.SyncContext.PushAsync();
 
-                //adapter.Clear();
+                //adapter.Clear(); 
 
                 //foreach (ToDoItem current in list)
                 //    adapter.Add(current);

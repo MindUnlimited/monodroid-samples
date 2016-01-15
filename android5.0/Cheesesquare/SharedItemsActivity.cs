@@ -14,14 +14,16 @@ using Todo;
 using Android.Support.V4.View;
 using Android.Support.V7.App;
 using Android.Support.V4.Widget;
+using Android.Support.Design.Widget;
 
 namespace Cheesesquare
 {
     [Activity(Label = "SharedItemsActivity")]
-    public class SharedItemsActivity : AppCompatActivity
+    public class SharedItemsActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {
         private ViewPager viewPager;
         private DrawerLayout drawerLayout;
+        private NavigationView navigationView;
 
         protected async override void OnCreate(Bundle savedInstanceState)
         {
@@ -39,9 +41,22 @@ namespace Cheesesquare
             foreach (var itl in itemLinks)
             {
                 Item it = await PublicFields.Database.GetItem(itl.ItemID);
-                it.Parent = itl.Parent;
-                sharedItems.Add(it);
-                sharedItemsTreeNode.Add(new TreeNode<Item>(it));
+
+                if (itl.Parent == null) // to be assigned to a parent so shows up in list
+                {
+                    it.Parent = itl.Parent;
+                    sharedItems.Add(it);
+                    sharedItemsTreeNode.Add(new TreeNode<Item>(it));
+                }
+                else // already assigned so does not show up in list of shared items but in the normal tree structure instead
+                {
+                    it.Parent = itl.Parent;
+                    var sharedItemNode = new TreeNode<Item>(it);
+
+                    var parentOfItem = PublicFields.ItemTree.Descendants().FirstOrDefault(x => x.Value.id == it.Parent);
+                    parentOfItem.Children.Add(sharedItemNode);
+                    PublicFields.ItemTree.FindAndReplace(parentOfItem.Value.id, parentOfItem);
+                }
             }
 
             Todo.TreeNode<Todo.Item> root = new TreeNode<Item>(null);
@@ -50,21 +65,29 @@ namespace Cheesesquare
             var adapter = new CheeseDetailActivity.MyAdapter(SupportFragmentManager);
 
             //adapter.AddFragment(new CheeseListFragmentDetail(item, dataObserver), item.Value.Name);
-            adapter.AddFragment(new CheeseListFragment(root), "Shared Items");
+            adapter.AddFragment(new CheeseListFragmentSharedItems(root), "Shared Items");
             viewPager.Adapter = adapter;
 
+            navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_shared);
+            navigationView.SetNavigationItemSelectedListener(this);
         }
 
-        public override bool OnOptionsItemSelected(IMenuItem item)
+        public bool OnNavigationItemSelected(IMenuItem menuItem)
         {
-            switch (item.ItemId)
+            switch (menuItem.ItemId)
             {
-                case Android.Resource.Id.Home:
-                    //drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
+                case Resource.Id.nav_home:
                     Finish();
+                    drawerLayout.CloseDrawers();
                     return true;
+                case Resource.Id.shared_items:
+                    drawerLayout.CloseDrawers();
+                    break;
             }
-            return base.OnOptionsItemSelected(item);
+
+            return false;
         }
+
+
     }
 }

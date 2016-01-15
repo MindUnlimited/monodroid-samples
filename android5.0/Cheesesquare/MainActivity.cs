@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using Android.Support.V7.Widget;
 using Todo;
+using Cheesesquare.Models;
 
 namespace Cheesesquare
 {
@@ -54,7 +55,7 @@ namespace Cheesesquare
         //private RecyclerView.AdapterDataObserver dataObserver;
 
 
-        protected override void OnCreate(Bundle savedInstanceState)
+        protected async override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
 
@@ -75,9 +76,8 @@ namespace Cheesesquare
             if (navigationView != null)
                 setupDrawerContent(navigationView);
 
-
             var fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
-            fab.Click += (sender, e) =>
+            fab.Click += (sender, e) =>                     
             {
                 //Snackbar.Make (fab, "Here's a snackbar!", Snackbar.LengthLong).SetAction ("Action",
                 //    new ClickListener (v => {
@@ -231,6 +231,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                     case EDIT_ITEM:// new item
                         var itemID = intent.GetStringExtra("itemID");
+                        bool groupChanged = intent.GetBooleanExtra("groupChanged", false);
                         var tempID = "temporaryID";
 
                         TreeNode<Item> newItem;
@@ -263,6 +264,35 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                             //PublicFields.ItemTree.FindAndReplace(tempID, newItem);
                         }
 
+
+                        if (groupChanged) // sharing an item
+                        {
+                            List<Todo.User> selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(intent.GetStringExtra("selectedContacts"));
+                            string groupName = intent.GetStringExtra("groupName"); // only has a name if user generated group
+                            //TODO: check if group already exists
+
+                            var newShareItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+                            if (selectedContacts != null && selectedContacts.Count > 0) // contacts selected so make a group for them
+                            {
+                                var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
+                                if (ownedByGroupResult != null)
+                                {
+                                    newShareItem.Value.OwnedBy = ownedByGroupResult.ID;
+                                    PublicFields.ItemTree.FindAndReplace(newShareItem.Value.id, newShareItem);
+                                }
+
+                                var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
+
+                                foreach (var id in userIDs)
+                                {
+                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = id };
+                                    await PublicFields.Database.SaveItemLink(link);
+                                }
+                            }
+
+
+
+                        }
                         //newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
 
                         //currentDomainFragment.itemRecyclerViewAdapter.NotifyItemInserted(currentDomainFragment.itemRecyclerViewAdapter.ItemCount);
@@ -392,6 +422,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                     //NavUtils.NavigateUpTo
                     Intent intent = new Intent(this, typeof(SharedItemsActivity));
                     intent.AddFlags(ActivityFlags.ClearTop);
+                    drawerLayout.CloseDrawers();
                     StartActivity(intent);
 
                     break;

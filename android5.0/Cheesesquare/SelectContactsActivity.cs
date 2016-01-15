@@ -24,6 +24,7 @@ using System.Xml.Serialization;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Todo;
 
 namespace Cheesesquare
 {
@@ -36,6 +37,9 @@ namespace Cheesesquare
 
             foreach (Todo.User contact in contacts)
             {
+                if (contact == null)
+                    break;
+
                 if(contact.Thumbnail == null)
                 {
                     if (contact.PhotoId == null)
@@ -245,11 +249,14 @@ namespace Cheesesquare
             fastScroller.BringToFront();
         }
 
-        private void OnItemClick(object sender, int e)
+        private async void OnItemClick(object sender, int e)
         {
             var adapter = sender as ContactsRecyclerAdapter;
             var contact = adapter.GetValueAt(e);
-            if (contact.Name == "Group" && contact.Email == null)
+
+            var groups = PublicFields.Database.userGroups;
+            var groupFound = groups.Find(grp => grp.Name == contact.Name && grp.ID == contact.ID);
+            if (contact.Name == "Create new group.." && contact.Email == null)
             {
                 var intent = new Intent(this, typeof(DefineGroupActivity));
 
@@ -266,6 +273,25 @@ namespace Cheesesquare
 
                 StartActivityForResult(intent, SHARE_CONTACT);
 
+            }
+            else if(groupFound != null)
+            {
+                Intent myIntent = new Intent();
+
+                var listOfDefGroupIDs = await PublicFields.Database.MembersOfGroup(groupFound);
+                var members = new List<User>(); //from defGroupId in listOfDefGroupIDs select PublicFields.Database.GetUser(defGroupId);
+                foreach(var grpID in listOfDefGroupIDs)
+                {
+                    members.Add(await PublicFields.Database.GetUser(new Group { ID = grpID }));
+                }
+
+
+                myIntent.PutExtra("members", JsonConvert.SerializeObject(members));
+                myIntent.PutExtra("groupname", groupFound.Name);
+                SetResult(Result.Ok, myIntent);
+                Finish();
+
+                Log.Debug(this.LocalClassName, "Select contacts");
             }
             else
             {
@@ -364,7 +390,22 @@ Intent intent)
             //_contactList.Remove(currentUser);
 
             var groupThumb = CircleBitmap.getCircleBitmap(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.ic_group_add_white_24dp), Application.Context.Resources.GetColor(Resource.Color.colorAccent));
-            _contactList.Insert(0, new Todo.User { Name = "Group", Thumbnail = groupThumb });
+            _contactList.Insert(0, new Todo.User { Name = "Create new group..", Thumbnail = groupThumb });
+
+            // insert the groups that the user already has excluding the default user group
+            var groups = PublicFields.Database.userGroups;
+            groups.Remove(PublicFields.Database.defGroup);
+
+            int index = 1;
+            foreach(var grp in groups)
+            {
+                var members = PublicFields.Database.MembersOfGroup(grp).Result;
+                if (members.Count > 2)
+                {
+                    _contactList.Insert(index, new Todo.User { Name = grp.Name, ID = grp.ID, Thumbnail = groupThumb });
+                    index++;
+                }
+            }
         }
 
         public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView, List<Todo.User> contactList) // assign constructor

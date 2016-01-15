@@ -488,7 +488,15 @@ Intent intent)
                         //intent.AddFlags(ActivityFlags.ClearTop);
                         //StartActivity(intent);
                         //NavigateUpTo(ParentActivityIntent);
-                        NavUtils.NavigateUpFromSameTask(this);
+                        drawerLayout.CloseDrawers();
+                        Finish();
+                        //NavUtils.NavigateUpFromSameTask(this);
+                        break;
+                    case Resource.Id.shared_items:
+                        Intent intent = new Intent(this, typeof(SharedItemsActivity));
+                        intent.AddFlags(ActivityFlags.ClearTop);
+                        drawerLayout.CloseDrawers();
+                        StartActivity(intent);
                         break;
                 }
                 //e.P0.SetChecked (true);

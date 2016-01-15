@@ -19,118 +19,34 @@ using Android.Support.V4.View;
 
 namespace Cheesesquare
 {
-    [Register("com.sample.cheesesquare.ScrollForwardingRecyclerView")]
-    public class ScrollForwardingRecyclerView : RecyclerView//, GestureDetector.IOnGestureListener
+    public class CheeseListFragmentSharedItems : CheeseListFragment
     {
-        //protected GestureDetectorCompat mDetector;
-
-        public ScrollForwardingRecyclerView(Context context): base(context)
-        {
-            NestedScrollingEnabled = true;
-            //mDetector = new GestureDetectorCompat(context, this);
-        }
-
-        public ScrollForwardingRecyclerView(Context context, IAttributeSet attributes) : base(context, attributes)
-        {
-            NestedScrollingEnabled = true;
-            //mDetector = new GestureDetectorCompat(context, this);
-        }
-
-        //public override bool OnTouchEvent(MotionEvent e)
-        //{
-        //    Boolean handled = mDetector.OnTouchEvent(e);
-        //    if (!handled && e.Action == MotionEventActions.Up) {
-        //        StopNestedScroll();
-        //    }
-        //    return true;
-        //}
-
-        //public bool OnFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY)
-        //{
-        //    //throw new NotImplementedException();
-        //    return true;
-        //}
-
-        //public void OnLongPress(MotionEvent e)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public bool OnScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
-        //{
-        //    DispatchNestedPreScroll(0, (int)distanceY, null, null);
-        //    DispatchNestedScroll(0, 0, 0, 0, null);
-        //    return true;
-        //}
-
-        //public void OnShowPress(MotionEvent e)
-        //{
-        //    //throw new NotImplementedException();
-        //}
-
-        //public bool OnSingleTapUp(MotionEvent e)
-        //{
-        //    return true;
-        //    //throw new NotImplementedException();
-        //}
-    }
-
-    public class CheeseListFragment : Android.Support.V4.App.Fragment
-    {
-        public Todo.TreeNode<Todo.Item> domain;
-
-        public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
-        protected const int ITEMDETAIL = 103;
+        public SharedItemRecyclerViewAdapter sharedItemRecyclerViewAdapter;
         RecyclerView.AdapterDataObserver dataObserver;
 
-        public CheeseListFragment(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver)
+        public CheeseListFragmentSharedItems(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver) : base(dom, DataObserver)
         {
-            domain = dom;
-            dataObserver = DataObserver;
         }
 
-        public CheeseListFragment(Todo.TreeNode<Todo.Item> dom)
+        public CheeseListFragmentSharedItems(Todo.TreeNode<Todo.Item> dom) : base(dom)
         {
-            domain = dom;
         }
 
-        public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-        {
-            var v = inflater.Inflate(
-                Resource.Layout.fragment_cheese_list, container, false);
-            var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
-
-            setupRecyclerView(rv);
-            return rv;
-        }
-
-
-
-        protected void setupRecyclerView(RecyclerView recyclerView)
+        new protected void setupRecyclerView(RecyclerView recyclerView)
         {
             recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
 
-            itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, domain.Children, this);
-            recyclerView.SetAdapter(itemRecyclerViewAdapter);
+            sharedItemRecyclerViewAdapter = new SharedItemRecyclerViewAdapter(Activity, domain.Children, this);
+            recyclerView.SetAdapter(sharedItemRecyclerViewAdapter);
             if (dataObserver != null)
-                itemRecyclerViewAdapter.RegisterAdapterDataObserver(dataObserver);
+                sharedItemRecyclerViewAdapter.RegisterAdapterDataObserver(dataObserver);
         }
 
-
-        List<String> getRandomSublist(string[] array, int amount)
+        public class SharedItemRecyclerViewAdapter : RecyclerView.Adapter
         {
-            var list = new List<string>(amount);
-            var random = new System.Random();
-            while (list.Count < amount)
-                list.Add(array[random.Next(array.Length)]);
-            return list;
-        }
-
-        public class ItemRecyclerViewAdapter : RecyclerView.Adapter
-        {
-            protected Todo.TreeNodeList<Todo.Item> items;
+            private Todo.TreeNodeList<Todo.Item> items;
             protected Android.App.Activity parent;
-            protected CheeseListFragment fragment;
+            private CheeseListFragment fragment;
 
             //Create an Event so that our our clients can act when a user clicks
             //on each individual item.
@@ -224,7 +140,7 @@ namespace Cheesesquare
 
             //This will fire any event handlers that are registered with our ItemClick
             //event.
-            protected void OnClick(int position)
+            private void OnClick(int position)
             {
                 if (ItemClick != null)
                 {
@@ -234,7 +150,7 @@ namespace Cheesesquare
 
             ////This will fire any event handlers that are registered with our DeleteItemClick
             ////event.
-            //protected void OnSubTaskClick(int position)
+            //private void OnSubTaskClick(int position)
             //{
             //    if (SubTaskClick != null)
             //    {
@@ -244,7 +160,7 @@ namespace Cheesesquare
 
             //This will fire any event handlers that are registered with our DeleteItemClick
             //event.
-            protected void OnDeleteClick(int position)
+            private void OnDeleteClick(int position)
             {
                 if (DeleteClick != null)
                 {
@@ -253,7 +169,7 @@ namespace Cheesesquare
             }
 
 
-            public ItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, CheeseListFragment fragm)
+            public SharedItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, CheeseListFragment fragm)
             {
                 parent = context;
                 fragment = fragm;
@@ -271,7 +187,7 @@ namespace Cheesesquare
                 NotifyDataSetChanged();
             }
 
-            //protected void OnSubTaskClick(object sender, int e)
+            //private void OnSubTaskClick(object sender, int e)
             //{
             //    var adapter = sender as ItemRecyclerViewAdapter;
             //    var item = adapter.GetValueAt(e);
@@ -284,7 +200,7 @@ namespace Cheesesquare
             //    //parent.StartActivityForResult(intent, ITEMDETAIL);
             //}
 
-            protected void OnDeleteClick(object sender, int e)
+            private void OnDeleteClick(object sender, int e)
             {
                 var adapter = sender as ItemRecyclerViewAdapter;
                 var item = adapter.GetValueAt(e);
@@ -293,21 +209,21 @@ namespace Cheesesquare
                 new Android.Support.V7.App.AlertDialog.Builder(parent)
                 .SetMessage("Delete this item?")
                 .SetCancelable(false)
-                .SetPositiveButton("Yes", async delegate
+                .SetPositiveButton("Yes", delegate
                 {
-                    var dataSetID = item.Parent.Value.id;
-                    var parent = await adapter.items.Remove(item);
+                    //var dataSetID = item.Parent.Value.id;
+                    //var parent = await adapter.items.Remove(item);
 
-                    //RecursiveDelete(item);
+                    ////RecursiveDelete(item);
 
-                    //var itemInTree = PublicFields.ItemTree.Descendants().First(it => it.Value.id == item.Value.id);
-                    //await itemInTree.Parent.Children.Remove(itemInTree);
+                    ////var itemInTree = PublicFields.ItemTree.Descendants().First(it => it.Value.id == item.Value.id);
+                    ////await itemInTree.Parent.Children.Remove(itemInTree);
 
-                    var dataset = PublicFields.ItemTree.Descendants().First(it => it.Value.id == dataSetID).Children;
-                    ChangeDateSet(dataset);
+                    //var dataset = PublicFields.ItemTree.Descendants().First(it => it.Value.id == dataSetID).Children;
+                    //ChangeDateSet(dataset);
 
-                    //NotifyItemRemoved(e);
-                    NotifyDataSetChanged();
+                    ////NotifyItemRemoved(e);
+                    //NotifyDataSetChanged();
 
                     Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Value.Name));
                 })
@@ -341,7 +257,7 @@ namespace Cheesesquare
                 return vh;
             }
 
-            protected void SubtaskCheckBox_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
+            private void SubtaskCheckBox_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
             {
                 Log.Debug("CheeseListFragment", "checkbox clicked");
             }
@@ -392,7 +308,7 @@ namespace Cheesesquare
                     //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                     try
                     {
-                        long timeInMilliseconds = (long) (TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
+                        long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
                         new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
 
                         if (timeInMilliseconds >= 0)
@@ -425,7 +341,7 @@ namespace Cheesesquare
 
                     // more items than the item signaling that there are no tasks and the item signaling
                     // that there are more than 5 tasks
-                    while (h.SubTasksLinearLayout.ChildCount > 2) 
+                    while (h.SubTasksLinearLayout.ChildCount > 2)
                         h.SubTasksLinearLayout.RemoveViewAt(1);
                     foreach (var subitem in item.Children)
                     {
@@ -475,7 +391,7 @@ namespace Cheesesquare
                 h.TextView.Text = item.Value.Name;
                 h.Importance.Text = string.Format("{0} stars", item.Value.Importance) ?? "0 stars";
                 h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
-            } 
+            }
 
             public override int ItemCount
             {

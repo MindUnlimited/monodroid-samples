@@ -97,6 +97,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheeseListFragmentSharedItems.cs" />
     <Compile Include="CheeseListFragmentDetail.cs" />
     <Compile Include="Data\SQLite_bak.cs" />
     <Compile Include="Data\TodoItemDatabase.cs" />

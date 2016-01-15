@@ -103,8 +103,12 @@ namespace Cheesesquare
             if (item != null && item.Value.OwnedBy != PublicFields.Database.defGroup.ID)
             {
                 var ownedByGroupTask = PublicFields.Database.GetGroupByID(item.Value.OwnedBy);
-                Todo.Group ownedByGroup = ownedByGroupTask.Result;
-                shareEditText.Text = ownedByGroup.Name;
+                if (ownedByGroupTask != null)
+                {
+                    Todo.Group ownedByGroup = ownedByGroupTask.Result;
+                    if (shareEditText != null && ownedByGroup != null)
+                        shareEditText.Text = ownedByGroup.Name ?? null;
+                }
             }
                 
 
