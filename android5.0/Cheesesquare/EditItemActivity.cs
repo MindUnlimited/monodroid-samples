@@ -176,17 +176,16 @@ namespace Cheesesquare
                 toolbar.Title = item.Value.Name;
                 commentText.Text = item.Value.Notes;
 
-                if (item.Value.EndDate != null && item.Value.EndDate != "")
+                if (item.Value.EndDate != null)
                 {
                     //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                     //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                     try
                     {
-                        //DateTime dt = new DateTime();
-                        //Date mDate = sdf.Parse(item.EndDate);
-                        long timeInMilliseconds;
-                        long.TryParse(item.Value.EndDate, out timeInMilliseconds);
-                        if (timeInMilliseconds > 0)
+                        long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
+                        new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
+
+                        if (timeInMilliseconds >= 0)
                             txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                     }
                     catch (ParseException e)

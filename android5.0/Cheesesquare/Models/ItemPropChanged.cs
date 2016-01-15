@@ -243,9 +243,9 @@ namespace Todo
             }
         }
         [JsonIgnore]
-        private string startdate;
+        private DateTime startdate;
 
-        public string StartDate
+        public DateTime StartDate
         {
             get { return startdate; }
             set

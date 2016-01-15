@@ -115,6 +115,7 @@
     <Compile Include="Models\Group.cs" />
     <Compile Include="Models\GroupGroupMembership.cs" />
     <Compile Include="Models\Item.cs" />
+    <Compile Include="Models\ItemLink.cs" />
     <Compile Include="Models\ItemListViewModel - Copy.cs" />
     <Compile Include="Models\ItemPropChanged.cs" />
     <Compile Include="Models\MicrosoftAccountInfo.cs" />
@@ -130,6 +131,7 @@
     <Compile Include="CheeseListFragment.cs" />
     <Compile Include="CheeseDetailActivity.cs" />
     <Compile Include="SelectContactsActivity.cs" />
+    <Compile Include="SharedItemsActivity.cs" />
     <Compile Include="WrapContentHeightViewPager.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -621,6 +623,9 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable-xxxhdpi\ic_clear_black_24dp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\activity_shared_items.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>

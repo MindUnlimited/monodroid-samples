@@ -388,6 +388,13 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                 case Resource.Id.nav_home:
                     drawerLayout.CloseDrawers();
                     return true;
+                case Resource.Id.shared_items:
+                    //NavUtils.NavigateUpTo
+                    Intent intent = new Intent(this, typeof(SharedItemsActivity));
+                    intent.AddFlags(ActivityFlags.ClearTop);
+                    StartActivity(intent);
+
+                    break;
             }
 
             return false;

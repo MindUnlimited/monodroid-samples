@@ -19,6 +19,7 @@ using System.Collections.ObjectModel;
 using Android.App;
 using Todo;
 using Android.Util;
+using Cheesesquare.Models;
 
 namespace Cheesesquare
 {
@@ -39,6 +40,7 @@ namespace Cheesesquare
         //Mobile Service sync table used to access data
         //private IMobileServiceSyncTable<TodoItem> toDoTable;
         private IMobileServiceSyncTable<Item> itemTable;
+        private IMobileServiceSyncTable<ItemLink> itemLinkTable;
         private IMobileServiceSyncTable<User> userTable;
         private IMobileServiceSyncTable<Group> groupTable;
         private IMobileServiceSyncTable<UserGroupMembership> userGroupMembershipTable;
@@ -137,6 +139,7 @@ namespace Cheesesquare
                 groupTable = client.GetSyncTable<Group>();
                 groupGroupMembershipTable = client.GetSyncTable<GroupGroupMembership>();
                 itemTable = client.GetSyncTable<Item>();
+                itemLinkTable = client.GetSyncTable<ItemLink>();
             }
             catch (Exception e)
             {
@@ -211,6 +214,7 @@ namespace Cheesesquare
             store.DefineTable<UserGroupMembership>();
             store.DefineTable<GroupGroupMembership>();
             store.DefineTable<Item>();
+            store.DefineTable<ItemLink>();
 
             // Uses the default conflict handler, which fails on conflict
             // To use a different conflict handler, pass a parameter to InitializeAsync. For more details, see http://go.microsoft.com/fwlink/?LinkId=521416
@@ -254,6 +258,7 @@ namespace Cheesesquare
                 await groupTable.PullAsync("Groups", groupTable.CreateQuery()); // first param is query ID, used for incremental sync
                 await groupGroupMembershipTable.PullAsync("GroupGroupMemberships", groupGroupMembershipTable.CreateQuery()); // first param is query ID, used for incremental sync
                 await itemTable.PullAsync("Items", itemTable.CreateQuery());// first param is query ID, used for incremental sync
+                await itemLinkTable.PullAsync("ItemLinks", itemLinkTable.CreateQuery());
             }
 
             catch (MobileServicePushFailedException ex)
@@ -487,6 +492,12 @@ namespace Cheesesquare
             List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == group.ID).ToListAsync();
 
             return ugms.Count == 1; // there should be only one item satisfying this query
+        }
+
+        public async Task<List<String>> MembersOfGroup(Group group)
+        {
+            List<String> ugms = await userGroupMembershipTable.Where(ugm => ugm.MembershipID == group.ID).Select(ugm => ugm.ID).ToListAsync();
+            return ugms; // there should be only one item satisfying this query
         }
 
         public async Task<User> GetUser(string email)
@@ -810,6 +821,30 @@ namespace Cheesesquare
             }
 
             return items;
+        }
+
+        public async Task<IEnumerable<ItemLink>> GetItemLinks()
+        {
+            IEnumerable<ItemLink> itemLinks = null;
+
+            if (userID != null)
+            {
+                if (userGroups == null)
+                    userGroups = await getGroups();
+
+                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
+
+                try
+                {
+                    itemLinks = await itemLinkTable.Where(itl => groups_ids.Contains(itl.OwnedBy)).ToListAsync();
+                }
+                catch (Exception e)
+                {
+                    CreateAndShowDialog(e, "Error");
+                }
+            }
+
+            return itemLinks;
         }
 
         public async Task<Item> GetItem(string id)
@@ -1149,6 +1184,39 @@ namespace Cheesesquare
                     //var retJObject = await itemTable.InsertAsync(jObject);// (item);
                     //item = retJObject.ToObject<Item>();
                     await itemTable.InsertAsync(item);
+                }
+
+                await client.SyncContext.PushAsync();
+
+                //adapter.Clear();
+
+                //foreach (ToDoItem current in list)
+                //    adapter.Add(current);
+
+            }
+            catch (Exception e)
+            {
+                CreateAndShowDialog(e, "Error");
+            }
+        }
+
+        public async Task SaveItemLink(ItemLink itemLink)
+        {
+            try
+            {
+                await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
+
+                // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
+                if (itemLink.Id != null)
+                {
+                    await itemLinkTable.UpdateAsync(itemLink);
+                }
+                else
+                {
+                    //var jObject = JObject.FromObject(item);
+                    //var retJObject = await itemTable.InsertAsync(jObject);// (item);
+                    //item = retJObject.ToObject<Item>();
+                    await itemLinkTable.InsertAsync(itemLink);
                 }
 
                 await client.SyncContext.PushAsync();

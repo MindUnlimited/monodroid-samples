@@ -39,24 +39,19 @@ namespace Cheesesquare
 
         public void OnDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth)
         {
-            //String date = dayOfMonth + "-" + (monthOfYear+1) + "-" + year;
-            //txtDate.Text = date;
-            
             Calendar calendar = Calendar.Instance;
             calendar.Set(year, monthOfYear, dayOfMonth, 0, 0, 0);
-            Item.Value.EndDate = calendar.TimeInMillis.ToString(); // time in milliseconds
 
-            if (Item.Value.EndDate != null && Item.Value.EndDate != "")
+            var dateInms = calendar.TimeInMillis; // time in milliseconds
+            DateTime date = new DateTime(year, monthOfYear+1, dayOfMonth);
+            Item.Value.EndDate = date;
+
+            if (Item.Value.EndDate != null)
             {
-                //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
-                //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                 try
                 {
-                    //Date mDate = sdf.Parse(item.EndDate);
-                    long timeInMilliseconds;
-                    long.TryParse(Item.Value.EndDate, out timeInMilliseconds);
-                    if (timeInMilliseconds > 0)
-                        txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
+                    if (dateInms >= 0)
+                        txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, dateInms);
                 }
                 catch (ParseException e)
                 {
@@ -69,10 +64,6 @@ namespace Cheesesquare
             }
 
             txtDate.ClearFocus();
-
-            //(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth(),
-            //             timePicker.getCurrentHour(), timePicker.getCurrentMinute(), 0);
-            //long startTime = calendar.getTimeInMillis();
         }
     }
 }

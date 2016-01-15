@@ -21,6 +21,7 @@ using Android.Text.Format;
 using Android.Net;
 using Java.Lang.Reflect;
 using Todo;
+using Cheesesquare.Models;
 
 namespace Cheesesquare
 {
@@ -132,16 +133,16 @@ namespace Cheesesquare
             collapsingToolbar.SetTitle (item.Value.Name);
 
             txtDate = FindViewById<TextView>(Resource.Id.txtdate);
-            if (item.Value.EndDate != null && item.Value.EndDate != "")
+            if (item.Value.EndDate != null)
             {
                 //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                 //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                 try
                 {
-                    //Date mDate = sdf.Parse(item.EndDate);
-                    long timeInMilliseconds;
-                    long.TryParse(item.Value.EndDate, out timeInMilliseconds);
-                    if (timeInMilliseconds > 0)
+                    long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
+                    new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
+
+                    if (timeInMilliseconds >= 0)
                         txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                 }
                 catch (ParseException e)
@@ -280,7 +281,7 @@ namespace Cheesesquare
             itemChanged = true;
         }
 
-        class MyAdapter : Android.Support.V4.App.FragmentPagerAdapter
+        public class MyAdapter : Android.Support.V4.App.FragmentPagerAdapter
         {
             List<V4Fragment> fragments = new List<V4Fragment>();
             List<string> fragmentTitles = new List<string>();
@@ -362,10 +363,10 @@ Intent intent)
 
                         itemChanged = true;
 
-                        //var itemTest = allItemsList.FirstOrDefault(node => node.Value.id == item.Value.id);// update the item of this detail view
+                        // update the item of this detail view
                         this.item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == item.Value.id); 
 
-                        if (groupChanged)
+                        if (groupChanged) // sharing an item
                         {
                             List<Todo.User> selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(intent.GetStringExtra("selectedContacts"));
                             string groupName = intent.GetStringExtra("groupName"); // only has a name if user generated group
@@ -379,25 +380,33 @@ Intent intent)
                                     item.Value.OwnedBy = ownedByGroupResult.ID;
                                     PublicFields.ItemTree.FindAndReplace(item.Value.id, item);
                                 }
+
+                                var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
+
+                                foreach(var id in  userIDs)
+                                {
+                                    var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = id };
+                                    await PublicFields.Database.SaveItemLink(link);
+                                }
                             }
+
+
+
                         }
+
+                        
 
                         if (edited && this.item != null) // the detail item
                         {
                             await PublicFields.Database.SaveItem(this.item.Value);
 
-                            for (int i = 0; i < item.Children.Count; i++)// Todo.Item it in subItem.SubItems) // check if the subitems of the new card are new as well, if so save them
+                            for (int i = 0; i < item.Children.Count; i++) // check if the subitems of the new card are new as well, if so save them
                             {
                                 var it = item.Children[i];
                                 if (string.IsNullOrEmpty(it.Value.id))
                                     await PublicFields.Database.SaveItem(it.Value);
 
                                 item.Children[i] = it; // store with newly acquired id
-
-                                //if (PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == it.Value.id) != null)
-                                //{
-                                //    PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
-                                //}
                             }
 
                             // refresh values
@@ -405,16 +414,18 @@ Intent intent)
                             importance.Rating = item.Value.Importance;
                             comment.Text = item.Value.Notes ?? "no notes";
 
-                            if (item.Value.EndDate != null && item.Value.EndDate != "")
+                            if (item.Value.EndDate != null)
                             {
                                 //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
                                 //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
                                 try
                                 {
                                     //Date mDate = sdf.Parse(item.EndDate);
-                                    long timeInMilliseconds;
-                                    long.TryParse(item.Value.EndDate, out timeInMilliseconds);
-                                    if (timeInMilliseconds > 0)
+
+                                    long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
+                                    new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
+
+                                    if (timeInMilliseconds >= 0)
                                         txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
                                 }
                                 catch (ParseException e)
