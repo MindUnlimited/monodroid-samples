@@ -356,6 +356,7 @@ Intent intent)
         Activity _activity;
         List<Todo.User> _contactList;
         RecyclerView _recyclerview;
+
         Todo.User _currentUser;
         public Todo.User currentUser
         {

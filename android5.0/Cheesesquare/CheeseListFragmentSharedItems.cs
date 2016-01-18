@@ -16,6 +16,7 @@ using Android.App;
 using Java.Text;
 using Java.Util;
 using Android.Support.V4.View;
+using Todo;
 
 namespace Cheesesquare
 {
@@ -32,7 +33,17 @@ namespace Cheesesquare
         {
         }
 
-        new protected void setupRecyclerView(RecyclerView recyclerView)
+        public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+        {
+            var v = inflater.Inflate(
+                Resource.Layout.fragment_cheese_list, container, false);
+            var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
+
+            setupRecyclerView(rv);
+            return rv;
+        }
+
+        protected new void setupRecyclerView(RecyclerView recyclerView)
         {
             recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
 
@@ -202,7 +213,7 @@ namespace Cheesesquare
 
             private void OnDeleteClick(object sender, int e)
             {
-                var adapter = sender as ItemRecyclerViewAdapter;
+                var adapter = sender as SharedItemRecyclerViewAdapter;
                 var item = adapter.GetValueAt(e);
 
 
@@ -236,15 +247,74 @@ namespace Cheesesquare
 
             protected void OnItemClick(object sender, int e)
             {
-                var adapter = sender as ItemRecyclerViewAdapter;
+                var adapter = sender as SharedItemRecyclerViewAdapter;
                 var item = adapter.GetValueAt(e);
+                var context = fragment.Context;
+                var activity = fragment.Activity;
 
-                var context = fragment.Context;//h.View.Context;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Value.Name);
-                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
-                parent.StartActivityForResult(intent, ITEMDETAIL);
-                //context.StartActivity(intent);
+                // Build the dialog.
+                var builder = new AlertDialog.Builder(context);
+                builder.SetTitle("Click me!");
+
+                
+
+                IEnumerable<Todo.Item> items = from x in PublicFields.domains select x.Value;
+                string [] itemNames = (from x in items select x.Name).ToArray();
+                builder.SetItems(itemNames, new EventHandler<DialogClickEventArgs>(
+                (s, args) => {
+                    activity.RunOnUiThread(async () =>
+                    {
+                        Item selectedDomain = items.ElementAtOrDefault(args.Which);
+
+                        // store domain as parent of this item in db
+                        item.Value.SharedLink.Parent = selectedDomain.id;
+                        await PublicFields.Database.SaveItemLink(item.Value.SharedLink);
+
+                        // change the current item to correspond with its new parent
+                        item.Value.Parent = selectedDomain.id;
+                        var sharedItemNode = new TreeNode<Item>(item.Value);
+
+                        // change locally
+                        var parentOfItem = PublicFields.ItemTree.Descendants().FirstOrDefault(x => x.Value.id == selectedDomain.id);
+                        parentOfItem.Children.Add(sharedItemNode);
+                        PublicFields.ItemTree.FindAndReplace(parentOfItem.Value.id, parentOfItem);
+
+                        NotifyItemRemoved(e);
+                    });
+                    //clicked(true);
+                }));
+
+                var dialog = builder.Create();
+
+                // Show the dialog. This is important to do before accessing the buttons.
+                dialog.Show();
+
+                // Get the buttons.
+                //var yesBtn = dialog.GetButton((int)DialogButtonType.Positive);
+                //var noBtn = dialog.GetButton((int)DialogButtonType.Negative);
+
+                //// Assign our handlers.
+                //yesBtn.Click += (sender, args) =>
+                //{
+                //    // Don't dismiss dialog.
+                //    Console.WriteLine("I am here to stay!");
+                //};
+                //noBtn.Click += (sender, args) =>
+                //{
+                //    // Dismiss dialog.
+                //    Console.WriteLine("I will dismiss now!");
+                //    dialog.Dismiss();
+                //};
+
+
+                ////h.View.Context;
+                //var intent = new Intent(context, typeof(CheeseDetailActivity));
+                //intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Value.Name);
+                //intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
+                //parent.StartActivityForResult(intent, ITEMDETAIL);
+                ////context.StartActivity(intent);
+
+
             }
 
             public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)

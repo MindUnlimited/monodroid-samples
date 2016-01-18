@@ -1176,6 +1176,16 @@ namespace Cheesesquare
         {
             try
             {
+                // item is shared from another user
+                if(item.SharedLink != null)
+                {
+                    // retrieve shared item
+                    var sharedItem = await GetItem(item.id);
+
+                    // undo share specific changes
+                    item.Parent = sharedItem.Parent;
+                }
+
                 await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
 
                 // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud

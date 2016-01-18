@@ -279,14 +279,19 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                                 {
                                     newShareItem.Value.OwnedBy = ownedByGroupResult.ID;
                                     PublicFields.ItemTree.FindAndReplace(newShareItem.Value.id, newShareItem);
+                                    await PublicFields.Database.SaveItem(newShareItem.Value); // update the item with the new ownedBy group
                                 }
 
                                 var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
 
                                 foreach (var id in userIDs)
                                 {
-                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = id };
-                                    await PublicFields.Database.SaveItemLink(link);
+                                    // this account does not need the id. only the ones the item gets shared with
+                                    if(id != PublicFields.Database.defGroup.ID)
+                                    {
+                                        var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = id };
+                                        await PublicFields.Database.SaveItemLink(link);
+                                    }
                                 }
                             }
 
@@ -341,18 +346,48 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
         //    }
         //}
 
-        public void attachChildren(TreeNode<Item> node, IEnumerable<Item> children = null)
+        public async void attachChildren(TreeNode<Item> node, IEnumerable<Item> children = null)
         {
+            var sharedChildren = await PublicFields.Database.GetItemLinks();
+            var sharedChildrenLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == node.Value.id);
+
+
+            // retrieve the item from the ItemLink
+            List<Item> sharedChildrenItems = new List<Item>();
+            foreach (var l in sharedChildrenLinks)
+            {
+                var it = await PublicFields.Database.GetItem(l.ItemID);
+                it.Parent = node.Value.id;
+                it.SharedLink = l;
+
+                sharedChildrenItems.Add(it);
+            }
 
             if (children == null)
-                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id);
+            {
+                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id).Concat(sharedChildrenItems);
+            }
 
             foreach (var child in children)
             {
                 var childNode = node.Children.Add(child);
-                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id);
+                var childNodeLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == child.id);
 
-                if (childrenOfChild != null)
+                // retrieve the item from the ItemLink
+                List<Item> childNodeSharedChildrenItems = new List<Item>();
+                foreach (var l in childNodeLinks)
+                {
+                    var it = await PublicFields.Database.GetItem(l.ItemID);
+                    it.Parent = childNode.Value.id;
+                    it.SharedLink = l;
+
+                    childNodeSharedChildrenItems.Add(it);
+                }
+
+
+                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id).Concat(childNodeSharedChildrenItems);
+
+                if (childrenOfChild != null && childrenOfChild.Count() > 0)
                 {
                     attachChildren(childNode, childrenOfChild);
                 }
@@ -424,8 +459,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                     intent.AddFlags(ActivityFlags.ClearTop);
                     drawerLayout.CloseDrawers();
                     StartActivity(intent);
-
-                    break;
+                    return true;
             }
 
             return false;

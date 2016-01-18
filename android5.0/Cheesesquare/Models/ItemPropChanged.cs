@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Microsoft.WindowsAzure.MobileServices;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Cheesesquare.Models;
 
 namespace Todo
 {
@@ -21,6 +22,25 @@ namespace Todo
         }
 
         public string id { get; set; }
+
+        [JsonIgnore]
+        private ItemLink _sharedLink;
+
+        [JsonIgnore]
+        public ItemLink SharedLink
+        {
+            get { return _sharedLink; }
+            set
+            {
+                // OnPropertyChanged should not be called if the property value
+                // does not change.
+                if (_sharedLink == value)
+                    return;
+                _sharedLink = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         [JsonIgnore]
         private String _ownedby;

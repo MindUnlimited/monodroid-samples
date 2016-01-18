@@ -248,9 +248,20 @@ namespace Cheesesquare
             StartActivityForResult(intent, SHARE_CONTACT);
         }
 
-        private void ThumbAndName_Click(object sender, EventArgs e)
+        private async void ThumbAndName_Click(object sender, EventArgs e)
         {
             Intent intent = new Intent(this, typeof(SelectContactsActivity));//(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
+
+            //if (selectedContacts != null && item.Value.OwnedBy != null && selectedContacts.Count == 0)
+            //{
+            //    var ownedByGroup = await PublicFields.Database.GetGroupByID(item.Value.OwnedBy);
+            //    var idsOfGroupMembers = await PublicFields.Database.MembersOfGroup(ownedByGroup);
+
+            //    List<Todo.User> members = from x in idsOfGroupMembers select PublicFields.Database.get
+
+            //    selectedContacts.AddRange(members);
+            //}
+                
             intent.PutExtra("members", JsonConvert.SerializeObject(selectedContacts));
             StartActivityForResult(intent, ASSIGN_CONTACT);
         }
@@ -401,7 +412,16 @@ namespace Cheesesquare
                             if (selectedContacts.Count > 0)
                             {
                                 returnIntent.PutExtra("groupChanged", groupChanged);
-                                selectedContacts.Insert(0, PublicFields.Database.defUser); // add the current user to the group
+
+                                // add the current user to the group if not already in there
+                                if (selectedContacts.Find(ct => ct.Email == PublicFields.Database.defUser.Email) == null)
+                                    selectedContacts.Insert(0, PublicFields.Database.defUser); 
+                                else //replace the current user with the selected user if the email address is the same
+                                {
+                                    var index = selectedContacts.FindIndex(ct => ct.Email == PublicFields.Database.defUser.Email);
+                                    selectedContacts[index] = PublicFields.Database.defUser;
+                                }
+
                                 returnIntent.PutExtra("selectedContacts", JsonConvert.SerializeObject(selectedContacts));
                                 returnIntent.PutExtra("groupName", shareEditText.Text);
                             }

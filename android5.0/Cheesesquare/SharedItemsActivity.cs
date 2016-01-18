@@ -41,21 +41,13 @@ namespace Cheesesquare
             foreach (var itl in itemLinks)
             {
                 Item it = await PublicFields.Database.GetItem(itl.ItemID);
+                it.SharedLink = itl;
 
                 if (itl.Parent == null) // to be assigned to a parent so shows up in list
                 {
                     it.Parent = itl.Parent;
                     sharedItems.Add(it);
                     sharedItemsTreeNode.Add(new TreeNode<Item>(it));
-                }
-                else // already assigned so does not show up in list of shared items but in the normal tree structure instead
-                {
-                    it.Parent = itl.Parent;
-                    var sharedItemNode = new TreeNode<Item>(it);
-
-                    var parentOfItem = PublicFields.ItemTree.Descendants().FirstOrDefault(x => x.Value.id == it.Parent);
-                    parentOfItem.Children.Add(sharedItemNode);
-                    PublicFields.ItemTree.FindAndReplace(parentOfItem.Value.id, parentOfItem);
                 }
             }
 

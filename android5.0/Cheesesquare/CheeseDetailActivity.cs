@@ -385,8 +385,11 @@ Intent intent)
 
                                 foreach(var id in  userIDs)
                                 {
-                                    var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = id };
-                                    await PublicFields.Database.SaveItemLink(link);
+                                    if(id != PublicFields.Database.defGroup.ID)
+                                    {
+                                        var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = id };
+                                        await PublicFields.Database.SaveItemLink(link);
+                                    }
                                 }
                             }
 

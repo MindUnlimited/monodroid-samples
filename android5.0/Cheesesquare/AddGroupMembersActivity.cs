@@ -142,13 +142,16 @@ namespace Cheesesquare
         {
             var autoCompleteTextView = sender as AutoCompleteTextView;
             var contact = Cast(autoCompleteTextView.Adapter.GetItem(e.Position));
-            selectedContacts.Add(contact);
-            ((AutocompleteCustomArrayAdapter)membersLV.Adapter).Add(contact);
-            Log.Debug("AddGroupMembershipActivity", "added contact " + contact.ToString());
-            autoCompleteTextView.Text = "";
-            autoCompleteTextView.ClearListSelection();
 
-            //var output = new Contact { DisplayName = contact.Displayname };
+            // no duplicate accounts
+            if (selectedContacts.Find(ct => ct.Email == contact.Email) == null)
+            {
+                selectedContacts.Add(contact);
+                ((AutocompleteCustomArrayAdapter)membersLV.Adapter).Add(contact);
+                Log.Debug("AddGroupMembershipActivity", "added contact " + contact.ToString());
+                autoCompleteTextView.Text = "";
+                autoCompleteTextView.ClearListSelection();
+            }
         }
 
         public override bool OnOptionsItemSelected(IMenuItem item)
@@ -162,10 +165,6 @@ namespace Cheesesquare
 
                     if (selectedContacts != null && selectedContacts.Count > 0)
                     {
-                        //var currentUser = PublicFields.Database.defUser;
-                        //if (currentUser != null && !selectedContacts.Contains(currentUser))
-                        //    selectedContacts.Insert(0, currentUser);// place current user at top
-
                         Intent myIntent = new Intent();
                         var members = JsonConvert.SerializeObject(selectedContacts);
                         myIntent.PutExtra("members", members);
