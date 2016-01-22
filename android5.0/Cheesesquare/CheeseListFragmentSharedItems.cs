@@ -254,7 +254,7 @@ namespace Cheesesquare
 
                 // Build the dialog.
                 var builder = new AlertDialog.Builder(context);
-                builder.SetTitle("Click me!");
+                builder.SetTitle("Move the item where?");
 
                 
 

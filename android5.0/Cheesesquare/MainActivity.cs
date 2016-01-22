@@ -31,6 +31,10 @@ namespace Cheesesquare
     public static class PublicFields
     {
         public static Database Database;
+        public static async void UpdateDatabase()
+        {
+            await PublicFields.Database.SyncAsync();
+        }
 
         public static Tree<Item> ItemTree { get; set; }
         //public static Dictionary<string, TreeNode<Item>> ItemDictionary { get; set; }
@@ -285,10 +289,28 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                         ITEMDETAIL:
                         if (intent.GetBooleanExtra("databaseUpdated", false))
                         {
-                            int index = viewPager.CurrentItem;
-                            PublicFields.Database.SyncAsync();
-                            setupViewPager(viewPager);
-                            viewPager.CurrentItem = index;
+                            PublicFields.UpdateDatabase();
+                            PublicFields.MakeTree();
+
+                            int currentIndex = viewPager.CurrentItem;
+                            var adapter = (MyAdapter)viewPager.Adapter;
+                            var currentFragment = (CheeseListFragment)adapter.GetItem(currentIndex);
+
+                            int indexes = adapter.Count;
+                            for (int i = 0; i < indexes; i++)
+                            {
+                                var domainFragment = (CheeseListFragment)adapter.GetItem(i);
+                                var domainItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == domainFragment.domain.Value.id);
+                                if (domainItem.Children != null && domainFragment.itemRecyclerViewAdapter != null)
+                                {
+                                    domainFragment.domain = domainItem;
+                                    domainFragment.itemRecyclerViewAdapter.ChangeDateSet(domainItem.Children);
+                                    domainFragment.itemRecyclerViewAdapter.NotifyDataSetChanged();
+                                }
+                            }
+
+                            viewPager.PageSelected += ViewPager_PageSelected;
+                            viewPager.CurrentItem = currentIndex;
                         }
                         else if (intent.GetBooleanExtra("itemChanged", false))
                         {
@@ -400,6 +422,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
             return true;
         }
 
+
         public override bool OnOptionsItemSelected(IMenuItem item)
         {
             switch (item.ItemId) {
@@ -411,14 +434,30 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                     // update db
                     //Task.Run(async () => await PublicFields.Database.SyncAsync());
+                    PublicFields.UpdateDatabase();
+                    PublicFields.MakeTree();
 
-                    int index = viewPager.CurrentItem;
-                    PublicFields.Database.SyncAsync();
-                    setupViewPager(viewPager);
-                    viewPager.CurrentItem = index;
+                    int currentIndex = viewPager.CurrentItem;
+                    var adapter = (MyAdapter)viewPager.Adapter;
+                    var currentFragment = (CheeseListFragment)adapter.GetItem(currentIndex);
+
+                    int indexes = adapter.Count;
+                    for (int i = 0; i < indexes; i++)
+                    {
+                        var domainFragment = (CheeseListFragment)adapter.GetItem(i);
+                        var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == domainFragment.domain.Value.id);
+                        if (domain.Children != null && domainFragment.itemRecyclerViewAdapter != null)
+                        {
+                            domainFragment.domain = domain;
+                            domainFragment.itemRecyclerViewAdapter.ChangeDateSet(domain.Children);
+                            domainFragment.itemRecyclerViewAdapter.NotifyDataSetChanged();
+                        }
+                    }
+
+                    viewPager.PageSelected += ViewPager_PageSelected;
+                    viewPager.CurrentItem = currentIndex;
 
                     return true;
-
             }
             return base.OnOptionsItemSelected(item);
         }
@@ -450,6 +489,7 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
             }
 
             viewPager.Adapter = adapter;
+            adapter.NotifyDataSetChanged();
             currentDomainFragment = ((CheeseListFragment)((MyAdapter)viewPager.Adapter).GetItem(viewPager.CurrentItem));
 
             viewPager.PageSelected += ViewPager_PageSelected;

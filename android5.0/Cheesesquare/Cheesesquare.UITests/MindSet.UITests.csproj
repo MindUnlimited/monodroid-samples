@@ -37,9 +37,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Cheesesquare.csproj">
+    <ProjectReference Include="..\MindSet.csproj">
       <Project>{580F5B91-D14A-449B-BFDE-C21A0F9A7D2F}</Project>
-      <Name>Cheesesquare</Name>
+      <Name>MindSet</Name>
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
       <Private>False</Private>
     </ProjectReference>

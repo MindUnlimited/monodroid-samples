@@ -562,7 +562,7 @@ Intent intent)
                 case Resource.Id.refresh:
                     Log.Debug("detail", "attempting refresh");
 
-                    PublicFields.Database.SyncAsync();
+                    PublicFields.UpdateDatabase();
 
                     PublicFields.MakeTree();
                     item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
