@@ -22,6 +22,7 @@ using Android.Net;
 using Java.Lang.Reflect;
 using Todo;
 using Cheesesquare.Models;
+using System.Threading.Tasks;
 
 namespace Cheesesquare
 {
@@ -91,6 +92,8 @@ namespace Cheesesquare
 
         private Android.Support.V7.Widget.PopupMenu statusMenu;
 
+        TextView userName;
+
         private FloatingActionButton editFAB;
         private FloatingActionButton addItemFAB;
         private CollapsingToolbarLayout collapsingToolbar;
@@ -99,6 +102,7 @@ namespace Cheesesquare
 
         private Todo.TreeNode<Todo.Item> item;
         public bool itemChanged;
+        public bool databaseUpdated;
 
         //private RecyclerView.AdapterDataObserver dataObserver;// = new DataObserver();
 
@@ -109,6 +113,7 @@ namespace Cheesesquare
 
             //dataObserver = new DataObserver(this);
             itemChanged = false;
+            databaseUpdated = false;
 
             itemID = Intent.GetStringExtra(ITEM_ID);
             var test = PublicFields.ItemTree.Descendants();
@@ -123,8 +128,8 @@ namespace Cheesesquare
             if (navigationView != null)
                 setupDrawerContent(navigationView);
 
-            var username = navigationView.FindViewById<TextView>(Resource.Id.username_nav);
-            username.Text = PublicFields.Database.userName;
+            userName = navigationView.GetHeaderView(0).FindViewById<TextView>(Resource.Id.username_nav);
+            userName.Text = PublicFields.Database.userName;
 
             SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
@@ -166,7 +171,7 @@ namespace Cheesesquare
             comment = FindViewById<TextView>(Resource.Id.comment_text);
             if (string.IsNullOrEmpty(item.Value.Notes))
             {
-                comment.Text = "No comments";
+                comment.Text = "No notes";
             }
             else
             {
@@ -415,7 +420,6 @@ Intent intent)
                             // refresh values
                             collapsingToolbar.SetTitle(item.Value.Name);
                             importance.Rating = item.Value.Importance;
-                            comment.Text = item.Value.Notes ?? "no notes";
 
                             if (item.Value.EndDate != null)
                             {
@@ -435,6 +439,40 @@ Intent intent)
                                 {
                                     e.PrintStackTrace();
                                 }
+                            }
+
+                            switch (item.Value.Status)
+                            {
+                                case -1:
+                                    status.Text = "Cancelled";
+                                    statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
+                                    break;
+                                case 0:
+                                    status.Text = "Backlog";
+                                    statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
+                                    break;
+                                case 6:
+                                    status.Text = "On Hold";
+                                    statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
+                                    break;
+                                case 7:
+                                    status.Text = "Completed";
+                                    statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
+                                    break;
+                                default:
+                                    status.Text = "Started";
+                                    statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
+                                    break;
+
+                            }
+
+                            if (string.IsNullOrEmpty(item.Value.Notes))
+                            {
+                                comment.Text = "No notes";
+                            }
+                            else
+                            {
+                                comment.Text = item.Value.Notes;
                             }
                         }
                         else // added a new cardview (subItem)
@@ -514,15 +552,87 @@ Intent intent)
             return true;
         }
 
-        public override bool OnOptionsItemSelected(IMenuItem item)
+        public override bool OnOptionsItemSelected(IMenuItem menuItem)
         {
-            switch (item.ItemId)
+            switch (menuItem.ItemId)
             {
                 case Android.Resource.Id.Home:
                     drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
                     return true;
+                case Resource.Id.refresh:
+                    Log.Debug("detail", "attempting refresh");
+
+                    PublicFields.Database.SyncAsync();
+
+                    PublicFields.MakeTree();
+                    item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+                    setupViewPager(viewPager);
+
+
+                    // refresh values detail item
+                    collapsingToolbar.SetTitle(item.Value.Name);
+                    importance.Rating = item.Value.Importance;
+
+                    if (item.Value.EndDate != null)
+                    {
+                        //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
+                        //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                        try
+                        {
+                            //Date mDate = sdf.Parse(item.EndDate);
+
+                            long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
+                            new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
+
+                            if (timeInMilliseconds >= 0)
+                                txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
+                        }
+                        catch (ParseException e)
+                        {
+                            e.PrintStackTrace();
+                        }
+                    }
+
+                    switch (item.Value.Status)
+                    {
+                        case -1:
+                            status.Text = "Cancelled";
+                            statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
+                            break;
+                        case 0:
+                            status.Text = "Backlog";
+                            statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
+                            break;
+                        case 6:
+                            status.Text = "On Hold";
+                            statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
+                            break;
+                        case 7:
+                            status.Text = "Completed";
+                            statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
+                            break;
+                        default:
+                            status.Text = "Started";
+                            statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
+                            break;
+
+                    }
+
+                    if (string.IsNullOrEmpty(item.Value.Notes))
+                    {
+                        comment.Text = "No notes";
+                    }
+                    else
+                    {
+                        comment.Text = item.Value.Notes;
+                    }
+
+                    databaseUpdated = true;
+
+                    return true;
+
             }
-            return base.OnOptionsItemSelected(item);
+            return base.OnOptionsItemSelected(menuItem);
         }
 
         private void AddItemFAB_Click(object sender, EventArgs e)
@@ -595,6 +705,7 @@ Intent intent)
 
             Intent returnIntent = new Intent();
             returnIntent.PutExtra("itemChanged", itemChanged);// ("passed_item", itemYouJustCreated);
+            returnIntent.PutExtra("databaseUpdated", databaseUpdated);
             if (itemChanged)
                 returnIntent.PutExtra("itemID", item.Value.id);// ("passed_item", itemYouJustCreated);
             SetResult(Result.Ok, returnIntent);

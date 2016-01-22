@@ -24,6 +24,7 @@ using System.Linq;
 using Android.Support.V7.Widget;
 using Todo;
 using Cheesesquare.Models;
+using System.Threading.Tasks;
 
 namespace Cheesesquare
 {
@@ -36,6 +37,71 @@ namespace Cheesesquare
         public static List<Item> ItemList { get; set; }
         public static List<TreeNode<Item>> domains { get; set; }
         public static List<Group> userGroups { get; set; }
+
+        public static async void attachChildren(TreeNode<Item> node, IEnumerable<Item> children = null)
+        {
+            var sharedChildren = await PublicFields.Database.GetItemLinks();
+            var sharedChildrenLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == node.Value.id);
+
+
+            // retrieve the item from the ItemLink
+            List<Item> sharedChildrenItems = new List<Item>();
+            foreach (var l in sharedChildrenLinks)
+            {
+                var it = await PublicFields.Database.GetItem(l.ItemID);
+                it.Parent = node.Value.id;
+                it.SharedLink = l;
+
+                sharedChildrenItems.Add(it);
+            }
+
+            if (children == null)
+            {
+                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id).Concat(sharedChildrenItems);
+            }
+
+            foreach (var child in children)
+            {
+                var childNode = node.Children.Add(child);
+                var childNodeLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == child.id);
+
+                // retrieve the item from the ItemLink
+                List<Item> childNodeSharedChildrenItems = new List<Item>();
+                foreach (var l in childNodeLinks)
+                {
+                    var it = await PublicFields.Database.GetItem(l.ItemID);
+                    it.Parent = childNode.Value.id;
+                    it.SharedLink = l;
+
+                    childNodeSharedChildrenItems.Add(it);
+                }
+
+
+                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id).Concat(childNodeSharedChildrenItems);
+
+                if (childrenOfChild != null && childrenOfChild.Count() > 0)
+                {
+                    attachChildren(childNode, childrenOfChild);
+                }
+            }
+        }
+
+        public static  async void MakeTree()
+        {
+            if (PublicFields.Database.userGroups == null)
+                PublicFields.Database.userGroups = await PublicFields.Database.getGroups();
+
+            PublicFields.ItemTree = new Tree<Item>(new Item { Name = "ROOT" });
+            PublicFields.ItemList = (List<Todo.Item>)await PublicFields.Database.GetItems();
+
+            PublicFields.domains = new List<TreeNode<Item>>();
+            foreach (var domain in PublicFields.ItemList.Where(it => it.Type == 1).ToList())
+            {
+                var domainNode = PublicFields.ItemTree.Children.Add(domain);
+                attachChildren(domainNode);
+                PublicFields.domains.Add(domainNode);
+            }
+        }
     }
 
 
@@ -46,6 +112,7 @@ namespace Cheesesquare
         ViewPager viewPager;
         TabLayout tabLayout;
         NavigationView navigationView;
+        TextView userName;
 
         private const int LOGIN = 102;
         private const int ITEMDETAIL = 103;
@@ -72,9 +139,11 @@ namespace Cheesesquare
 
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
 
-            navigationView = FindViewById<NavigationView>(Resource.Id.nav_view);
+            navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_main);
             if (navigationView != null)
                 setupDrawerContent(navigationView);
+
+            userName = navigationView.GetHeaderView(0).FindViewById<TextView>(Resource.Id.username_nav);
 
             var fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
             fab.Click += (sender, e) =>                     
@@ -166,6 +235,8 @@ namespace Cheesesquare
                 }
             }
 
+            navigationView.SetCheckedItem(Resource.Id.nav_home);
+
             //else
             //{
             //    var loginpage = new NavigationPage(new Views.SelectLoginProviderPage());
@@ -207,12 +278,19 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                         tabLayout.SetupWithViewPager(viewPager);
 
-                        var username = navigationView.FindViewById<TextView>(Resource.Id.username_nav);
-                        username.Text = PublicFields.Database.userName;
+                        if(userName!=null)
+                            userName.Text = PublicFields.Database.userName;
                         break;
                     case
                         ITEMDETAIL:
-                        if (intent.GetBooleanExtra("itemChanged", false))
+                        if (intent.GetBooleanExtra("databaseUpdated", false))
+                        {
+                            int index = viewPager.CurrentItem;
+                            PublicFields.Database.SyncAsync();
+                            setupViewPager(viewPager);
+                            viewPager.CurrentItem = index;
+                        }
+                        else if (intent.GetBooleanExtra("itemChanged", false))
                         {
                             string ItemID = intent.GetStringExtra("itemID");
                             Log.Debug("MainActivity", "Item changed");
@@ -328,6 +406,19 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
                 case Android.Resource.Id.Home:
                     drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
                     return true;
+                case Resource.Id.refresh:
+                    Log.Debug("main", "attempting refresh");
+
+                    // update db
+                    //Task.Run(async () => await PublicFields.Database.SyncAsync());
+
+                    int index = viewPager.CurrentItem;
+                    PublicFields.Database.SyncAsync();
+                    setupViewPager(viewPager);
+                    viewPager.CurrentItem = index;
+
+                    return true;
+
             }
             return base.OnOptionsItemSelected(item);
         }
@@ -346,69 +437,10 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
         //    }
         //}
 
-        public async void attachChildren(TreeNode<Item> node, IEnumerable<Item> children = null)
+
+        public void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
         {
-            var sharedChildren = await PublicFields.Database.GetItemLinks();
-            var sharedChildrenLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == node.Value.id);
-
-
-            // retrieve the item from the ItemLink
-            List<Item> sharedChildrenItems = new List<Item>();
-            foreach (var l in sharedChildrenLinks)
-            {
-                var it = await PublicFields.Database.GetItem(l.ItemID);
-                it.Parent = node.Value.id;
-                it.SharedLink = l;
-
-                sharedChildrenItems.Add(it);
-            }
-
-            if (children == null)
-            {
-                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id).Concat(sharedChildrenItems);
-            }
-
-            foreach (var child in children)
-            {
-                var childNode = node.Children.Add(child);
-                var childNodeLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == child.id);
-
-                // retrieve the item from the ItemLink
-                List<Item> childNodeSharedChildrenItems = new List<Item>();
-                foreach (var l in childNodeLinks)
-                {
-                    var it = await PublicFields.Database.GetItem(l.ItemID);
-                    it.Parent = childNode.Value.id;
-                    it.SharedLink = l;
-
-                    childNodeSharedChildrenItems.Add(it);
-                }
-
-
-                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id).Concat(childNodeSharedChildrenItems);
-
-                if (childrenOfChild != null && childrenOfChild.Count() > 0)
-                {
-                    attachChildren(childNode, childrenOfChild);
-                }
-            }
-        }
-
-        async void setupViewPager(Android.Support.V4.View.ViewPager viewPager)
-        {
-            if (PublicFields.Database.userGroups == null)
-                PublicFields.Database.userGroups = await PublicFields.Database.getGroups();
-
-            PublicFields.ItemTree = new Tree<Item>(new Item { Name = "ROOT" });
-            PublicFields.ItemList = (List<Todo.Item>) await PublicFields.Database.GetItems();
-
-            PublicFields.domains = new List<TreeNode<Item>>();
-            foreach (var domain in PublicFields.ItemList.Where(it => it.Type == 1).ToList())
-            {
-                var domainNode = PublicFields.ItemTree.Children.Add(domain);
-                attachChildren(domainNode);
-                PublicFields.domains.Add(domainNode);
-            }
+            PublicFields.MakeTree();
             
             var adapter = new MyAdapter(SupportFragmentManager);
 
@@ -416,9 +448,9 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
             {
                 adapter.AddFragment(new CheeseListFragment(domain), domain.Value.Name);
             }
+
             viewPager.Adapter = adapter;
             currentDomainFragment = ((CheeseListFragment)((MyAdapter)viewPager.Adapter).GetItem(viewPager.CurrentItem));
-
 
             viewPager.PageSelected += ViewPager_PageSelected;
         }

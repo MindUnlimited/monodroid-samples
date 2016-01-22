@@ -10,6 +10,8 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.Support.V7.Widget;
+
+using V7Toolbar = Android.Support.V7.Widget.Toolbar;
 using Todo;
 using Android.Support.V4.View;
 using Android.Support.V7.App;
@@ -24,6 +26,7 @@ namespace Cheesesquare
         private ViewPager viewPager;
         private DrawerLayout drawerLayout;
         private NavigationView navigationView;
+        private TextView userName;
 
         protected async override void OnCreate(Bundle savedInstanceState)
         {
@@ -31,6 +34,13 @@ namespace Cheesesquare
 
             // Create your application here
             SetContentView(Resource.Layout.activity_shared_items);
+
+            var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
+            SetSupportActionBar(toolbar);
+
+            SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
+            SupportActionBar.SetDisplayHomeAsUpEnabled(true);
+            SupportActionBar.Title = "Shared with me";
 
             viewPager = FindViewById<ViewPager>(Resource.Id.viewpager_shared_items);
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_shared);
@@ -62,6 +72,11 @@ namespace Cheesesquare
 
             navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_shared);
             navigationView.SetNavigationItemSelectedListener(this);
+
+            navigationView.SetCheckedItem(Resource.Id.shared_items);
+
+            userName = navigationView.GetHeaderView(0).FindViewById<TextView>(Resource.Id.username_nav);
+            userName.Text = PublicFields.Database.userName;
         }
 
         public bool OnNavigationItemSelected(IMenuItem menuItem)
@@ -78,6 +93,17 @@ namespace Cheesesquare
             }
 
             return false;
+        }
+
+        public override bool OnOptionsItemSelected(IMenuItem item)
+        {
+            switch (item.ItemId)
+            {
+                case Android.Resource.Id.Home:
+                    drawerLayout.OpenDrawer(Android.Support.V4.View.GravityCompat.Start);
+                    return true;
+            }
+            return base.OnOptionsItemSelected(item);
         }
 
 
