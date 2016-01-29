@@ -495,21 +495,6 @@ Intent intent)
 
                                 //PublicFields.ItemTree.FindAndReplace(it.Value.id, it);
                             }
-
-                            //PublicFields.ItemTree.FindAndReplace(tempID, itemCard); //replace this detail item by searching from this detail item and replacing the one with the temp id
-
-                            //PublicFields.ItemTree.FindAndReplace(tempID, itemCard);
-                            //PublicFields.ItemDictionary[indexSubItem] = itemCard;
-
-                            //int index = viewPager.CurrentItem;
-                            //var adapter = (MyAdapter)viewPager.Adapter;
-                            //var currentFragment = (CheeseListFragment)adapter.GetItem(index);
-                            //var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
-
-                            ////fragmentAdapter.ChangeDateSet(item.Children);
-                            //fragmentAdapter.NotifyDataSetChanged();
-                            //fragmentAdapter.addItem(itemCard);//PublicFields.allItems.Find(it => it.id == itemID));
-                            //fragmentAdapter.ApplyChanges();
                         }
                         this.item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == item.Value.id);
                         break;
