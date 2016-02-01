@@ -825,6 +825,7 @@ namespace Cheesesquare
 
                 try
                 {
+                    var all_items = await itemTable.ToListAsync();
                     items = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy)).ToListAsync();
                 }
                 catch (Exception e)
