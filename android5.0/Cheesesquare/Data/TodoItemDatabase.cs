@@ -442,45 +442,46 @@ namespace Cheesesquare
                 return null;
             else
             {
-                // from userID to GroupID from the users default group (defGroup)
-                List<Group> resultGroups = new List<Group>();
-                List<Group> groups = await groupTable.ToListAsync();
+                var resultGroups = await groupTable.ToListAsync();
+                //// from userID to GroupID from the users default group (defGroup)
+                //List<Group> resultGroups = new List<Group>();
+                //List<Group> groups = await groupTable.ToListAsync();
 
-                if (defGroup == null)
-                    defGroup = await getDefaultGroup();
+                //if (defGroup == null)
+                //    defGroup = await getDefaultGroup();
 
-                var queue = new Queue<Group>();
-                queue.Enqueue(defGroup);
+                //var queue = new Queue<Group>();
+                //queue.Enqueue(defGroup);
 
-                while (queue.Count > 0)
-                {
-                    // Take the next node from the front of the queue
-                    var node = queue.Dequeue();
+                //while (queue.Count > 0)
+                //{
+                //    // Take the next node from the front of the queue
+                //    var node = queue.Dequeue();
 
-                    // Process the node 'node'
-                    if (resultGroups.Contains(node) == false)
-                        resultGroups.Add(node);
+                //    // Process the node 'node'
+                //    if (resultGroups.Contains(node) == false)
+                //        resultGroups.Add(node);
 
-                    List<GroupGroupMembership> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MemberID == node.ID).ToListAsync();
+                //    List<GroupGroupMembership> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MemberID == node.ID).ToListAsync();
 
-                    IEnumerable<Group> children = from g in groups
-                                                  where ggms.Any(ggm => ggm.MembershipID == g.ID)
-                                                  select g;
+                //    IEnumerable<Group> children = from g in groups
+                //                                  where ggms.Any(ggm => ggm.MembershipID == g.ID)
+                //                                  select g;
 
-                    //List<Group> children = await groupTable.Where(group => ids.Contains(group.ID)).ToListAsync();
+                //    //List<Group> children = await groupTable.Where(group => ids.Contains(group.ID)).ToListAsync();
 
-                    //List<Group> groups = await groupTable.ToListAsync();
-                    //List<GroupGroupMembership> ggms = await groupGroupMembershipTable.ToListAsync();
+                //    //List<Group> groups = await groupTable.ToListAsync();
+                //    //List<GroupGroupMembership> ggms = await groupGroupMembershipTable.ToListAsync();
 
-                    //var childrrren = from g in groups
-                    //                 join ggm in ggms
-                    //                     on g.ID equals ggm.
-                    //                 select g;
+                //    //var childrrren = from g in groups
+                //    //                 join ggm in ggms
+                //    //                     on g.ID equals ggm.
+                //    //                 select g;
 
-                    // Add the node’s children to the back of the queue
-                    foreach (var child in children)
-                        queue.Enqueue(child);
-                }
+                //    // Add the node’s children to the back of the queue
+                //    foreach (var child in children)
+                //        queue.Enqueue(child);
+                //}
 
                 return resultGroups;
             }
@@ -825,8 +826,8 @@ namespace Cheesesquare
 
                 try
                 {
-                    var all_items = await itemTable.ToListAsync();
-                    items = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy)).ToListAsync();
+                    items = await itemTable.ToListAsync();
+                    //items = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy)).ToListAsync();
                 }
                 catch (Exception e)
                 {
@@ -850,7 +851,8 @@ namespace Cheesesquare
 
                 try
                 {
-                    itemLinks = await itemLinkTable.Where(itl => groups_ids.Contains(itl.OwnedBy)).ToListAsync();
+                    itemLinks = await itemLinkTable.ToListAsync();
+                    //itemLinks = await itemLinkTable.Where(itl => groups_ids.Contains(itl.OwnedBy)).ToListAsync();
                 }
                 catch (Exception e)
                 {
