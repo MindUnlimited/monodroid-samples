@@ -2,7 +2,6 @@
 
 using Android.App;
 using Android.Content;
-using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
@@ -13,18 +12,15 @@ using V4FragmentManager = Android.Support.V4.App.FragmentManager;
 using Android.Support.V4.Widget;
 using Android.Support.Design.Widget;
 using System.Collections.Generic;
-using Android.Support.V4.App;
 using Android.Util;
 using Android.Support.V4.View;
-using Android.Graphics;
 using Microsoft.WindowsAzure.MobileServices;
 using Android.Preferences;
 using Newtonsoft.Json;
 using System.Linq;
-using Android.Support.V7.Widget;
 using Todo;
 using Cheesesquare.Models;
-using System.Threading.Tasks;
+using Gcm.Client;
 
 namespace Cheesesquare
 {
@@ -108,10 +104,19 @@ namespace Cheesesquare
         }
     }
 
+    public static class Constants
+    {
+        public const string SenderID = "53371998202"; // Google API Project Number
+        public const string ListenConnectionString = "Endpoint=sb://mindunlimited.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=bNeGF939mVBgwcyxqb/b6XdXy6oroNquT5SBHDhl4HA=";
+        public const string NotificationHubName = "notificationhub";
+    }
+
 
     [Activity(Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true)]
     public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {
+        public static MainActivity instance;
+
         DrawerLayout drawerLayout;
         ViewPager viewPager;
         TabLayout tabLayout;
@@ -125,10 +130,26 @@ namespace Cheesesquare
         private CheeseListFragment currentDomainFragment;
         //private RecyclerView.AdapterDataObserver dataObserver;
 
+        private void RegisterWithGCM()
+        {
+            // Check to ensure everything's set up right
+            GcmClient.CheckDevice(this);
+            GcmClient.CheckManifest(this);
+
+            // Register for push notifications
+            Log.Info("MainActivity", "Registering...");
+            GcmClient.Register(this, Constants.SenderID);
+        }
 
         protected async override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+
+            instance = this;
+
+            RegisterWithGCM();
+
+
 
             PublicFields.Database = new Database();
             //dataObserver = new DataObserver();
