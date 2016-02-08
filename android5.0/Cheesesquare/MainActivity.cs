@@ -139,6 +139,8 @@ namespace Cheesesquare
             // Register for push notifications
             Log.Info("MainActivity", "Registering...");
             GcmClient.Register(this, Constants.SenderID);
+
+
         }
 
         protected async override void OnCreate(Bundle savedInstanceState)
@@ -146,10 +148,6 @@ namespace Cheesesquare
             base.OnCreate(savedInstanceState);
 
             instance = this;
-
-            RegisterWithGCM();
-
-
 
             PublicFields.Database = new Database();
             //dataObserver = new DataObserver();
@@ -305,6 +303,9 @@ protected async override void OnActivityResult(int requestCode, Result resultCod
 
                         if(userName!=null)
                             userName.Text = PublicFields.Database.userName;
+
+                        RegisterWithGCM();
+
                         break;
                     case
                         ITEMDETAIL:

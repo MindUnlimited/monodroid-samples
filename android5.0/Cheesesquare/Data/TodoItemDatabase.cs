@@ -143,6 +143,7 @@ namespace Cheesesquare
         //Mobile Service sync table used to access data
         //private IMobileServiceSyncTable<TodoItem> toDoTable;
         private IMobileServiceSyncTable<Item> itemTable;
+        private IMobileServiceSyncTable<Device> deviceTable;
         private IMobileServiceSyncTable<ItemLink> itemLinkTable;
         private IMobileServiceSyncTable<User> userTable;
         private IMobileServiceSyncTable<Group> groupTable;
@@ -238,6 +239,7 @@ namespace Cheesesquare
                 InitLocalStoreAsync();
                                 
                 userTable = client.GetSyncTable<User>();
+                deviceTable = client.GetSyncTable<Device>();
                 userGroupMembershipTable = client.GetSyncTable<UserGroupMembership>();
                 groupTable = client.GetSyncTable<Group>();
                 groupGroupMembershipTable = client.GetSyncTable<GroupGroupMembership>();
@@ -312,6 +314,7 @@ namespace Cheesesquare
 
             var store = new MobileServiceSQLiteStore(path);
             store.DefineTable<TodoItem>();
+            store.DefineTable<Device>();
             store.DefineTable<User>();
             store.DefineTable<Group>();
             store.DefineTable<UserGroupMembership>();
@@ -362,6 +365,7 @@ namespace Cheesesquare
                 await groupTable.PullAsync("Groups", groupTable.CreateQuery()); // first param is query ID, used for incremental sync
                 await groupGroupMembershipTable.PullAsync("GroupGroupMemberships", groupGroupMembershipTable.CreateQuery()); // first param is query ID, used for incremental sync
                 await itemTable.PullAsync("Items", itemTable.CreateQuery());// first param is query ID, used for incremental sync
+                await deviceTable.PullAsync("Devices", deviceTable.CreateQuery());
                 await itemLinkTable.PullAsync("ItemLinks", itemLinkTable.CreateQuery());
             }
 
@@ -590,6 +594,57 @@ namespace Cheesesquare
                 return resultGroups;
             }
         }
+
+        public async Task<List<Device>> getDevices()
+        {
+            if (userID == null)
+                return null;
+            else
+            {
+                var devices = await deviceTable.ToListAsync();
+                return devices;
+            }
+        }
+
+
+        public async Task SaveDevice(Device device)
+        {
+            try
+            {
+                await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
+
+                if(device.OwnerId == null)
+                {
+                    device.OwnerId = defGroup.ID;
+                }
+
+                var devices_in_db_like_this = await deviceTable.Where(x => x.MachineId == device.MachineId && device.OwnerId == x.OwnerId && device.OwnerId != null).ToListAsync();
+
+                // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
+                if (devices_in_db_like_this.Count == 1)
+                {
+                    Log.Debug("DB", "Device already in db, doing nothing");
+                    //await deviceTable.UpdateAsync(device);
+                }
+                else if (devices_in_db_like_this.Count == 0)
+                {
+                    Log.Debug("DB", "Device not yet in db adding field");
+                    await deviceTable.InsertAsync(device);
+                }
+                else
+                {
+                    Log.Error("DB", "Something went wrong, multiple devices in db with the same machine id and owner");
+                }
+
+                await client.SyncContext.PushAsync();
+            }
+            catch (Exception e)
+            {
+                CreateAndShowDialog(e, "Error");
+            }
+        }
+
+
 
         public async Task<bool> MemberOfGroup(User user, Group group)
         {

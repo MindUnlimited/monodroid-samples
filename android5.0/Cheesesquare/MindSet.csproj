@@ -130,6 +130,7 @@
     <Compile Include="LoginActivity.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Models\Contact.cs" />
+    <Compile Include="Models\Device.cs" />
     <Compile Include="Models\Group.cs" />
     <Compile Include="Models\GroupGroupMembership.cs" />
     <Compile Include="Models\Item.cs" />

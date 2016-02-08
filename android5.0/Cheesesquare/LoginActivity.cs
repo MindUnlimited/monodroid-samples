@@ -202,7 +202,12 @@ namespace Cheesesquare
                 await PublicFields.Database.SyncAsync(); // pull database tables
 
 
-                JToken defGroup = await PublicFields.Database.client.InvokeApiAsync("getdefaultgroup", HttpMethod.Get, null); // also gather extra user information
+                var parameters = new Dictionary<string, string>
+                {
+                    { "userid", "96090072-0234-4570-898a-5e9ec9d398c3" }
+                };
+
+                JToken defGroup = await PublicFields.Database.client.InvokeApiAsync("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
                 //await PublicFields.Database.getContactsThatUseApp();
 
                 message = string.Format("You are now logged in - {0}", user.UserId);
