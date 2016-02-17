@@ -29,6 +29,7 @@ namespace Cheesesquare
         private Button microsoftButton;
 
         private MobileServiceAuthenticationProvider provider;
+        private ProgressDialog progressDialog;
 
         protected override async void OnCreate(Bundle bundle)
         {
@@ -74,6 +75,12 @@ namespace Cheesesquare
             // Sharedpreferences (local storage) for storing the last used oauth provider
             var preferences = PreferenceManager.GetDefaultSharedPreferences(Application.Context);
             var editor = preferences.Edit();
+
+            progressDialog = new ProgressDialog(this);
+            progressDialog.SetMessage("Logging in..");
+            progressDialog.Show();
+            progressDialog.SetCanceledOnTouchOutside(false);
+            progressDialog.SetCancelable(false);
 
             while (user == null)
             {
@@ -159,6 +166,8 @@ namespace Cheesesquare
                 {
                     try
                     {
+                        progressDialog.Hide();
+
                         // Login with the identity provider.
                         user = await PublicFields.Database.client
                             .LoginAsync(this, provider);
@@ -166,6 +175,8 @@ namespace Cheesesquare
                         // Store the encrypted user credentials in local settings.
                         Account currentAccount = new Account(user.UserId, new Dictionary<string, string> { { "token", user.MobileServiceAuthenticationToken } });
                         accountStore.Save(currentAccount, providerName);
+
+                        progressDialog.Show();
                     }
                     catch (MobileServiceInvalidOperationException ex)
                     {
@@ -208,6 +219,9 @@ namespace Cheesesquare
                 };
 
                 JToken defGroup = await PublicFields.Database.client.InvokeApiAsync("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
+
+                progressDialog.Cancel();
+
                 //await PublicFields.Database.getContactsThatUseApp();
 
                 message = string.Format("You are now logged in - {0}", user.UserId);
