@@ -1,0 +1,8 @@
+﻿delete from [mindunlimited].[UserGroupMembership]
+delete from [mindunlimited].[GroupGroupMembership]
+delete from [mindunlimited].[UserGroupAccess]
+delete from [mindunlimited].[UserGroupMembership]
+delete from [mindunlimited].[ItemLink]
+delete from [mindunlimited].[Group]
+delete from [mindunlimited].[User]
+delete from [mindunlimited].[Item]
