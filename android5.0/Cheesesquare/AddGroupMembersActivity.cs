@@ -63,13 +63,14 @@ namespace Cheesesquare
 
                 // get the TextView and then set the text (item name) and tag (item ID) values
                 TextView textViewItem = (TextView)convertView.FindViewById(Resource.Id.ContactName);
-                if(textViewItem != null)
+                if(textViewItem != null && objectItem != null)
+                {
                     textViewItem.Text = objectItem.Name;
-
-                ImageView imageViewitem = (ImageView)convertView.FindViewById(Resource.Id.ContactImage);
-                var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, objectItem.Thumbnail);
-                roundedThumbBitmap.Circular = true;
-                imageViewitem.SetImageDrawable(roundedThumbBitmap);               
+                    ImageView imageViewitem = (ImageView)convertView.FindViewById(Resource.Id.ContactImage);
+                    var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, objectItem.Thumbnail);
+                    roundedThumbBitmap.Circular = true;
+                    imageViewitem.SetImageDrawable(roundedThumbBitmap);
+                }
             }
             catch (NullPointerException e)
             {

@@ -218,7 +218,11 @@ namespace Cheesesquare
                     { "userid", "96090072-0234-4570-898a-5e9ec9d398c3" }
                 };
 
-                JToken defGroup = await PublicFields.Database.client.InvokeApiAsync("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
+                //JObject response2 = (JObject)await PublicFields.Database.client.InvokeApiAsync("getcontacts", HttpMethod.Get, null);
+                //var defGroup2 = await PublicFields.Database.client.InvokeApiAsync(
+                //    "getdefaultgroup", HttpContent b, HttpMethod, null, null);
+
+                //var defGroup = await PublicFields.Database.client.InvokeApiAsync<Group>("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
 
                 progressDialog.Cancel();
 

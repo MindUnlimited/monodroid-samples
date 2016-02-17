@@ -498,17 +498,24 @@ namespace Cheesesquare
             if (user == null)
                 user = defUser;
 
-            var groups = await groupTable.ToListAsync();
+            //var groups = await groupTable.ToListAsync();
 
-            var userGroups = new List<Group>();
-            foreach (var grp in groups)
-            {
-                List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == grp.ID).ToListAsync();
-                if (ugms.Count == 1)
-                    return grp;
-            }
+            //var userGroups = new List<Group>();
+            //foreach (var grp in groups)
+            //{
+            //    List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == grp.ID).ToListAsync();
+            //    if (ugms.Count == 1)
+            //        return grp;
+            //}
 
-            return null;
+            var parameters = new Dictionary<string, string>
+                {
+                    { "userid", user.ID }
+                };
+
+            var defGroup = await PublicFields.Database.client.InvokeApiAsync<Group>("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
+
+            return defGroup;
         }
 
 
@@ -613,6 +620,9 @@ namespace Cheesesquare
             {
                 await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
 
+                if (defGroup == null)
+                    defGroup = await getDefaultGroup();
+
                 if(device.OwnerId == null)
                 {
                     device.OwnerId = defGroup.ID;
@@ -663,8 +673,14 @@ namespace Cheesesquare
 
         public async Task<User> GetUser(string email)
         {
-            var user = await userTable.Where(usr => usr.Email.ToLower() == email.ToLower()).ToListAsync();
-            return user.FirstOrDefault();            
+            var parameters = new Dictionary<string, string>
+                {
+                    { "email", email }
+                };
+
+            var user = await PublicFields.Database.client.InvokeApiAsync<User>("contactusesapp", HttpMethod.Get, parameters); // also gather extra user information
+
+            return user;
         }
 
         public async Task<User> GetUser(Group defGroup)

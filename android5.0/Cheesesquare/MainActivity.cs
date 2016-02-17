@@ -21,6 +21,7 @@ using System.Linq;
 using Todo;
 using Cheesesquare.Models;
 using Gcm.Client;
+using Android.Content.PM;
 
 namespace Cheesesquare
 {
@@ -112,7 +113,7 @@ namespace Cheesesquare
     }
 
 
-    [Activity(Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true)]
+    [Activity(Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true, ScreenOrientation = ScreenOrientation.Portrait)]
     public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {
         public static MainActivity instance;

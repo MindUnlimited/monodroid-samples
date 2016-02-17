@@ -56,8 +56,7 @@ namespace Cheesesquare
             Log.Verbose(MyBroadcastReceiver.TAG, "GCM Registered: " + registrationId);
             RegistrationID = registrationId;
 
-            createNotification("PushHandlerService-GCM Registered...",
-                                "The device has been Registered!");
+            //createNotification("PushHandlerService-GCM Registered...", "The device has been Registered!");
 
             var device = new Models.Device { MachineId = RegistrationID, OS = 0 };
             await PublicFields.Database.SaveDevice(device);

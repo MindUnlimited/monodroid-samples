@@ -18,12 +18,13 @@ using Android.Support.V4.Graphics.Drawable;
 using Newtonsoft.Json;
 using Android.Text.Format;
 using Android.Net;
+using Android.Content.PM;
 
 namespace Cheesesquare
 {
     //public class SubTaskArrayAdapter : ArrayAdapter<>
 
-    [Activity]
+    [Activity(ScreenOrientation = ScreenOrientation.Portrait)]
     public class EditItemActivity : AppCompatActivity
     {
         private Android.Support.V7.Widget.Toolbar toolbar;

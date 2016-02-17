@@ -23,6 +23,7 @@ using Java.Lang.Reflect;
 using Todo;
 using Cheesesquare.Models;
 using System.Threading.Tasks;
+using Android.Content.PM;
 
 namespace Cheesesquare
 {
@@ -64,7 +65,7 @@ namespace Cheesesquare
         //}
     }
 
-    [Activity (Label="Details")]
+    [Activity (Label="Details", ScreenOrientation = ScreenOrientation.Portrait)]
     [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.cheesesquare.MainActivity")]
     public class CheeseDetailActivity : AppCompatActivity
     {
