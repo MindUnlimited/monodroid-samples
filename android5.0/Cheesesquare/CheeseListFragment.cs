@@ -16,6 +16,7 @@ using Android.App;
 using Java.Text;
 using Java.Util;
 using Android.Support.V4.View;
+using Android.Graphics;
 
 namespace Cheesesquare
 {
@@ -80,7 +81,8 @@ namespace Cheesesquare
         public Todo.TreeNode<Todo.Item> domain;
 
         public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
-        protected const int ITEMDETAIL = 103;
+        public const int ITEMDETAIL = 103;
+        public const int PICKIMAGE = 105;
         RecyclerView.AdapterDataObserver dataObserver;
 
         public CheeseListFragment(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver)
@@ -144,6 +146,10 @@ namespace Cheesesquare
             //on each individual item.
             public event EventHandler<int> DeleteClick;
 
+            //Create an Event so that our our clients can act when a user clicks
+            //on each individual item.
+            public event EventHandler<int> ImageClick;
+
             public class ViewHolder : RecyclerView.ViewHolder
             {
                 public View View { get; set; }
@@ -163,7 +169,7 @@ namespace Cheesesquare
                 public ImageButton Delete { get; set; }
 
 
-                public ViewHolder(View view, Action<int> itemClickListener, Action<int> deleteClickListener) : base(view)
+                public ViewHolder(View view, Action<int> itemClickListener, Action<int> deleteClickListener, Action<int> imageClickListener) : base(view)
                 {
                     View = view;
                     TextView = view.FindViewById<TextView>(Resource.Id.task_title);
@@ -179,6 +185,7 @@ namespace Cheesesquare
 
                     view.Click += (sender, e) => itemClickListener(base.LayoutPosition);
                     Delete.Click += (sender, e) => deleteClickListener(base.LayoutPosition);
+                    ImageView.Click += (sender, e) => imageClickListener(base.LayoutPosition);
 
                     //for(int i = 1; i < SubTasksLinearLayout.ChildCount-1; i++) // skip the first and the last child
                     //{
@@ -252,6 +259,16 @@ namespace Cheesesquare
                 }
             }
 
+            //This will fire any event handlers that are registered with our DeleteItemClick
+            //event.
+            protected void OnImageClick(int position)
+            {
+                if (ImageClick != null)
+                {
+                    ImageClick(this, position);
+                }
+            }
+
 
             public ItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, CheeseListFragment fragm)
             {
@@ -263,6 +280,7 @@ namespace Cheesesquare
                 this.ItemClick += OnItemClick;
                 //this.SubTaskClick += OnSubTaskClick;
                 this.DeleteClick += OnDeleteClick;
+                this.ImageClick += OnImageClick;
             }
 
             public void ChangeDateSet(Todo.TreeNodeList<Todo.Item> items)
@@ -331,13 +349,26 @@ namespace Cheesesquare
                 //context.StartActivity(intent);
             }
 
+            protected void OnImageClick(object sender, int e)
+            {
+                var adapter = sender as ItemRecyclerViewAdapter;
+                var item = adapter.GetValueAt(e);
+
+                var context = fragment.Context;
+
+                var intentAbstraction = new Intent(parent, typeof(PickImageActivity));
+                intentAbstraction.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
+
+                parent.StartActivityForResult(intentAbstraction, PICKIMAGE);
+            }
+
             public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
             {
 
                 var view = LayoutInflater.From(parent.Context)
                     .Inflate(Resource.Layout.item_card_view, parent, false);
 
-                var vh = new ViewHolder(view, OnClick, OnDeleteClick);
+                var vh = new ViewHolder(view, OnClick, OnDeleteClick, OnImageClick);
                 return vh;
             }
 
@@ -474,7 +505,16 @@ namespace Cheesesquare
 
                 h.TextView.Text = item.Value.Name;
                 h.Importance.Text = string.Format("{0} stars", item.Value.Importance) ?? "0 stars";
-                h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
+                if(item.Value.ImagePath != null)
+                {
+                    Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
+                    h.ImageView.SetImageBitmap(bmImg);
+                    //h.ImageView.SetImageURI(item.Value.ImageUri);
+                }
+                else
+                {
+                    h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
+                }
             } 
 
             public override int ItemCount

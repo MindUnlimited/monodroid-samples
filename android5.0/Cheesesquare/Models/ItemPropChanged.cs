@@ -43,6 +43,25 @@ namespace Todo
 
 
         [JsonIgnore]
+        private string _imagePath;
+
+        [JsonIgnore]
+        public string ImagePath
+        {
+            get { return _imagePath; }
+            set
+            {
+                // OnPropertyChanged should not be called if the property value
+                // does not change.
+                if (_imagePath == value)
+                    return;
+                _imagePath = value;
+                OnPropertyChanged();
+            }
+        }
+
+
+        [JsonIgnore]
         private String _ownedby;
 
         public String OwnedBy

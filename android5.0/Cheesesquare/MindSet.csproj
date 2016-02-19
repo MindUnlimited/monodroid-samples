@@ -143,6 +143,7 @@
     <Compile Include="Models\TodoItem_bak.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\UserGroupMembership.cs" />
+    <Compile Include="PickImageActivity.cs" />
     <Compile Include="RecyclerViewLinearLayoutManager.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

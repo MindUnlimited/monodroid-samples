@@ -24,6 +24,7 @@ using Todo;
 using Cheesesquare.Models;
 using System.Threading.Tasks;
 using Android.Content.PM;
+using Android.Graphics;
 
 namespace Cheesesquare
 {
@@ -703,8 +704,17 @@ Intent intent)
         {            
             var imageView = FindViewById<ImageView> (Resource.Id.backdrop);
 
-            var r = Cheeses.GetRandomCheeseBackground ();
-            imageView.SetImageResource (r);
+            if (item.Value.ImagePath != null)
+            {
+                Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
+                imageView.SetImageBitmap(bmImg);
+                //imageView.SetImageURI(item.Value.ImageUri);
+            } 
+            else
+            {
+                var r = Cheeses.GetRandomCheeseBackground();
+                imageView.SetImageResource(r);
+            }
         }
     }
 }
