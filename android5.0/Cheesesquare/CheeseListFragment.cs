@@ -148,6 +148,14 @@ namespace Cheesesquare
 
             //Create an Event so that our our clients can act when a user clicks
             //on each individual item.
+            public event EventHandler<int> CompleteClick;
+
+            //Create an Event so that our our clients can act when a user clicks
+            //on each individual item.
+            public event EventHandler<int> ShareClick;
+
+            //Create an Event so that our our clients can act when a user clicks
+            //on each individual item.
             public event EventHandler<int> ImageClick;
 
             public class ViewHolder : RecyclerView.ViewHolder
@@ -167,9 +175,11 @@ namespace Cheesesquare
                 public TextView NoSubTasks { get; set; }
 
                 public ImageButton Delete { get; set; }
+                public ImageButton Complete { get; set; }
+                public ImageButton Share { get; set; }
 
 
-                public ViewHolder(View view, Action<int> itemClickListener, Action<int> deleteClickListener, Action<int> imageClickListener) : base(view)
+                public ViewHolder(View view, Action<int> itemClickListener, Action<int> deleteClickListener, Action<int> completeClickListener, Action<int> shareClickListener, Action<int> imageClickListener) : base(view)
                 {
                     View = view;
                     TextView = view.FindViewById<TextView>(Resource.Id.task_title);
@@ -182,10 +192,16 @@ namespace Cheesesquare
                     MoreThanFiveSubtasks = view.FindViewById<TextView>(Resource.Id.more_than_five_subtasks_text);
                     NoSubTasks = view.FindViewById<TextView>(Resource.Id.no_subtasks_text);
                     Delete = view.FindViewById<ImageButton>(Resource.Id.deleteButton);
+                    Complete = view.FindViewById<ImageButton>(Resource.Id.finishButton);
+                    Share = view.FindViewById<ImageButton>(Resource.Id.shareButton);
 
                     view.Click += (sender, e) => itemClickListener(base.LayoutPosition);
-                    Delete.Click += (sender, e) => deleteClickListener(base.LayoutPosition);
+                    
                     ImageView.Click += (sender, e) => imageClickListener(base.LayoutPosition);
+
+                    Delete.Click += (sender, e) => deleteClickListener(base.LayoutPosition);
+                    Complete.Click += (sender, e) => completeClickListener(base.LayoutPosition);
+                    Share.Click += (sender, e) => shareClickListener(base.LayoutPosition);
 
                     //for(int i = 1; i < SubTasksLinearLayout.ChildCount-1; i++) // skip the first and the last child
                     //{
@@ -261,6 +277,27 @@ namespace Cheesesquare
 
             //This will fire any event handlers that are registered with our DeleteItemClick
             //event.
+            protected void OnCompleteClick(int position)
+            {
+                if (CompleteClick != null)
+                {
+                    CompleteClick(this, position);
+                }
+            }
+
+            //This will fire any event handlers that are registered with our DeleteItemClick
+            //event.
+            protected void OnShareClick(int position)
+            {
+                if (ShareClick != null)
+                {
+                    ShareClick(this, position);
+                }
+            }
+
+
+            //This will fire any event handlers that are registered with our DeleteItemClick
+            //event.
             protected void OnImageClick(int position)
             {
                 if (ImageClick != null)
@@ -280,6 +317,8 @@ namespace Cheesesquare
                 this.ItemClick += OnItemClick;
                 //this.SubTaskClick += OnSubTaskClick;
                 this.DeleteClick += OnDeleteClick;
+                this.CompleteClick += OnCompleteClick;
+                this.ShareClick += OnShareClick;
                 this.ImageClick += OnImageClick;
             }
 
@@ -327,11 +366,59 @@ namespace Cheesesquare
                     //NotifyItemRemoved(e);
                     NotifyDataSetChanged();
 
-                    Log.Debug("CheeseListFragment", string.Format("removed item {0} and its subitems", item.Value.Name));
+                    Log.Debug("CheeseListFragment", string.Format("Removed item {0} and its subitems", item.Value.Name));
                 })
                .SetNegativeButton("No", delegate
                {
                    Log.Debug("CheeseListFragment", string.Format("Did not remove item {0}", item.Value.Name));
+               })
+               .Show();
+            }
+
+            protected void OnCompleteClick(object sender, int e)
+            {
+                var adapter = sender as ItemRecyclerViewAdapter;
+                var item = adapter.GetValueAt(e);
+
+
+                new Android.Support.V7.App.AlertDialog.Builder(parent)
+                .SetMessage("Complete this item?")
+                .SetCancelable(false)
+                .SetPositiveButton("Yes", async delegate
+                {
+                    var dataSetID = item.Parent.Value.id;
+                    var parent = await adapter.items.Complete(item);
+
+                    var dataset = PublicFields.ItemTree.Descendants().First(it => it.Value.id == dataSetID).Children;
+                    ChangeDateSet(dataset);
+
+                    NotifyDataSetChanged();
+
+                    Log.Debug("CheeseListFragment", string.Format("Completed item {0} and its subitems", item.Value.Name));
+                })
+               .SetNegativeButton("No", delegate
+               {
+                   Log.Debug("CheeseListFragment", string.Format("Did not complete item {0} and its subitems", item.Value.Name));
+               })
+               .Show();
+            }
+
+            protected void OnShareClick(object sender, int e)
+            {
+                var adapter = sender as ItemRecyclerViewAdapter;
+                var item = adapter.GetValueAt(e);
+
+
+                new Android.Support.V7.App.AlertDialog.Builder(parent)
+                .SetMessage("Share this item?")
+                .SetCancelable(false)
+                .SetPositiveButton("Yes", async delegate
+                {
+                    Log.Debug("CheeseListFragment", string.Format("Shared item {0} and its subitems", item.Value.Name));
+                })
+               .SetNegativeButton("No", delegate
+               {
+                   Log.Debug("CheeseListFragment", string.Format("Did not share item {0} and its subitems", item.Value.Name));
                })
                .Show();
             }
@@ -368,7 +455,7 @@ namespace Cheesesquare
                 var view = LayoutInflater.From(parent.Context)
                     .Inflate(Resource.Layout.item_card_view, parent, false);
 
-                var vh = new ViewHolder(view, OnClick, OnDeleteClick, OnImageClick);
+                var vh = new ViewHolder(view, OnClick, OnDeleteClick, OnCompleteClick, OnShareClick, OnImageClick);
                 return vh;
             }
 
@@ -507,8 +594,18 @@ namespace Cheesesquare
                 h.Importance.Text = string.Format("{0} stars", item.Value.Importance) ?? "0 stars";
                 if(item.Value.ImagePath != null)
                 {
-                    Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
-                    h.ImageView.SetImageBitmap(bmImg);
+                    //Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
+
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.InJustDecodeBounds = true;
+                    BitmapFactory.DecodeFile(item.Value.ImagePath, options);
+                    int imageHeight = options.OutHeight;
+                    int imageWidth = options.OutWidth;
+                    String imageType = options.OutMimeType;
+
+                    var sampledBitmap = PublicFields.DecodeSampledBitmapFromFile(item.Value.ImagePath, 80, 80);
+
+                    h.ImageView.SetImageBitmap(sampledBitmap);
                     //h.ImageView.SetImageURI(item.Value.ImageUri);
                 }
                 else

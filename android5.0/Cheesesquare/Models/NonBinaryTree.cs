@@ -88,6 +88,45 @@ namespace Todo
             }
         }
 
+        public async void CompleteAllChildren()
+        {
+            for (int i = 0; i < Parent.AmountOfChildren; i++)
+            {
+                var child = Parent.Children[i];
+                if (child.AmountOfChildren > 0)
+                    child.Children.CompleteAllChildren();
+
+                if (child.Value.Status != 7)
+                {
+                    child.Value.Status = 7;
+                    await PublicFields.Database.SaveItem(child.Value);
+                    Parent.AmountOfChildrenCompletedChanged(1);
+                }
+            }
+        }
+
+        public async Task<TreeNode<T>> Complete(TreeNode<T> Node)
+        {
+            if (this.Contains(Node))
+            {
+                Node.Children.CompleteAllChildren();
+
+                if (Node.Value.Status != 7)
+                {
+                    Node.Value.Status = 7;
+                    await PublicFields.Database.SaveItem(Node.Value);
+                    Parent.AmountOfChildrenCompletedChanged(1);
+                }
+
+                return Parent;
+            }
+            else
+            {
+                Log.Debug("Tree", string.Format("tried to remove node that was not there {0}", Node));
+                return null;
+            }
+        }
+
         public async new Task<TreeNode<T>> Remove(TreeNode<T> Node)
         {
             if (this.Contains(Node))

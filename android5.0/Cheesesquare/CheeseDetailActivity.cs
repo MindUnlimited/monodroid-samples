@@ -72,8 +72,11 @@ namespace Cheesesquare
     {
         public const string EXTRA_NAME = "cheese_name";
         public const string ITEM_ID = "item_id";
+
         private const int ITEMDETAIL = 103;
         private const int EDIT_ITEM = 104;
+        private const int PICKIMAGE = 105;
+
         private const string TAG = "CheeseActivity";
 
         //bool editmode;
@@ -342,6 +345,25 @@ Intent intent)
 
                 switch (requestCode)
                 {
+                    case PICKIMAGE:
+                        if (intent != null)
+                        {
+                            Android.Net.Uri uri = intent.Data;
+                            string ItemID = intent.GetStringExtra(CheeseDetailActivity.ITEM_ID);
+                            string path = intent.GetStringExtra("path");
+
+                            int index = viewPager.CurrentItem;
+                            var adapter = (MyAdapter)viewPager.Adapter;
+                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                            var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+                            item.Value.ImagePath = path;
+
+                            fragmentAdapter.UpdateValue(item);
+                            fragmentAdapter.ApplyChanges();
+                        }
+                        break;
                     case
                         ITEMDETAIL: // back from other detail activity
                         if (intent.GetBooleanExtra("itemChanged", false))
@@ -706,8 +728,20 @@ Intent intent)
 
             if (item.Value.ImagePath != null)
             {
-                Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
-                imageView.SetImageBitmap(bmImg);
+                //Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
+                //imageView.SetImageBitmap(bmImg);
+
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.InJustDecodeBounds = true;
+                BitmapFactory.DecodeFile(item.Value.ImagePath, options);
+                int imageHeight = options.OutHeight;
+                int imageWidth = options.OutWidth;
+                String imageType = options.OutMimeType;
+
+                var sampledBitmap = PublicFields.DecodeSampledBitmapFromFile(item.Value.ImagePath, 500, 500);
+
+                imageView.SetImageBitmap(sampledBitmap);
+
                 //imageView.SetImageURI(item.Value.ImageUri);
             } 
             else

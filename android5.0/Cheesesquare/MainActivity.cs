@@ -24,6 +24,7 @@ using Gcm.Client;
 using Android.Content.PM;
 using Android.Database;
 using Android.Provider;
+using Android.Graphics;
 
 namespace Cheesesquare
 {
@@ -104,6 +105,49 @@ namespace Cheesesquare
                 attachChildren(domainNode);
                 PublicFields.domains.Add(domainNode);
             }
+        }
+
+        public static int CalculateInSampleSize(
+        BitmapFactory.Options options, int reqWidth, int reqHeight)
+        {
+            // Raw height and width of image
+            int height = options.OutHeight;
+            int width = options.OutWidth;
+            int inSampleSize = 1;
+
+            if (height > reqHeight || width > reqWidth)
+            {
+
+                int halfHeight = height / 2;
+                int halfWidth = width / 2;
+
+                // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                // height and width larger than the requested height and width.
+                while ((halfHeight / inSampleSize) > reqHeight
+                        && (halfWidth / inSampleSize) > reqWidth)
+                {
+                    inSampleSize *= 2;
+                }
+            }
+
+            return inSampleSize;
+        }
+
+        public static Bitmap DecodeSampledBitmapFromFile(string pathName,
+        int reqWidth, int reqHeight)
+        {
+
+            // First decode with inJustDecodeBounds=true to check dimensions
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.InJustDecodeBounds = true;
+            BitmapFactory.DecodeFile(pathName, options);
+
+            // Calculate inSampleSize
+            options.InSampleSize = CalculateInSampleSize(options, reqWidth, reqHeight);
+
+            // Decode bitmap with inSampleSize set
+            options.InJustDecodeBounds = false;
+            return BitmapFactory.DecodeFile(pathName, options);
         }
     }
 
