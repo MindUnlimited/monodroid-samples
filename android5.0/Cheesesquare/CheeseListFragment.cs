@@ -133,6 +133,7 @@ namespace Cheesesquare
             protected Todo.TreeNodeList<Todo.Item> items;
             protected Android.App.Activity parent;
             protected CheeseListFragment fragment;
+            private const int SHARE_CONTACT = 101;
 
             //Create an Event so that our our clients can act when a user clicks
             //on each individual item.
@@ -407,6 +408,7 @@ namespace Cheesesquare
             {
                 var adapter = sender as ItemRecyclerViewAdapter;
                 var item = adapter.GetValueAt(e);
+                var context = fragment.Context;
 
 
                 new Android.Support.V7.App.AlertDialog.Builder(parent)
@@ -415,6 +417,8 @@ namespace Cheesesquare
                 .SetPositiveButton("Yes", async delegate
                 {
                     Log.Debug("CheeseListFragment", string.Format("Shared item {0} and its subitems", item.Value.Name));
+                    var intent = new Intent(context, typeof(SelectContactsActivity));
+                    parent.StartActivityForResult(intent, SHARE_CONTACT);
                 })
                .SetNegativeButton("No", delegate
                {
