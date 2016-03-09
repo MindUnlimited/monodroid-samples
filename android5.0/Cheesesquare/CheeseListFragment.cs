@@ -81,6 +81,7 @@ namespace Cheesesquare
         public Todo.TreeNode<Todo.Item> domain;
 
         public ItemRecyclerViewAdapter itemRecyclerViewAdapter;
+        private const int SHARE_CONTACT = 101;
         public const int ITEMDETAIL = 103;
         public const int PICKIMAGE = 105;
         RecyclerView.AdapterDataObserver dataObserver;
@@ -407,14 +408,18 @@ namespace Cheesesquare
             {
                 var adapter = sender as ItemRecyclerViewAdapter;
                 var item = adapter.GetValueAt(e);
-
+                var context = fragment.Context;
 
                 new Android.Support.V7.App.AlertDialog.Builder(parent)
                 .SetMessage("Share this item?")
                 .SetCancelable(false)
-                .SetPositiveButton("Yes", async delegate
+                .SetPositiveButton("Yes", delegate
                 {
                     Log.Debug("CheeseListFragment", string.Format("Shared item {0} and its subitems", item.Value.Name));
+
+                    var intent = new Intent(context, typeof(SelectContactsActivity));
+                    intent.PutExtra("itemID", item.Value.id);
+                    parent.StartActivityForResult(intent, SHARE_CONTACT);
                 })
                .SetNegativeButton("No", delegate
                {
@@ -422,6 +427,7 @@ namespace Cheesesquare
                })
                .Show();
             }
+
 
             protected void OnItemClick(object sender, int e)
             {

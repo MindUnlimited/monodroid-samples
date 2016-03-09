@@ -170,6 +170,7 @@ namespace Cheesesquare
         NavigationView navigationView;
         TextView userName;
 
+        private const int SHARE_CONTACT = 101;
         private const int LOGIN = 102;
         private const int ITEMDETAIL = 103;
         private const int EDIT_ITEM = 104;
@@ -491,6 +492,9 @@ namespace Cheesesquare
 
             if (resultCode == Result.Ok)
             {
+                List<Todo.User> selectedContacts = new List<User>();
+                string groupName = null;
+
                 switch (requestCode)
                 {
                     case LOGIN:
@@ -606,19 +610,19 @@ namespace Cheesesquare
 
                         if (groupChanged) // sharing an item
                         {
-                            List<Todo.User> selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(intent.GetStringExtra("selectedContacts"));
-                            string groupName = intent.GetStringExtra("groupName"); // only has a name if user generated group
+                            selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(intent.GetStringExtra("selectedContacts"));
+                            groupName = intent.GetStringExtra("groupName"); // only has a name if user generated group
                             //TODO: check if group already exists
 
-                            var newShareItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+                            var editedToBeShared = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
                             if (selectedContacts != null && selectedContacts.Count > 0) // contacts selected so make a group for them
                             {
                                 var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
                                 if (ownedByGroupResult != null)
                                 {
-                                    newShareItem.Value.OwnedBy = ownedByGroupResult.ID;
-                                    PublicFields.ItemTree.FindAndReplace(newShareItem.Value.id, newShareItem);
-                                    await PublicFields.Database.SaveItem(newShareItem.Value); // update the item with the new ownedBy group
+                                    editedToBeShared.Value.OwnedBy = ownedByGroupResult.ID;
+                                    PublicFields.ItemTree.FindAndReplace(editedToBeShared.Value.id, editedToBeShared);
+                                    await PublicFields.Database.SaveItem(editedToBeShared.Value); // update the item with the new ownedBy group
                                 }
 
                                 var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
@@ -628,7 +632,7 @@ namespace Cheesesquare
                                     // this account does not need the id. only the ones the item gets shared with
                                     if(id != PublicFields.Database.defGroup.ID)
                                     {
-                                        var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = id };
+                                        var link = new ItemLink { ItemID = editedToBeShared.Value.id, Parent = null, OwnedBy = id };
                                         await PublicFields.Database.SaveItemLink(link);
                                     }
                                 }
@@ -649,7 +653,85 @@ namespace Cheesesquare
                         //currentDomainFragment.itemRecyclerViewAdapter.ApplyChanges();
 
                         break;
-                    default:
+
+                    case SHARE_CONTACT:
+                        var sharedItemID = intent.GetStringExtra("itemID");
+                        groupName = null;
+                        selectedContacts = new List<User>();
+                        User selectedContact = null;
+
+                        if (intent.GetStringExtra("members") != null)
+                        {
+                            var members = intent.GetStringExtra("members");
+                            groupName = intent.GetStringExtra("groupname");
+                            selectedContacts = JsonConvert.DeserializeObject<List<Todo.User>>(members);
+                            selectedContacts = CircleBitmap.addPhotoThumbs(selectedContacts); // add all the photo thumbnails to the contacts
+                        }
+                        else if (intent.GetStringExtra("member") != null)
+                        {
+                            var member = intent.GetStringExtra("member");
+                            selectedContact = JsonConvert.DeserializeObject<Todo.User>(member);
+                            selectedContact = CircleBitmap.addPhotoThumbs(selectedContact); // add the photo thumbnails to the contact
+                        }
+
+                        if (selectedContacts != null && selectedContacts.Count >= 2) // need at least two other users to make a group
+                        {
+                            if (selectedContacts.Count > 0)
+                            {
+                                // add the current user to the group if not already in there
+                                if (selectedContacts.Find(ct => ct.Email == PublicFields.Database.defUser.Email) == null)
+                                    selectedContacts.Insert(0, PublicFields.Database.defUser);
+                                else //replace the current user with the selected user if the email address is the same
+                                {
+                                    var index = selectedContacts.FindIndex(ct => ct.Email == PublicFields.Database.defUser.Email);
+                                    selectedContacts[index] = PublicFields.Database.defUser;
+                                }
+                            }
+                        }
+                        else if (selectedContact != null) // invisible group containing only two members (selected user and self)
+                        {
+                            selectedContacts.Clear();
+                            selectedContacts.Add(PublicFields.Database.defUser);
+                            selectedContacts.Add(selectedContact);
+                        }
+
+                        var parent = PublicFields.ItemTree.Descendants().FirstOrDefault(it => it.Value.id == sharedItemID);
+
+
+                        var newShareItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == sharedItemID);
+                        if (selectedContacts != null && selectedContacts.Count >= 2) // contacts selected so make a group for them
+                        {
+                            var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
+                            if (ownedByGroupResult != null)
+                            {
+                                newShareItem.Value.OwnedBy = ownedByGroupResult.ID;
+                                PublicFields.ItemTree.FindAndReplace(newShareItem.Value.id, newShareItem);
+                                await PublicFields.Database.SaveItem(newShareItem.Value); // update the item with the new ownedBy group
+                            }
+
+                            var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
+
+                            foreach (var id in userIDs)
+                            {
+                                // this account does not need the id. only the ones the item gets shared with
+                                if (id != null && id.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
+                                {
+                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = id };
+                                    await PublicFields.Database.SaveItemLink(link);
+                                }
+                            }
+                        }
+
+                        var sharedItemDomain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
+                        currentDomainFragment.itemRecyclerViewAdapter.ChangeDateSet(sharedItemDomain.Children);
+
+                        var sharedItemAdapter = currentDomainFragment.itemRecyclerViewAdapter;
+                        var sharedItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == newShareItem.Value.id);
+                        sharedItemAdapter.UpdateValue(sharedItem);
+                        sharedItemAdapter.ApplyChanges();
+
+                        break;
+                default:
                         break;
                 }
             }

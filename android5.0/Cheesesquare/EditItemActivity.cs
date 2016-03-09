@@ -246,12 +246,14 @@ namespace Cheesesquare
             var editText = (EditText)sender;
 
             var intent = new Intent(this, typeof(SelectContactsActivity));
+            intent.PutExtra("itemID", item.Value.id);
             StartActivityForResult(intent, SHARE_CONTACT);
         }
 
         private async void ThumbAndName_Click(object sender, EventArgs e)
         {
             Intent intent = new Intent(this, typeof(SelectContactsActivity));//(Intent.ActionPick, ContactsContract.Contacts.ContentUri);
+            intent.PutExtra("itemID", item.Value.id);
 
             //if (selectedContacts != null && item.Value.OwnedBy != null && selectedContacts.Count == 0)
             //{
@@ -262,7 +264,7 @@ namespace Cheesesquare
 
             //    selectedContacts.AddRange(members);
             //}
-                
+
             intent.PutExtra("members", JsonConvert.SerializeObject(selectedContacts));
             StartActivityForResult(intent, ASSIGN_CONTACT);
         }

@@ -177,6 +177,7 @@ namespace Cheesesquare
         private RecyclerView.LayoutManager recyclerLayoutManager;
         private const int SHARE_CONTACT = 101;
         private List<Todo.User> members;
+        private string itemID;
 
         private Todo.User currentUser;
 
@@ -234,6 +235,8 @@ namespace Cheesesquare
                 recyclerAdapter = new ContactsRecyclerAdapter(this, contactsRecyclerView);
             }
 
+            itemID = Intent.GetStringExtra("itemID");
+
             // specify an adapter (see also next example)
             
             recyclerAdapter.ItemClick += OnItemClick;
@@ -288,6 +291,7 @@ namespace Cheesesquare
 
                 myIntent.PutExtra("members", JsonConvert.SerializeObject(members));
                 myIntent.PutExtra("groupname", groupFound.Name);
+                myIntent.PutExtra("itemID", itemID);
                 SetResult(Result.Ok, myIntent);
                 Finish();
 
@@ -297,6 +301,7 @@ namespace Cheesesquare
             {
                 Intent myIntent = new Intent();
                 myIntent.PutExtra("member", JsonConvert.SerializeObject(contact));
+                myIntent.PutExtra("itemID", itemID);
                 SetResult(Result.Ok, myIntent);
                 Finish();
             }
