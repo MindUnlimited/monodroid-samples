@@ -70,7 +70,7 @@ namespace Cheesesquare
     [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.cheesesquare.MainActivity")]
     public class CheeseDetailActivity : AppCompatActivity
     {
-        public const string EXTRA_NAME = "cheese_name";
+        public const string EXTRA_NAME = "item_name";
         public const string ITEM_ID = "item_id";
 
         private const int ITEMDETAIL = 103;

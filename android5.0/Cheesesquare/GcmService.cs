@@ -13,6 +13,7 @@ using WindowsAzure.Messaging;
 // So please, for the love of all that is kind on this earth, use a LOWERCASE first letter in your Package Name!!!!
 using System.Diagnostics;
 using System;
+using Android.Support.V7.App;
 
 [assembly: Permission(Name = "@PACKAGE_NAME@.permission.C2D_MESSAGE")]
 [assembly: UsesPermission(Name = "@PACKAGE_NAME@.permission.C2D_MESSAGE")]
@@ -46,6 +47,7 @@ namespace Cheesesquare
         public static string RegistrationID { get; private set; }
         private NotificationHub Hub { get; set; }
         public const int ITEMDETAIL = 103;
+        public const int NOTIFY = 110;
 
         public PushHandlerService() : base(Constants.SenderID)
         {
@@ -102,7 +104,7 @@ namespace Cheesesquare
                 }
             }
 
-            Log.Info(MyBroadcastReceiver.TAG, msg.ToString());
+            //Log.Info(MyBroadcastReceiver.TAG, msg.ToString());
 
             string messageText = intent.Extras.GetString("message");
             if (!string.IsNullOrEmpty(messageText))
@@ -126,8 +128,8 @@ namespace Cheesesquare
             var intent = new Intent(this, typeof(CheeseDetailActivity));
 
             //item_ownedby
-            var name = descDictionary["item_name"];
-            var itemID = descDictionary["item_id"];
+            var name = descDictionary[CheeseDetailActivity.EXTRA_NAME];
+            var itemID = descDictionary[CheeseDetailActivity.ITEM_ID];
 
             intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
             intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
@@ -142,11 +144,20 @@ namespace Cheesesquare
             //Set the notification info
             //we use the pending intent, passing our ui intent over, which will get called
             //when the notification is tapped.
-            notification.SetLatestEventInfo(Application.Context, notificationTitle, name, PendingIntent.GetActivity(this, ITEMDETAIL, intent, 0));
+            //notification.SetLatestEventInfo(Application.Context, notificationTitle, name, PendingIntent.GetActivity(this, ITEMDETAIL, intent, 0));
+
+            var pendingIntent = PendingIntent.GetActivity(this, ITEMDETAIL, intent, PendingIntentFlags.UpdateCurrent); // update current is neccessary for passing the extras allong
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(
+                        this);
+            notification = builder.SetContentIntent(pendingIntent)
+                                  .SetSmallIcon(Resource.Drawable.LogoMindSet).SetTicker("new item added")
+                                  .SetAutoCancel(true).SetContentTitle(notificationTitle)
+                                  .SetContentText(name).Build();
 
             //Show the notification
-            notificationManager.Notify(1, notification);
             //dialogNotify(title, desc);
+            notificationManager.Notify(NOTIFY, notification);
         }
 
 
@@ -179,8 +190,8 @@ namespace Cheesesquare
 
             MainActivity.instance.RunOnUiThread(() =>
             {
-                AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.instance);
-                AlertDialog alert = dlg.Create();
+                Android.App.AlertDialog.Builder dlg = new Android.App.AlertDialog.Builder(MainActivity.instance);
+                Android.App.AlertDialog alert = dlg.Create();
                 alert.SetTitle(title);
                 alert.SetButton("Ok", delegate
                 {

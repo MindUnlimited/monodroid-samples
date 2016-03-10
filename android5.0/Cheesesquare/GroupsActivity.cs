@@ -20,8 +20,8 @@ using Android.Support.Design.Widget;
 
 namespace Cheesesquare
 {
-    [Activity(Label = "SharedItemsActivity")]
-    public class SharedItemsActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
+    [Activity(Label = "GroupsActivity")]
+    public class GroupsActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {
         private ViewPager viewPager;
         private DrawerLayout drawerLayout;
@@ -33,51 +33,28 @@ namespace Cheesesquare
             base.OnCreate(savedInstanceState);
 
             // Create your application here
-            SetContentView(Resource.Layout.activity_shared_items);
+            SetContentView(Resource.Layout.activity_groups);
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
             SetSupportActionBar(toolbar);
 
             SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
-            SupportActionBar.Title = "Shared with me";
+            SupportActionBar.Title = "Your Groups";
 
-            viewPager = FindViewById<ViewPager>(Resource.Id.viewpager_shared_items);
-            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_shared);
-            var itemLinks = await PublicFields.Database.GetItemLinks();
-            itemLinks = itemLinks.Where(x => x.OwnedBy.ToLower() == PublicFields.Database.defGroup.ID.ToLower()); // filter so that we only see the ones we own not the ones we are part of the group
+            viewPager = FindViewById<ViewPager>(Resource.Id.viewpager_groups);
+            drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_groups);
 
-            List<Item> sharedItems = new List<Item>();
-            List<TreeNode<Item>> sharedItemsTreeNode = new List<TreeNode<Item>>();
-            foreach (var itl in itemLinks)
-            {
-                Item it = await PublicFields.Database.GetItem(itl.ItemID);
-                if (it != null)
-                {
-                    it.SharedLink = itl;
-
-                    if (itl.Parent == null) // to be assigned to a parent so shows up in list
-                    {
-                        it.Parent = itl.Parent;
-                        sharedItems.Add(it);
-                        sharedItemsTreeNode.Add(new TreeNode<Item>(it));
-                    }
-                }
-            }
-
-            Todo.TreeNode<Todo.Item> root = new TreeNode<Item>(null);
-            root.Children.AddRange(sharedItemsTreeNode);
-
+            var groups = await PublicFields.Database.getGroups();
             var adapter = new CheeseDetailActivity.MyAdapter(SupportFragmentManager);
+            //adapter.AddFragment(new CheeseListFragmentSharedItems(root), "Shared Items");
 
-            //adapter.AddFragment(new CheeseListFragmentDetail(item, dataObserver), item.Value.Name);
-            adapter.AddFragment(new CheeseListFragmentSharedItems(root), "Shared Items");
             viewPager.Adapter = adapter;
 
-            navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_shared);
+            navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_groups);
             navigationView.SetNavigationItemSelectedListener(this);
 
-            navigationView.SetCheckedItem(Resource.Id.shared_items);
+            navigationView.SetCheckedItem(Resource.Id.groups);
 
             userName = navigationView.GetHeaderView(0).FindViewById<TextView>(Resource.Id.username_nav);
             userName.Text = PublicFields.Database.userName;
@@ -93,15 +70,15 @@ namespace Cheesesquare
                     Finish();
                     return true;
                 case Resource.Id.shared_items:
-                    drawerLayout.CloseDrawers();
-                    break;
-                case Resource.Id.groups:
-                    intent = new Intent(this, typeof(GroupsActivity));
+                    intent = new Intent(this, typeof(SharedItemsActivity));
                     intent.AddFlags(ActivityFlags.ClearTop);
                     drawerLayout.CloseDrawers();
                     StartActivity(intent);
                     Finish();
                     return true;
+                case Resource.Id.groups:
+                    drawerLayout.CloseDrawers();
+                    break;
             }
 
             return false;

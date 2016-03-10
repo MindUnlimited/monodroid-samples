@@ -151,6 +151,7 @@
     <Compile Include="CheeseListFragment.cs" />
     <Compile Include="CheeseDetailActivity.cs" />
     <Compile Include="SelectContactsActivity.cs" />
+    <Compile Include="GroupsActivity.cs" />
     <Compile Include="SharedItemsActivity.cs" />
     <Compile Include="UpdateDBService.cs" />
     <Compile Include="WrapContentHeightViewPager.cs" />
@@ -685,6 +686,9 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable-xxxhdpi\ic_people_black_24dp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\layout\activity_groups.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <Import Project="packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />

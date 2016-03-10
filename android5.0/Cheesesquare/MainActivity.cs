@@ -841,6 +841,7 @@ namespace Cheesesquare
 
         public bool OnNavigationItemSelected(IMenuItem menuItem)
         {
+            Intent intent = null;
             switch (menuItem.ItemId)
             {
                 case Resource.Id.nav_home:
@@ -848,7 +849,13 @@ namespace Cheesesquare
                     return true;
                 case Resource.Id.shared_items:
                     //NavUtils.NavigateUpTo
-                    Intent intent = new Intent(this, typeof(SharedItemsActivity));
+                    intent = new Intent(this, typeof(SharedItemsActivity));
+                    intent.AddFlags(ActivityFlags.ClearTop);
+                    drawerLayout.CloseDrawers();
+                    StartActivity(intent);
+                    return true;
+                case Resource.Id.groups:
+                    intent = new Intent(this, typeof(GroupsActivity));
                     intent.AddFlags(ActivityFlags.ClearTop);
                     drawerLayout.CloseDrawers();
                     StartActivity(intent);
