@@ -106,11 +106,6 @@ namespace Cheesesquare
 
                     view.Click += (sender, e) => itemClickListener(base.LayoutPosition);
                     Delete.Click += (sender, e) => deleteClickListener(base.LayoutPosition);
-
-                    //for(int i = 1; i < SubTasksLinearLayout.ChildCount-1; i++) // skip the first and the last child
-                    //{
-                    //    SubTasksLinearLayout.GetChildAt(i).Click += (sender, e) => subTaskClickListener(base.LayoutPosition);
-                    //}
                 }
 
                 public override string ToString()
@@ -254,7 +249,7 @@ namespace Cheesesquare
 
                 // Build the dialog.
                 var builder = new AlertDialog.Builder(context);
-                builder.SetTitle("Move the item where?");
+                builder.SetTitle("Place under");
 
                 
 

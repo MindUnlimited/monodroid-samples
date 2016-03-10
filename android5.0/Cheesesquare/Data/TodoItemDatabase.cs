@@ -388,13 +388,6 @@ namespace Cheesesquare
             }
         }
 
-        //// Called when the refresh menu option is selected
-        //public async Task OnRefreshItemsSelected()
-        //{
-        //    await SyncAsync(); // get changes from the mobile service
-        //}
-
-
         public async Task CheckItem(Item item)
         {
             if (client == null)
@@ -419,94 +412,15 @@ namespace Cheesesquare
             }
         }
 
-
-
-        //public async void AddItem(View view)
-        //{
-        //    if (client == null)// || string.IsNullOrWhiteSpace(textNewToDo.Text))
-        //    {
-        //        return;
-        //    }
-
-        //    // Create a new item
-        //    var item = new Item
-        //    {
-                
-        //        //Name = textNewToDo.Text,
-
-        //        Status = 0
-        //    };
-
-        //    try
-        //    {
-        //        await itemTable.InsertAsync(item); // insert the new item into the local database
-        //        await SyncAsync(); // send changes to the mobile service
-
-
-        //        //if (!item.Done)
-        //        //{
-        //        //    adapter.Add(item);
-        //        //}
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        CreateAndShowDialog(e, "Error: " + e.Message);
-        //    }
-
-        //    //textNewToDo.Text = "";
-        //}
-
 	    private void CreateAndShowDialog(Exception exception, String title)
 	    {
             Debug.WriteLine(exception.InnerException.Message);
 	    }
 
-        public async Task createDomains(string OwnedByID)
-        {
-            //if (defGroup == null)
-            //    defGroup = await getDefaultGroup();
-
-            Item personal = new Item { Name = "Personal", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
-            Item friends = new Item { Name = "Friends & Family", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
-            Item work = new Item { Name = "Work", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
-            Item community = new Item { Name = "Community", Type = 1, OwnedBy = OwnedByID, CreatedBy = OwnedByID };
-
-            await itemTable.InsertAsync(personal);
-            await itemTable.InsertAsync(friends);
-            await itemTable.InsertAsync(work);
-            await itemTable.InsertAsync(community);
-                
-            await client.SyncContext.PushAsync();
-        }
-
-        //private void CreateAndShowDialog(Exception exception, String title)
-        //{
-        //    CreateAndShowDialog(exception.Message, title);
-        //}
-
-        //private void CreateAndShowDialog(string message, string title)
-        //{
-        //    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        //    builder.SetMessage(message);
-        //    builder.SetTitle(title);
-        //    builder.Create().Show();
-        //}
-
         public async Task<Group> getDefaultGroup(User user = null)
         {
             if (user == null)
                 user = defUser;
-
-            //var groups = await groupTable.ToListAsync();
-
-            //var userGroups = new List<Group>();
-            //foreach (var grp in groups)
-            //{
-            //    List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == grp.ID).ToListAsync();
-            //    if (ugms.Count == 1)
-            //        return grp;
-            //}
 
             var parameters = new Dictionary<string, string>
                 {
@@ -546,7 +460,7 @@ namespace Cheesesquare
                 if (userGroups == null)
                     userGroups = await getGroups();
 
-                return userGroups.Find(grp => grp.ID == groupID); 
+                return userGroups.Find(grp => grp.ID.ToLower() == groupID.ToLower()); 
             }
         }
 
@@ -558,46 +472,6 @@ namespace Cheesesquare
             else
             {
                 var resultGroups = await groupTable.ToListAsync();
-                //// from userID to GroupID from the users default group (defGroup)
-                //List<Group> resultGroups = new List<Group>();
-                //List<Group> groups = await groupTable.ToListAsync();
-
-                //if (defGroup == null)
-                //    defGroup = await getDefaultGroup();
-
-                //var queue = new Queue<Group>();
-                //queue.Enqueue(defGroup);
-
-                //while (queue.Count > 0)
-                //{
-                //    // Take the next node from the front of the queue
-                //    var node = queue.Dequeue();
-
-                //    // Process the node 'node'
-                //    if (resultGroups.Contains(node) == false)
-                //        resultGroups.Add(node);
-
-                //    List<GroupGroupMembership> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MemberID == node.ID).ToListAsync();
-
-                //    IEnumerable<Group> children = from g in groups
-                //                                  where ggms.Any(ggm => ggm.MembershipID == g.ID)
-                //                                  select g;
-
-                //    //List<Group> children = await groupTable.Where(group => ids.Contains(group.ID)).ToListAsync();
-
-                //    //List<Group> groups = await groupTable.ToListAsync();
-                //    //List<GroupGroupMembership> ggms = await groupGroupMembershipTable.ToListAsync();
-
-                //    //var childrrren = from g in groups
-                //    //                 join ggm in ggms
-                //    //                     on g.ID equals ggm.
-                //    //                 select g;
-
-                //    // Add the node’s children to the back of the queue
-                //    foreach (var child in children)
-                //        queue.Enqueue(child);
-                //}
-
                 return resultGroups;
             }
         }
@@ -625,7 +499,7 @@ namespace Cheesesquare
 
                 if(device.OwnerId == null)
                 {
-                    device.OwnerId = defGroup.ID;
+                    device.OwnerId = defGroup.ID.ToLower();
                 }
 
                 var devices_in_db_like_this = await deviceTable.Where(x => x.MachineId == device.MachineId && device.OwnerId == x.OwnerId && device.OwnerId != null).ToListAsync();
@@ -659,15 +533,15 @@ namespace Cheesesquare
         public async Task<bool> MemberOfGroup(User user, Group group)
         {
             var defGroupUser = await getDefaultGroup(user);
-            List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID == user.ID && ugm.MembershipID == group.ID).ToListAsync();
+            List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.ID.ToLower() == user.ID.ToLower() && ugm.MembershipID.ToLower() == group.ID.ToLower()).ToListAsync();
 
             return ugms.Count == 1; // there should be only one item satisfying this query
         }
 
         public async Task<List<String>> MembersOfGroup(Group group)
         {
-            var test = await userGroupMembershipTable.Where(ugm => ugm.MembershipID == group.ID).ToListAsync();
-            List<String> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MembershipID == group.ID).Select(ggm => ggm.MemberID).ToListAsync();
+            var test = await userGroupMembershipTable.Where(ugm => ugm.MembershipID.ToLower() == group.ID.ToLower()).ToListAsync();
+            List<String> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MembershipID.ToLower() == group.ID.ToLower()).Select(ggm => ggm.MemberID.ToLower()).ToListAsync();
             return ggms; // there should be only one item satisfying this query
         }
 
@@ -685,11 +559,11 @@ namespace Cheesesquare
 
         public async Task<User> GetUser(Group defGroup)
         {
-            List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.MembershipID == defGroup.ID).ToListAsync();
+            List<UserGroupMembership> ugms = await userGroupMembershipTable.Where(ugm => ugm.MembershipID.ToLower() == defGroup.ID.ToLower()).ToListAsync();
             var ugmExtracted = ugms.FirstOrDefault();
             if (ugmExtracted != null)
             {
-                var user = await userTable.Where(usr => usr.ID == ugmExtracted.ID).ToListAsync();
+                var user = await userTable.Where(usr => usr.ID.ToLower() == ugmExtracted.ID.ToLower()).ToListAsync();
                 return user[0];
             }
             else return null;
@@ -722,7 +596,7 @@ namespace Cheesesquare
                 if (defGroupUser1 == null || defGroupUser2 == null)
                     return null;
 
-                groupWithCorrectName = userGroups.Find(grp => (grp.Name == defGroupUser1.ID + "+" + defGroupUser2.ID) || (grp.Name == defGroupUser2.ID + "+" + defGroupUser1.ID));
+                groupWithCorrectName = userGroups.Find(grp => (grp.Name == defGroupUser1.ID.ToLower() + "+" + defGroupUser2.ID.ToLower()) || (grp.Name == defGroupUser2.ID.ToLower() + "+" + defGroupUser1.ID.ToLower()));
                 return groupWithCorrectName;
             }
             else // something has gone wrong
@@ -754,29 +628,9 @@ namespace Cheesesquare
             {
                 // insert new user
                 await userTable.InsertAsync(user);
-                //await client.SyncContext.PushAsync();
+                await SyncAsync(); // offline sync, retrieve the group and ugm relationship to the local sqlite db
 
-                Group group = new Group
-                {
-                    Name = user.Name
-                };
-
-                // add default group voor user
-                await groupTable.InsertAsync(group);
-                //await client.SyncContext.PushAsync();
-
-                UserGroupMembership ugm = new UserGroupMembership
-                {
-                    ID = user.ID,
-                    MembershipID = group.ID
-                };
-
-                await userGroupMembershipTable.InsertAsync(ugm);
-                await client.SyncContext.PushAsync();
-
-                await createDomains(group.ID);
-
-                await SyncAsync(); // offline sync
+                var defGroup = await getDefaultGroup(user);
             }
             catch (Exception e)
             {
@@ -856,7 +710,7 @@ namespace Cheesesquare
             foreach (User usr in users)
             {
                 Group usrDefGroup = await getDefaultGroup(usr);
-                if (!string.IsNullOrEmpty(usrDefGroup.ID) && !string.IsNullOrEmpty(newGroup.ID))
+                if (!string.IsNullOrEmpty(usrDefGroup.ID.ToLower()) && !string.IsNullOrEmpty(newGroup.ID.ToLower()))
                 {
                     var ggm = new GroupGroupMembership { MemberID = usrDefGroup.ID, MembershipID = newGroup.ID };
                     await groupGroupMembershipTable.InsertAsync(ggm);
@@ -898,7 +752,7 @@ namespace Cheesesquare
                 if (userGroups == null)
                     userGroups = await getGroups();
 
-                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
+                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID.ToLower();
 
                 try
                 {
@@ -954,11 +808,11 @@ namespace Cheesesquare
                 if (userGroups == null)
                     userGroups = await getGroups();
 
-                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
+                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID.ToLower();
 
                 try
                 {
-                    var goals = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy) && it.Parent == parent.id).ToListAsync();
+                    var goals = await itemTable.Where(it => groups_ids.Contains(it.OwnedBy.ToLower()) && it.Parent == parent.id).ToListAsync();
                     IEnumerable<string> goal_ids = from goal in goals select goal.id;
 
                     if (goals.Count > 0)
@@ -992,12 +846,12 @@ namespace Cheesesquare
         {
             IEnumerable<Item> items = null;
 
-            if (userID != null)
-            {
-                if (userGroups == null)
-                    userGroups = await getGroups();
+            //if (userID != null)
+            //{
+            //    if (userGroups == null)
+            //        userGroups = await getGroups();
 
-                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
+            //    IEnumerable<string> groups_ids = from grp in userGroups select grp.ID.ToLower();
 
                 try
                 {
@@ -1008,7 +862,7 @@ namespace Cheesesquare
                 {
                     CreateAndShowDialog(e, "Error");
                 }
-            }
+            //}
 
             return items;
         }
@@ -1017,22 +871,13 @@ namespace Cheesesquare
         {
             IEnumerable<ItemLink> itemLinks = null;
 
-            if (userID != null)
+            try
             {
-                if (userGroups == null)
-                    userGroups = await getGroups();
-
-                IEnumerable<string> groups_ids = from grp in userGroups select grp.ID;
-
-                try
-                {
-                    itemLinks = await itemLinkTable.ToListAsync();
-                    //itemLinks = await itemLinkTable.Where(itl => groups_ids.Contains(itl.OwnedBy)).ToListAsync();
-                }
-                catch (Exception e)
-                {
-                    CreateAndShowDialog(e, "Error");
-                }
+                itemLinks = await itemLinkTable.ToListAsync();
+            }
+            catch (Exception e)
+            {
+                CreateAndShowDialog(e, "Error");
             }
 
             return itemLinks;
@@ -1040,14 +885,8 @@ namespace Cheesesquare
 
         public async Task<Item> GetItem(string id)
         {
-            //lock (locker)
-            //{
-            //    return database.Table<TodoItem>().FirstOrDefault(x => x.ID == id);
-            //}
-
             try
             {
-                //await SyncAsync();
                 return await itemTable.LookupAsync(id);
             }
             catch (MobileServiceInvalidOperationException msioe)
@@ -1067,25 +906,6 @@ namespace Cheesesquare
             {
                 var userTable = client.GetSyncTable<User>();
                 await userTable.PullAsync(null, userTable.CreateQuery());
-
-                //var users = await userTable.ToListAsync();
-                //var all_users = await userTable.ToListAsync();
-
-                //List<User> existingUserList = new List<User>();
-                //foreach (MobileServiceAuthenticationProvider prov in Enum.GetValues(typeof(MobileServiceAuthenticationProvider)))
-                //{
-                //    switch (prov)
-                //    {
-                //        case MobileServiceAuthenticationProvider.Facebook:
-                //            await userTable.Where(u => u.Email== user.Email.ToLower()).ToListAsync();
-                //            break;
-                //        default:
-
-                //            break;
-                //    }
-                //    await userTable.Where(u => u.MicrosoftID.ToLower() == user.Email.ToLower()).ToListAsync();
-                //    existingUserList.AddRange
-                //}
 
                 var existingUserList = await userTable.Where(u => u.Email.ToLower() == user.Email.ToLower()).ToListAsync();
                 User foundUser = existingUserList.FirstOrDefault();
@@ -1116,9 +936,6 @@ namespace Cheesesquare
                     var userTable = client.GetSyncTable<User>();
                     await userTable.PullAsync(null, userTable.CreateQuery());
 
-                    //var users = await userTable.ToListAsync();
-                    //var all_users = await userTable.ToListAsync();
-
                     switch (provider)
                     {
                         case MobileServiceAuthenticationProvider.Facebook:
@@ -1140,11 +957,6 @@ namespace Cheesesquare
 
                     List<User> existing_user = new List<User>();
                     existing_user = await userTable.Where(u => u.Email.ToLower() == email.ToLower()).ToListAsync();
-
-
-
-                    //var existing_user = await userTable.Where(u => u.MicrosoftID == userID).ToListAsync();
-                    //var groups = await groupTable.ToListAsync();
 
                     if (existing_user.Count == 0)
                     {
@@ -1174,32 +986,11 @@ namespace Cheesesquare
                         }
 
                         // insert new user
-                        await userTable.InsertAsync(user);
-                        await client.SyncContext.PushAsync();
+                        await newUser(user);
 
                         userID = user.ID;
 
-                        Group group = new Group
-                        {
-                            Name = userName
-                        };
-
-                        // add default group voor user
-                        await groupTable.InsertAsync(group);
-                        await client.SyncContext.PushAsync();
-
-                        defGroup = group;
-
-                        UserGroupMembership ugm = new UserGroupMembership
-                        {
-                            ID = user.ID,
-                            MembershipID = group.ID
-                        };
-
-                        await userGroupMembershipTable.InsertAsync(ugm);
-                        await client.SyncContext.PushAsync();
-
-                        await createDomains(defGroup.ID);
+                        defGroup = await getDefaultGroup(user);
 
                         defUser = user;
                     }
@@ -1286,7 +1077,7 @@ namespace Cheesesquare
                     await groupTable.InsertAsync(group);
                     await client.SyncContext.PushAsync();
 
-                    ggm.MembershipID = group.ID;
+                    ggm.MembershipID = group.ID.ToLower();
 
                     await groupGroupMembershipTable.InsertAsync(ggm);
                 }
@@ -1322,7 +1113,7 @@ namespace Cheesesquare
                     await groupTable.InsertAsync(group);
                     await client.SyncContext.PushAsync();
 
-                    ggm.MembershipID = group.ID;
+                    ggm.MembershipID = group.ID.ToLower();
                     await groupGroupMembershipTable.InsertAsync(ggm);
                     await client.SyncContext.PushAsync();
 
@@ -1332,8 +1123,8 @@ namespace Cheesesquare
                         if (userInDB != null)
                         {
                             GroupGroupMembership ggmUser = new GroupGroupMembership();
-                            ggmUser.MembershipID = group.ID;
-                            ggmUser.MemberID = userInDB.ID;
+                            ggmUser.MembershipID = group.ID.ToLower();
+                            ggmUser.MemberID = userInDB.ID.ToLower();
                             await groupGroupMembershipTable.InsertAsync(ggmUser);
                             await client.SyncContext.PushAsync();
                         }
@@ -1380,20 +1171,10 @@ namespace Cheesesquare
 
                         item.CreatedBy = defGroup.ID;
                     }
-
-                    //var jObject = JObject.FromObject(item);
-                    //var retJObject = await itemTable.InsertAsync(jObject);// (item);
-                    //item = retJObject.ToObject<Item>();
                     await itemTable.InsertAsync(item);
                 }
 
                 await client.SyncContext.PushAsync();
-
-                //adapter.Clear();
-
-                //foreach (ToDoItem current in list)
-                //    adapter.Add(current);
-
             }
             catch (Exception e)
             {
@@ -1414,19 +1195,10 @@ namespace Cheesesquare
                 }
                 else
                 {
-                    //var jObject = JObject.FromObject(item);
-                    //var retJObject = await itemTable.InsertAsync(jObject);// (item);
-                    //item = retJObject.ToObject<Item>();
                     await itemLinkTable.InsertAsync(itemLink);
                 }
 
                 await client.SyncContext.PushAsync();
-
-                //adapter.Clear(); 
-
-                //foreach (ToDoItem current in list)
-                //    adapter.Add(current);
-
             }
             catch (Exception e)
             {
@@ -1436,11 +1208,6 @@ namespace Cheesesquare
 
         public async Task DeleteItem(Item item)
         {
-            //lock (locker)
-            //{
-            //    return database.Delete<TodoItem>(id);
-            //}
-
             try
             {
                 await itemTable.DeleteAsync(item);
@@ -1458,11 +1225,6 @@ namespace Cheesesquare
 
         public async Task DeleteItem(Group group)
         {
-            //lock (locker)
-            //{
-            //    return database.Delete<TodoItem>(id);
-            //}
-
             try
             {
                 await groupTable.DeleteAsync(group);
@@ -1477,46 +1239,6 @@ namespace Cheesesquare
                 CreateAndShowDialog(e, "Error");
             }
         }
-
-        //public async Task DeleteItem(string id)
-        //{
-        //    //lock (locker)
-        //    //{
-        //    //    return database.Delete<TodoItem>(id);
-        //    //}
-
-        //    try 
-        //    {
-        //        Item to_be_deleted = GetItem(id).Result;
-        //        await itemTable.DeleteAsync(to_be_deleted);
-        //        await SyncAsync(); // offline sync
-        //    } 
-        //    catch (MobileServiceInvalidOperationException msioe)
-        //    {
-        //       CreateAndShowDialog(msioe, msioe.Message);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        CreateAndShowDialog(e, "Error");
-        //    }
-        //}
-
-        //public async Task DeleteTaskAsync(TodoItem item)
-        //{
-        //    try
-        //    {
-        //        await todoTable.DeleteAsync(item);
-        //        //await SyncAsync ();
-        //    }
-        //    catch (MobileServiceInvalidOperationException msioe)
-        //    {
-        //        Debug.WriteLine(@"INVALID {0}", msioe.Message);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Debug.WriteLine(@"ERROR {0}", e.Message);
-        //    }
-        //}
 	}
 }
 

@@ -45,6 +45,7 @@ namespace Cheesesquare
     {
         public static string RegistrationID { get; private set; }
         private NotificationHub Hub { get; set; }
+        public const int ITEMDETAIL = 103;
 
         public PushHandlerService() : base(Constants.SenderID)
         {
@@ -90,23 +91,64 @@ namespace Cheesesquare
             Log.Info(MyBroadcastReceiver.TAG, "GCM Message Received!");
 
             var msg = new StringBuilder();
+            Dictionary<string, string> descDictionary = new Dictionary<string, string>();
 
             if (intent != null && intent.Extras != null)
             {
                 foreach (var key in intent.Extras.KeySet())
+                {
                     msg.AppendLine(key + "=" + intent.Extras.Get(key).ToString());
+                    descDictionary[key] = intent.Extras.Get(key).ToString();
+                }
             }
+
+            Log.Info(MyBroadcastReceiver.TAG, msg.ToString());
 
             string messageText = intent.Extras.GetString("message");
             if (!string.IsNullOrEmpty(messageText))
             {
-                createNotification("New hub message!", messageText);
+                createNotification("New hub message!", messageText, descDictionary);
             }
             else
             {
-                createNotification("Unknown message details", msg.ToString());
+                createNotification("Unknown message details", msg.ToString(), descDictionary);
             }
         }
+
+
+
+        public void createNotification(string title, string desc, Dictionary<string,string> descDictionary)
+        {
+            //Create notification
+            var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
+
+            //Create an intent to show UI
+            var intent = new Intent(this, typeof(CheeseDetailActivity));
+
+            //item_ownedby
+            var name = descDictionary["item_name"];
+            var itemID = descDictionary["item_id"];
+
+            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
+            intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+
+            //Create the notification
+            var notification = new Notification(Android.Resource.Drawable.SymActionEmail, title);
+
+            //Auto-cancel will remove the notification once the user touches it
+            notification.Flags = NotificationFlags.AutoCancel;
+
+            var notificationTitle = "A new item has been added";
+            //Set the notification info
+            //we use the pending intent, passing our ui intent over, which will get called
+            //when the notification is tapped.
+            notification.SetLatestEventInfo(Application.Context, notificationTitle, name, PendingIntent.GetActivity(this, ITEMDETAIL, intent, 0));
+
+            //Show the notification
+            notificationManager.Notify(1, notification);
+            //dialogNotify(title, desc);
+        }
+
 
         public void createNotification(string title, string desc)
         {
