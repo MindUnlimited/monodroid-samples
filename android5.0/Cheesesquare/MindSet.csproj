@@ -113,6 +113,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ListFragmentGroups.cs" />
     <Compile Include="CheeseListFragmentSharedItems.cs" />
     <Compile Include="CheeseListFragmentDetail.cs" />
     <Compile Include="Data\SQLite_bak.cs" />
@@ -182,6 +183,9 @@
       <SubType>AndroidResource</SubType>
     </AndroidResource>
     <AndroidResource Include="Resources\layout\subtask_line.axml">
+      <SubType>AndroidResource</SubType>
+    </AndroidResource>
+    <AndroidResource Include="Resources\layout\group_card_view.axml">
       <SubType>AndroidResource</SubType>
     </AndroidResource>
   </ItemGroup>

@@ -47,7 +47,7 @@ namespace Cheesesquare
 
             var groups = await PublicFields.Database.getGroups();
             var adapter = new CheeseDetailActivity.MyAdapter(SupportFragmentManager);
-            //adapter.AddFragment(new CheeseListFragmentSharedItems(root), "Shared Items");
+            adapter.AddFragment(new ListFragmentGroups(groups), "Shared Items");
 
             viewPager.Adapter = adapter;
 

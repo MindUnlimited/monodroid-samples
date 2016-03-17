@@ -540,9 +540,32 @@ namespace Cheesesquare
 
         public async Task<List<String>> MembersOfGroup(Group group)
         {
-            var test = await userGroupMembershipTable.Where(ugm => ugm.MembershipID.ToLower() == group.ID.ToLower()).ToListAsync();
-            List<String> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MembershipID.ToLower() == group.ID.ToLower()).Select(ggm => ggm.MemberID.ToLower()).ToListAsync();
-            return ggms; // there should be only one item satisfying this query
+            var user = defUser;
+
+            var parameters = new Dictionary<string, string>
+                {
+                    { "userid", user.ID }, {"groupid", group.ID }
+                };
+
+            var memberIDs = new List<string>();
+            var members = new List<Group>();
+            var groupMembers = await client.InvokeApiAsync("getgroupmembers", HttpMethod.Get, parameters);
+
+            var t1 = groupMembers.ToObject<List<Group>>();
+            var t2 = groupMembers.ToString();
+            //var t3 = groupMembers.ToObject<Group>();
+
+            //members = JsonConvert.DeserializeObject<List<User>>(groupMembers.ToString());
+
+            return memberIDs;
+            //var defGroup = await PublicFields.Database.client.InvokeApiAsync<Group>("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
+
+            //return defGroup;
+        //}
+
+        //var test = await userGroupMembershipTable.Where(ugm => ugm.MembershipID.ToLower() == group.ID.ToLower()).ToListAsync();
+        //    List<String> ggms = await groupGroupMembershipTable.Where(ggm => ggm.MembershipID.ToLower() == group.ID.ToLower()).Select(ggm => ggm.MemberID.ToLower()).ToListAsync();
+        //    return ggms;
         }
 
         public async Task<User> GetUser(string email)
