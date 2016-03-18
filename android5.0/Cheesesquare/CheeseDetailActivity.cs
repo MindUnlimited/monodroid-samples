@@ -410,13 +410,14 @@ Intent intent)
                                     PublicFields.ItemTree.FindAndReplace(item.Value.id, item);
                                 }
 
-                                var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
+                                var groupMembers = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
 
-                                foreach(var id in  userIDs)
+                                foreach(var grp in  groupMembers)
                                 {
-                                    if(id != PublicFields.Database.defGroup.ID)
+                                    // this account does not need the id. only the ones the item gets shared with
+                                    if (grp != null && grp.ID.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
                                     {
-                                        var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = id };
+                                        var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = grp.ID };
                                         await PublicFields.Database.SaveItemLink(link);
                                     }
                                 }

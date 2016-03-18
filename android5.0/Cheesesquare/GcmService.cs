@@ -14,6 +14,7 @@ using WindowsAzure.Messaging;
 using System.Diagnostics;
 using System;
 using Android.Support.V7.App;
+using System.Linq;
 
 [assembly: Permission(Name = "@PACKAGE_NAME@.permission.C2D_MESSAGE")]
 [assembly: UsesPermission(Name = "@PACKAGE_NAME@.permission.C2D_MESSAGE")]
@@ -119,20 +120,47 @@ namespace Cheesesquare
 
 
 
-        public void createNotification(string title, string desc, Dictionary<string,string> descDictionary)
+        public async void createNotification(string title, string desc, Dictionary<string,string> descDictionary)
         {
-            //Create notification
-            var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
-
-            //Create an intent to show UI
-            var intent = new Intent(this, typeof(CheeseDetailActivity));
-
             //item_ownedby
             var name = descDictionary[CheeseDetailActivity.EXTRA_NAME];
             var itemID = descDictionary[CheeseDetailActivity.ITEM_ID];
 
-            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
-            intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+            //Create notification
+            var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
+
+            //Retrieve ItemLinks
+            var itemLinks = await PublicFields.Database.GetItemLinks();
+            var myItemLinks = from itl in itemLinks where itl.OwnedBy.ToLower() == PublicFields.Database.defGroup.ID.ToLower() select itl;
+
+            //shared from other user
+            Intent intent = null;
+
+            var itemLink = myItemLinks.First(x => x.ItemID.ToLower() == itemID.ToLower());
+            if (itemLink != null) // found the link
+            {
+                if (itemLink.Parent != null) // has a place in the tree already
+                {
+                    //Create an intent to show UI
+                    intent = new Intent(this, typeof(CheeseDetailActivity));
+                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
+                    intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+                }
+                else // not assigned yet
+                {
+                    //Create an intent to show the shared items
+                    Log.Debug("push", "found itemlink not regual item");
+                    //intent = new Intent(this, typeof(SharedItemsActivity));
+                    //intent.AddFlags(ActivityFlags.ClearTop);
+                }
+            }
+            else
+            {
+                //Create an intent to show UI
+                intent = new Intent(this, typeof(CheeseDetailActivity));
+                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
+                intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+            }
 
             //Create the notification
             var notification = new Notification(Android.Resource.Drawable.SymActionEmail, title);
@@ -146,12 +174,18 @@ namespace Cheesesquare
             //when the notification is tapped.
             //notification.SetLatestEventInfo(Application.Context, notificationTitle, name, PendingIntent.GetActivity(this, ITEMDETAIL, intent, 0));
 
-            var pendingIntent = PendingIntent.GetActivity(this, ITEMDETAIL, intent, PendingIntentFlags.UpdateCurrent); // update current is neccessary for passing the extras allong
+            
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                        this);
-            notification = builder.SetContentIntent(pendingIntent)
-                                  .SetSmallIcon(Resource.Drawable.LogoMindSet).SetTicker("new item added")
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+            if(intent != null)
+            {
+                var pendingIntent = PendingIntent.GetActivity(this, ITEMDETAIL, intent, PendingIntentFlags.UpdateCurrent); // update current is neccessary for passing the extras allong
+                builder.SetContentIntent(pendingIntent);
+            }
+            
+
+            notification = builder.SetSmallIcon(Resource.Drawable.LogoMindSet).SetTicker("new item added")
                                   .SetAutoCancel(true).SetContentTitle(notificationTitle)
                                   .SetContentText(name).Build();
 

@@ -53,10 +53,19 @@ namespace Cheesesquare
             foreach (var l in sharedChildrenLinks)
             {
                 var it = await PublicFields.Database.GetItem(l.ItemID);
-                it.Parent = node.Value.id;
-                it.SharedLink = l;
 
-                sharedChildrenItems.Add(it);
+                if (it == null)
+                {
+                    Log.Error("main", string.Format("itemlink {0} could not retrieve it's item!", l));
+                }
+                else
+                {
+                    it.Parent = node.Value.id;
+                    it.SharedLink = l;
+
+                    sharedChildrenItems.Add(it);
+                }
+
             }
 
             if (children == null)
@@ -625,14 +634,14 @@ namespace Cheesesquare
                                     await PublicFields.Database.SaveItem(editedToBeShared.Value); // update the item with the new ownedBy group
                                 }
 
-                                var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
+                                var groupMembers = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
 
-                                foreach (var id in userIDs)
+                                foreach (var grp in groupMembers)
                                 {
                                     // this account does not need the id. only the ones the item gets shared with
-                                    if(id != PublicFields.Database.defGroup.ID)
+                                    if (grp != null && grp.ID.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
                                     {
-                                        var link = new ItemLink { ItemID = editedToBeShared.Value.id, Parent = null, OwnedBy = id };
+                                        var link = new ItemLink { ItemID = editedToBeShared.Value.id, Parent = null, OwnedBy = grp.ID };
                                         await PublicFields.Database.SaveItemLink(link);
                                     }
                                 }
@@ -709,14 +718,14 @@ namespace Cheesesquare
                                 await PublicFields.Database.SaveItem(newShareItem.Value); // update the item with the new ownedBy group
                             }
 
-                            var userIDs = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
+                            var groupMembers = await PublicFields.Database.MembersOfGroup(ownedByGroupResult);
 
-                            foreach (var id in userIDs)
+                            foreach (var grp in groupMembers)
                             {
                                 // this account does not need the id. only the ones the item gets shared with
-                                if (id != null && id.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
+                                if (grp != null && grp.ID.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
                                 {
-                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = id };
+                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = grp.ID };
                                     await PublicFields.Database.SaveItemLink(link);
                                 }
                             }

@@ -324,7 +324,7 @@ namespace Cheesesquare
             }
 
             public void ChangeDateSet(Todo.TreeNodeList<Todo.Item> items)
-            {
+            { 
                 this.items = items ?? new Todo.TreeNodeList<Todo.Item>(fragment.domain);
                 NotifyDataSetChanged();
             }
@@ -465,10 +465,20 @@ namespace Cheesesquare
                 return vh;
             }
 
-            protected void SubtaskCheckBox_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
-            {
-                Log.Debug("CheeseListFragment", "checkbox clicked");
-            }
+            //protected void SubtaskCheckBox_CheckedChange(object sender, CompoundButton.CheckedChangeEventArgs e)
+            //{
+            //    var checkBox = (CheckBox)sender;
+            //    Log.Debug("CheeseListFragment", "checkbox clicked");
+            //    if(checkBox.Checked)
+            //    {
+            //        Log.Debug("CheeseListFragment", "checkbox clicked");
+
+            //        Node.Value.Status = 7;
+            //        await PublicFields.Database.SaveItem(Node.Value);
+            //        Parent.AmountOfChildrenCompletedChanged(1);
+            //    }
+
+            //}
 
             public async void RecursiveDelete(Todo.TreeNode<Todo.Item> item)
             {
@@ -571,7 +581,27 @@ namespace Cheesesquare
                         };
 
                         var subtaskCheckBox = subtaskView.FindViewById<CheckBox>(Resource.Id.checkbox);
-                        subtaskCheckBox.CheckedChange += SubtaskCheckBox_CheckedChange;
+                        subtaskCheckBox.Checked = subitem.Value.Status == 7; // set checked if completed
+                        subtaskCheckBox.CheckedChange += async (sender, e) =>// SubtaskCheckBox_CheckedChange;
+                        {
+                            var checkBox = (CheckBox)sender;
+                            if (checkBox.Checked)
+                            {
+                                Log.Debug("CheeseListFragment", string.Format("{0} checked as completed", subitem.Value.id));
+
+                                subitem.Value.Status = 7;
+                                await PublicFields.Database.SaveItem(subitem.Value);
+                                subitem.Parent.AmountOfChildrenCompletedChanged(1);
+                            }
+                            else
+                            {
+                                Log.Debug("CheeseListFragment", string.Format("{0} unchecked as completed", subitem.Value.id));
+
+                                subitem.Value.Status = 0;
+                                await PublicFields.Database.SaveItem(subitem.Value);
+                                subitem.Parent.AmountOfChildrenCompletedChanged(-1);
+                            }
+                        };
 
                         h.SubTasksLinearLayout.AddView(subtaskView, index);
 

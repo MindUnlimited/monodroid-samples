@@ -538,7 +538,7 @@ namespace Cheesesquare
             return ugms.Count == 1; // there should be only one item satisfying this query
         }
 
-        public async Task<List<String>> MembersOfGroup(Group group)
+        public async Task<List<Group>> MembersOfGroup(Group group)
         {
             var user = defUser;
 
@@ -549,15 +549,15 @@ namespace Cheesesquare
 
             var memberIDs = new List<string>();
             var members = new List<Group>();
-            var groupMembers = await client.InvokeApiAsync("getgroupmembers", HttpMethod.Get, parameters);
+            var groupMembers = await client.InvokeApiAsync<List<Group>>("getgroupmembers", HttpMethod.Get, parameters);
 
-            var t1 = groupMembers.ToObject<List<Group>>();
-            var t2 = groupMembers.ToString();
+            //var t1 = groupMembers.ToObject<List<Group>>();
+            //var t2 = groupMembers.ToString();
             //var t3 = groupMembers.ToObject<Group>();
 
             //members = JsonConvert.DeserializeObject<List<User>>(groupMembers.ToString());
 
-            return memberIDs;
+            return groupMembers;
             //var defGroup = await PublicFields.Database.client.InvokeApiAsync<Group>("getdefaultgroup", HttpMethod.Get, parameters); // also gather extra user information
 
             //return defGroup;

@@ -25,6 +25,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Todo;
+using System.Threading.Tasks;
 
 namespace Cheesesquare
 {
@@ -281,15 +282,10 @@ namespace Cheesesquare
             {
                 Intent myIntent = new Intent();
 
-                var listOfDefGroupIDs = await PublicFields.Database.MembersOfGroup(groupFound);
-                var members = new List<User>(); //from defGroupId in listOfDefGroupIDs select PublicFields.Database.GetUser(defGroupId);
-                foreach(var grpID in listOfDefGroupIDs)
-                {
-                    members.Add(await PublicFields.Database.GetUser(new Group { ID = grpID }));
-                }
+                var groupMembers = await PublicFields.Database.MembersOfGroup(groupFound);
 
 
-                myIntent.PutExtra("members", JsonConvert.SerializeObject(members));
+                myIntent.PutExtra("members", JsonConvert.SerializeObject(groupMembers));
                 myIntent.PutExtra("groupname", groupFound.Name);
                 myIntent.PutExtra("itemID", itemID);
                 SetResult(Result.Ok, myIntent);
@@ -359,11 +355,11 @@ Intent intent)
     public class ContactsRecyclerAdapter : BaseRecyclerAdapter
     {
         Activity _activity;
-        List<Todo.User> _contactList;
+        static List<Todo.User> _contactList;
         RecyclerView _recyclerview;
 
-        Todo.User _currentUser;
-        public Todo.User currentUser
+        static Todo.User _currentUser;
+        static public Todo.User currentUser
         {
 	        get
 	        {
@@ -374,11 +370,11 @@ Intent intent)
                     return currentUserContact;
                 }
 	            else
-                    return this._currentUser;
+                    return _currentUser;
 	        }
 	        set
 	        {
-	            this._currentUser = value;
+	            _currentUser = value;
 	        }
         }
 
@@ -390,6 +386,18 @@ Intent intent)
         {
             _activity = (SelectContactsActivity)activity;
             _recyclerview = recyclerView;
+            CreateContactList();
+        }
+
+        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView, List<Todo.User> contactList) // assign constructor
+        {
+            _activity = (SelectContactsActivity)activity;
+            _recyclerview = recyclerView;
+            _contactList = contactList;
+        }
+
+        public static async void CreateContactList()
+        {
             FillContacts();
             _contactList.Sort();
 
@@ -400,25 +408,22 @@ Intent intent)
 
             // insert the groups that the user already has excluding the default user group
             var groups = PublicFields.Database.userGroups;
-            groups.Remove(PublicFields.Database.defGroup);
+            groups = groups.Where(grp => grp.ID.ToLower() == PublicFields.Database.defGroup.ID.ToLower()).ToList();// groups.Remove(PublicFields.Database.defGroup);
 
             int index = 1;
-            foreach(var grp in groups)
+            foreach (var grp in groups)
             {
-                var members = PublicFields.Database.MembersOfGroup(grp).Result;
+                //var membersTask = PublicFields.Database.MembersOfGroup(grp);
+                //membersTask.RunSynchronously();
+                //var members = membersTask.Result;
+                var members = await PublicFields.Database.MembersOfGroup(grp);
+
                 if (members.Count > 2)
                 {
                     _contactList.Insert(index, new Todo.User { Name = grp.Name, ID = grp.ID, Thumbnail = groupThumb });
                     index++;
                 }
             }
-        }
-
-        public ContactsRecyclerAdapter(Activity activity, RecyclerView recyclerView, List<Todo.User> contactList) // assign constructor
-        {
-            _activity = (SelectContactsActivity)activity;
-            _recyclerview = recyclerView;
-            _contactList = contactList;
         }
 
         //This will fire any event handlers that are registered with our ItemClick
@@ -436,10 +441,10 @@ Intent intent)
             return _contactList;
         }
 
-        void FillContacts()
+        static void FillContacts()
         {
-            var db = new Database();
-            db.getContacts();
+            //var db = new Database();
+            //PublicFields.Database.getContacts();
 
             var uri = ContactsContract.Contacts.ContentUri;
 
@@ -492,9 +497,10 @@ Intent intent)
                         }
                         finally
                         {
+                            cursor_email.Close();
                             if (cursor_email != null)
                             {
-                                cursor_email.Close();
+                                // found some email address
                             }
                             if (email.Length == 0)
                             {

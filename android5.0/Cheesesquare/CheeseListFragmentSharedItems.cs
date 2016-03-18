@@ -250,16 +250,15 @@ namespace Cheesesquare
                 // Build the dialog.
                 var builder = new AlertDialog.Builder(context);
                 builder.SetTitle("Place under");
-
                 
 
-                IEnumerable<Todo.Item> items = from x in PublicFields.domains select x.Value;
-                string [] itemNames = (from x in items select x.Name).ToArray();
+                IEnumerable<Todo.Item> domains = from x in PublicFields.domains select x.Value;
+                string [] itemNames = (from x in domains select x.Name).ToArray();
                 builder.SetItems(itemNames, new EventHandler<DialogClickEventArgs>(
                 (s, args) => {
                     activity.RunOnUiThread(async () =>
                     {
-                        Item selectedDomain = items.ElementAtOrDefault(args.Which);
+                        Item selectedDomain = domains.ElementAtOrDefault(args.Which);
 
                         // store domain as parent of this item in db
                         item.Value.SharedLink.Parent = selectedDomain.id;
@@ -274,7 +273,11 @@ namespace Cheesesquare
                         parentOfItem.Children.Add(sharedItemNode);
                         PublicFields.ItemTree.FindAndReplace(parentOfItem.Value.id, parentOfItem);
 
+                        await items.Remove(item);
                         NotifyItemRemoved(e);
+
+                        //ChangeDateSet(items);
+                        //NotifyDataSetChanged();
                     });
                     //clicked(true);
                 }));

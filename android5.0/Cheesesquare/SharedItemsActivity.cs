@@ -45,10 +45,11 @@ namespace Cheesesquare
             viewPager = FindViewById<ViewPager>(Resource.Id.viewpager_shared_items);
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_shared);
             var itemLinks = await PublicFields.Database.GetItemLinks();
-            itemLinks = itemLinks.Where(x => x.OwnedBy.ToLower() == PublicFields.Database.defGroup.ID.ToLower()); // filter so that we only see the ones we own not the ones we are part of the group
+            itemLinks = itemLinks.Where(x => x.OwnedBy.ToLower() == PublicFields.Database.defGroup.ID.ToLower()).ToList(); // filter so that we only see the ones we own not the ones we are part of the group
 
             List<Item> sharedItems = new List<Item>();
             List<TreeNode<Item>> sharedItemsTreeNode = new List<TreeNode<Item>>();
+
             foreach (var itl in itemLinks)
             {
                 Item it = await PublicFields.Database.GetItem(itl.ItemID);
