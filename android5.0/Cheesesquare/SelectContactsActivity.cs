@@ -259,7 +259,7 @@ namespace Cheesesquare
             var contact = adapter.GetValueAt(e);
 
             var groups = PublicFields.Database.userGroups;
-            var groupFound = groups.Find(grp => grp.Name == contact.Name && grp.ID == contact.ID);
+            var groupFound = groups.Find(grp => grp.Name == contact.Name && grp.id == contact.ID);
             if (contact.Name == "Create new group.." && contact.Email == null)
             {
                 var intent = new Intent(this, typeof(DefineGroupActivity));
@@ -408,7 +408,7 @@ Intent intent)
 
             // insert the groups that the user already has excluding the default user group
             var groups = PublicFields.Database.userGroups;
-            groups = groups.Where(grp => grp.ID.ToLower() == PublicFields.Database.defGroup.ID.ToLower()).ToList();// groups.Remove(PublicFields.Database.defGroup);
+            groups = groups.Where(grp => grp.id == PublicFields.Database.defGroup.id).ToList();// groups.Remove(PublicFields.Database.defGroup);
 
             int index = 1;
             foreach (var grp in groups)
@@ -420,7 +420,7 @@ Intent intent)
 
                 if (members.Count > 2)
                 {
-                    _contactList.Insert(index, new Todo.User { Name = grp.Name, ID = grp.ID, Thumbnail = groupThumb });
+                    _contactList.Insert(index, new Todo.User { Name = grp.Name, ID = grp.id, Thumbnail = groupThumb });
                     index++;
                 }
             }

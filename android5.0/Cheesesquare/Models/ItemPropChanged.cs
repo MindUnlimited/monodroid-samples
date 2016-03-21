@@ -21,7 +21,10 @@ namespace Todo
             }
         }
 
-        public string id { get; set; }
+        public string id
+        {
+            get; set;
+        }
 
         [JsonIgnore]
         private ItemLink _sharedLink;

@@ -46,8 +46,8 @@ namespace Cheesesquare
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_groups);
 
             var groups = await PublicFields.Database.getGroups();
-            var defGroup = await PublicFields.Database.getDefaultGroup(); 
-            groups = groups.Where(gr => gr.ID.ToLower() != defGroup.ID.ToLower()).ToList(); // don't show your own def group
+            var defGroup = await PublicFields.Database.getDefaultGroup(PublicFields.Database.defUser); 
+            groups = groups.Where(gr => gr.id != defGroup.id).ToList(); // don't show your own def group
 
             var adapter = new CheeseDetailActivity.MyAdapter(SupportFragmentManager);
             adapter.AddFragment(new ListFragmentGroups(groups), "Shared Items");

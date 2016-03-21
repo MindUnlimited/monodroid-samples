@@ -101,7 +101,7 @@ namespace Cheesesquare
             shareEditText = FindViewById<EditText>(Resource.Id.user_to_share_name);
             shareEditText.Click += ShareEditText_Click;
 
-            if (item != null && item.Value.OwnedBy != PublicFields.Database.defGroup.ID)
+            if (item != null && item.Value.OwnedBy != PublicFields.Database.defGroup.id)
             {
                 var ownedByGroupTask = PublicFields.Database.GetGroupByID(item.Value.OwnedBy);
                 if (ownedByGroupTask != null)

@@ -12,6 +12,26 @@ namespace Todo
 
         //public string MemberID { get; set; } 
 
-        public string MembershipID { get; set; } // group id
+        //public string MembershipID { get; set; } // group id
+
+        [JsonIgnore]
+        private string _MembershipID;
+
+        public string MembershipID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_MembershipID))
+                {
+                    return _MembershipID;
+                }
+                return _MembershipID.ToUpper();
+            }
+            set
+            {
+                _MembershipID = value.ToUpper();
+            }
+        }
+
     }
 }

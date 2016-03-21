@@ -70,7 +70,7 @@ namespace Cheesesquare
 
             if (children == null)
             {
-                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id).Concat(sharedChildrenItems);
+                children = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == node.Value.id && it.OwnedBy == PublicFields.Database.defGroup.id).Concat(sharedChildrenItems);
             }
 
             foreach (var child in children)
@@ -90,7 +90,7 @@ namespace Cheesesquare
                 }
 
 
-                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id).Concat(childNodeSharedChildrenItems);
+                var childrenOfChild = PublicFields.ItemList.Where(it => it.Parent != null && it.Parent == child.id && it.OwnedBy == PublicFields.Database.defGroup.id).Concat(childNodeSharedChildrenItems);
 
                 if (childrenOfChild != null && childrenOfChild.Count() > 0)
                 {
@@ -589,6 +589,7 @@ namespace Cheesesquare
                         TreeNode<Item> newItem;
                         if (itemID == tempID)
                         {
+                            var test = PublicFields.ItemTree.Descendants().ToList();
                             newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
                             newItem.Value.id = null;
 
@@ -629,7 +630,7 @@ namespace Cheesesquare
                                 var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
                                 if (ownedByGroupResult != null)
                                 {
-                                    editedToBeShared.Value.OwnedBy = ownedByGroupResult.ID;
+                                    editedToBeShared.Value.OwnedBy = ownedByGroupResult.id;
                                     PublicFields.ItemTree.FindAndReplace(editedToBeShared.Value.id, editedToBeShared);
                                     await PublicFields.Database.SaveItem(editedToBeShared.Value); // update the item with the new ownedBy group
                                 }
@@ -638,10 +639,13 @@ namespace Cheesesquare
 
                                 foreach (var grp in groupMembers)
                                 {
-                                    // this account does not need the id. only the ones the item gets shared with
-                                    if (grp != null && grp.ID.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
+                                    if (grp != null)
                                     {
-                                        var link = new ItemLink { ItemID = editedToBeShared.Value.id, Parent = null, OwnedBy = grp.ID };
+                                        var link = new ItemLink { ItemID = editedToBeShared.Value.id, Parent = null, OwnedBy = grp.id };
+                                        if (grp.id == PublicFields.Database.defGroup.id) // own item
+                                        {
+                                            link.Parent = editedToBeShared.Value.Parent;
+                                        }
                                         await PublicFields.Database.SaveItemLink(link);
                                     }
                                 }
@@ -654,6 +658,9 @@ namespace Cheesesquare
 
                         //currentDomainFragment.itemRecyclerViewAdapter.NotifyItemInserted(currentDomainFragment.itemRecyclerViewAdapter.ItemCount);
 
+
+                        PublicFields.UpdateDatabase();
+                        PublicFields.MakeTree();
 
                         var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
                         currentDomainFragment.itemRecyclerViewAdapter.ChangeDateSet(domain.Children);
@@ -713,7 +720,7 @@ namespace Cheesesquare
                             var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
                             if (ownedByGroupResult != null)
                             {
-                                newShareItem.Value.OwnedBy = ownedByGroupResult.ID;
+                                newShareItem.Value.OwnedBy = ownedByGroupResult.id;
                                 PublicFields.ItemTree.FindAndReplace(newShareItem.Value.id, newShareItem);
                                 await PublicFields.Database.SaveItem(newShareItem.Value); // update the item with the new ownedBy group
                             }
@@ -722,10 +729,13 @@ namespace Cheesesquare
 
                             foreach (var grp in groupMembers)
                             {
-                                // this account does not need the id. only the ones the item gets shared with
-                                if (grp != null && grp.ID.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
+                                if (grp != null)
                                 {
-                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = grp.ID };
+                                    var link = new ItemLink { ItemID = newShareItem.Value.id, Parent = null, OwnedBy = grp.id };
+                                    if (grp.id == PublicFields.Database.defGroup.id) // own item
+                                    {
+                                        link.Parent = newShareItem.Value.Parent;
+                                    }
                                     await PublicFields.Database.SaveItemLink(link);
                                 }
                             }

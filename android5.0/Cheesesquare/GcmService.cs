@@ -129,16 +129,20 @@ namespace Cheesesquare
             //Create notification
             var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
 
-            //Retrieve ItemLinks
+            //update db and retrieve item link
+            PublicFields.UpdateDatabase();
+            PublicFields.MakeTree();
             var itemLinks = await PublicFields.Database.GetItemLinks();
-            var myItemLinks = from itl in itemLinks where itl.OwnedBy.ToLower() == PublicFields.Database.defGroup.ID.ToLower() select itl;
+            var myItemLinks = from itl in itemLinks where itl.OwnedBy == PublicFields.Database.defGroup.id select itl;
 
             //shared from other user
             Intent intent = null;
 
-            var itemLink = myItemLinks.First(x => x.ItemID.ToLower() == itemID.ToLower());
+            var itemLink = myItemLinks.FirstOrDefault(x => x.ItemID == itemID);
             if (itemLink != null) // found the link
             {
+                Log.Debug("push", string.Format("found itemlink {0}", itemLink.id));
+
                 if (itemLink.Parent != null) // has a place in the tree already
                 {
                     //Create an intent to show UI
@@ -156,6 +160,7 @@ namespace Cheesesquare
             }
             else
             {
+                Log.Debug("push", "found no itemlink");
                 //Create an intent to show UI
                 intent = new Intent(this, typeof(CheeseDetailActivity));
                 intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);

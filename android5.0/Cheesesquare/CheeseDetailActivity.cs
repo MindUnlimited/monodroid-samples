@@ -406,7 +406,7 @@ Intent intent)
                                 var ownedByGroupResult = await PublicFields.Database.SaveGroup(selectedContacts, groupName);
                                 if (ownedByGroupResult != null)
                                 {
-                                    item.Value.OwnedBy = ownedByGroupResult.ID;
+                                    item.Value.OwnedBy = ownedByGroupResult.id;
                                     PublicFields.ItemTree.FindAndReplace(item.Value.id, item);
                                 }
 
@@ -415,9 +415,9 @@ Intent intent)
                                 foreach(var grp in  groupMembers)
                                 {
                                     // this account does not need the id. only the ones the item gets shared with
-                                    if (grp != null && grp.ID.ToLower() != PublicFields.Database.defGroup.ID.ToLower())
+                                    if (grp != null && grp.id != PublicFields.Database.defGroup.id)
                                     {
-                                        var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = grp.ID };
+                                        var link = new ItemLink { ItemID = item.Value.id, Parent = null, OwnedBy = grp.id };
                                         await PublicFields.Database.SaveItemLink(link);
                                     }
                                 }
@@ -545,6 +545,12 @@ Intent intent)
                         break;
                     case Resource.Id.shared_items:
                         Intent intent = new Intent(this, typeof(SharedItemsActivity));
+                        intent.AddFlags(ActivityFlags.ClearTop);
+                        drawerLayout.CloseDrawers();
+                        StartActivity(intent);
+                        break;
+                    case Resource.Id.groups:
+                        intent = new Intent(this, typeof(GroupsActivity));
                         intent.AddFlags(ActivityFlags.ClearTop);
                         drawerLayout.CloseDrawers();
                         StartActivity(intent);

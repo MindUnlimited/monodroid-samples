@@ -8,7 +8,25 @@ namespace Todo
 {
     public class Group
     {
-        public string ID { get; set; }
+        //public string ID { get; set; }
+
+        [JsonIgnore]
+        private string _id;
+        public string id
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_id))
+                {
+                    return _id;
+                }
+                return _id.ToUpper();
+            }
+            set
+            {
+                _id = value.ToUpper();
+            }
+        }
 
         public string Name { get; set; }
 
