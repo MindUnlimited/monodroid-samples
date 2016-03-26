@@ -280,6 +280,24 @@ namespace Cheesesquare
                 var items = await PublicFields.Database.GetItems();
                 var itemsFromGroup = from x in items where x.OwnedBy == boundGroup.id select x;
 
+                var sharedMembers = await PublicFields.Database.MembersOfGroup(boundGroup);
+                if (boundGroup.Name.Contains("+") && sharedMembers.Count == 2)
+                {
+                    if (PublicFields.Database.defGroup.id == sharedMembers[0].id)
+                    {
+                        h.TextView.Text = sharedMembers[1].Name;
+                    }
+                    else
+                    {
+                        h.TextView.Text = sharedMembers[0].Name;
+                    }
+                }
+                else
+                {
+                    h.TextView.Text = boundGroup.Name ?? null;
+                }
+
+                h.AmountOfItems.Text = itemsFromGroup.Count().ToString() + " items";
 
                 if (h.groupMembersLinearLayout.ChildCount > 0)
                     h.groupMembersLinearLayout.RemoveAllViews();
@@ -301,11 +319,6 @@ namespace Cheesesquare
 
                     index++;
                 }
-
-                //h.MembersListView.Adapter = new ArrayAdapter<Group>(fragment.Context, Android.Resource.Layout.SimpleListItem1, groupMembers);
-
-                h.TextView.Text = boundGroup.Name;
-                    h.AmountOfItems.Text = itemsFromGroup.Count().ToString() + " items";
             }
 
             public override int ItemCount

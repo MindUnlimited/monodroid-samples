@@ -99,18 +99,7 @@ namespace Cheesesquare
             txtDate.FocusChange += TxtDate_FocusChange;
 
             shareEditText = FindViewById<EditText>(Resource.Id.user_to_share_name);
-            shareEditText.Click += ShareEditText_Click;
 
-            if (item != null && item.Value.OwnedBy != PublicFields.Database.defGroup.id)
-            {
-                var ownedByGroupTask = PublicFields.Database.GetGroupByID(item.Value.OwnedBy);
-                if (ownedByGroupTask != null)
-                {
-                    Todo.Group ownedByGroup = ownedByGroupTask.Result;
-                    if (shareEditText != null && ownedByGroup != null)
-                        shareEditText.Text = ownedByGroup.Name ?? null;
-                }
-            }
                 
 
             commentText = FindViewById<EditText>(Resource.Id.insert_comment_text);
@@ -269,10 +258,40 @@ namespace Cheesesquare
             StartActivityForResult(intent, ASSIGN_CONTACT);
         }
 
-        protected override void OnStart()
+        protected async override void OnStart()
         {
             base.OnStart();
 
+            shareEditText.Click += ShareEditText_Click;
+
+            if (item != null && item.Value.OwnedBy != PublicFields.Database.defGroup.id)
+            {
+                var ownedByGroup = await PublicFields.Database.GetGroupByID(item.Value.OwnedBy);
+
+                if (ownedByGroup != null)
+                {
+                    if (shareEditText != null && ownedByGroup != null)
+                    {
+                        var sharedMembers = await PublicFields.Database.MembersOfGroup(ownedByGroup);
+                        if (ownedByGroup.Name.Contains("+") && sharedMembers.Count == 2)
+                        {
+                            if (PublicFields.Database.defGroup.id == sharedMembers[0].id)
+                            {
+                                shareEditText.Text = sharedMembers[1].Name;
+                            }
+                            else
+                            {
+                                shareEditText.Text = sharedMembers[0].Name;
+                            }
+                        }
+                        else
+                        {
+                            shareEditText.Text = ownedByGroup.Name ?? null;
+                        }
+
+                    }
+                }
+            }
 
         }
 

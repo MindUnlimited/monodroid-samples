@@ -138,34 +138,39 @@ namespace Cheesesquare
             //shared from other user
             Intent intent = null;
 
-            var itemLink = myItemLinks.FirstOrDefault(x => x.ItemID == itemID);
-            if (itemLink != null) // found the link
-            {
-                Log.Debug("push", string.Format("found itemlink {0}", itemLink.id));
+            //var itemLink = myItemLinks.FirstOrDefault(x => x.ItemID == itemID);
+            //if (itemLink != null) // found the link
+            //{
+            //    Log.Debug("push", string.Format("found itemlink {0}", itemLink.id));
 
-                if (itemLink.Parent != null) // has a place in the tree already
-                {
-                    //Create an intent to show UI
-                    intent = new Intent(this, typeof(CheeseDetailActivity));
-                    intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
-                    intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
-                }
-                else // not assigned yet
-                {
-                    //Create an intent to show the shared items
-                    Log.Debug("push", "found itemlink not regual item");
-                    //intent = new Intent(this, typeof(SharedItemsActivity));
-                    //intent.AddFlags(ActivityFlags.ClearTop);
-                }
-            }
-            else
-            {
-                Log.Debug("push", "found no itemlink");
-                //Create an intent to show UI
-                intent = new Intent(this, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
-                intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
-            }
+            //    if (itemLink.Parent != null) // has a place in the tree already
+            //    {
+            //        //Create an intent to show UI
+            //        intent = new Intent(this, typeof(CheeseDetailActivity));
+            //        intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
+            //        intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+            //    }
+            //    else // not assigned yet
+            //    {
+            //        //Create an intent to show the shared items
+            //        Log.Debug("push", "found itemlink not regual item");
+            //        //intent = new Intent(this, typeof(SharedItemsActivity));
+            //        //intent.AddFlags(ActivityFlags.ClearTop);
+            //    }
+            //}
+            //else
+            //{
+            //    Log.Debug("push", "found no itemlink");
+            //    //Create an intent to show UI
+            //    //intent = new Intent(this, typeof(CheeseDetailActivity));
+            //    //intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
+            //    //intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+            //}
+
+            //Create an intent to show UI
+            intent = new Intent(this, typeof(CheeseDetailActivity));
+            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
+            intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
 
             //Create the notification
             var notification = new Notification(Android.Resource.Drawable.SymActionEmail, title);

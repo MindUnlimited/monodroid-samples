@@ -44,9 +44,10 @@ namespace Cheesesquare
 
         public static async void attachChildren(TreeNode<Item> node, IEnumerable<Item> children = null)
         {
+            PublicFields.UpdateDatabase();
+
             var sharedChildren = await PublicFields.Database.GetItemLinks();
             var sharedChildrenLinks = sharedChildren.Where(it => it.Parent != null && it.Parent == node.Value.id);
-
 
             // retrieve the item from the ItemLink
             List<Item> sharedChildrenItems = new List<Item>();
@@ -65,7 +66,6 @@ namespace Cheesesquare
 
                     sharedChildrenItems.Add(it);
                 }
-
             }
 
             if (children == null)
@@ -591,6 +591,12 @@ namespace Cheesesquare
                         {
                             var test = PublicFields.ItemTree.Descendants().ToList();
                             newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+
+                            if (newItem == null)
+                            {
+                                PublicFields.UpdateDatabase();
+                                PublicFields.MakeTree();
+                            }
                             newItem.Value.id = null;
 
                             await PublicFields.Database.SaveItem(newItem.Value);
@@ -615,6 +621,7 @@ namespace Cheesesquare
                             //domain.Children.Add(newItem);
 
                             //PublicFields.ItemTree.FindAndReplace(tempID, newItem);
+
                         }
 
 
