@@ -57,7 +57,7 @@ namespace Cheesesquare
 
                 if (it == null)
                 {
-                    Log.Error("main", string.Format("itemlink {0} could not retrieve it's item!", l));
+                    Log.Error("main", string.Format("could not retrieve item with item ID: {0}!", l.ItemID));
                 }
                 else
                 {
@@ -594,34 +594,57 @@ namespace Cheesesquare
 
                             if (newItem == null)
                             {
-                                PublicFields.UpdateDatabase();
+                                //PublicFields.UpdateDatabase(); don't want it to push the item with a temporary id
                                 PublicFields.MakeTree();
+
+                                newItem = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
+
+                                // still null
+                                if(newItem == null)
+                                {
+                                    Log.Error("Main", string.Format("can not find the item with id: {0}", itemID));
+                                }
+                                else
+                                {
+                                    newItem.Value.id = null;
+
+                                    await PublicFields.Database.SaveItem(newItem.Value);
+
+                                    itemID = newItem.Value.id; // the newly acquired item id
+
+                                    // check if the subitems of the new card are new as well, if so save them
+                                    for (int i = 0; i < newItem.Children.Count; i++)
+                                    {
+                                        var it = newItem.Children[i];
+                                        it.Value.Parent = itemID; // change the parent id to the new one
+
+                                        if (string.IsNullOrEmpty(it.Value.id))
+                                            await PublicFields.Database.SaveItem(it.Value);
+
+                                        newItem.Children[i] = it; // store with newly acquired id
+                                    }
+                                }
                             }
-                            newItem.Value.id = null;
-
-                            await PublicFields.Database.SaveItem(newItem.Value);
-
-                            itemID = newItem.Value.id; // the newly acquired item id
-
-                            // check if the subitems of the new card are new as well, if so save them
-                            for (int i = 0; i < newItem.Children.Count; i++)
+                            else
                             {
-                                var it = newItem.Children[i];
-                                it.Value.Parent = itemID; // change the parent id to the new one
+                                newItem.Value.id = null;
 
-                                if (string.IsNullOrEmpty(it.Value.id))
-                                    await PublicFields.Database.SaveItem(it.Value);
+                                await PublicFields.Database.SaveItem(newItem.Value);
 
-                                newItem.Children[i] = it; // store with newly acquired id
+                                itemID = newItem.Value.id; // the newly acquired item id
+
+                                // check if the subitems of the new card are new as well, if so save them
+                                for (int i = 0; i < newItem.Children.Count; i++)
+                                {
+                                    var it = newItem.Children[i];
+                                    it.Value.Parent = itemID; // change the parent id to the new one
+
+                                    if (string.IsNullOrEmpty(it.Value.id))
+                                        await PublicFields.Database.SaveItem(it.Value);
+
+                                    newItem.Children[i] = it; // store with newly acquired id
+                                }
                             }
-
-                            //PublicFields.ItemDictionary.Remove("temporaryID");
-                            //PublicFields.ItemDictionary[itemID] = newItem;
-                            //var domain = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == currentDomainFragment.domain.Value.id);
-                            //domain.Children.Add(newItem);
-
-                            //PublicFields.ItemTree.FindAndReplace(tempID, newItem);
-
                         }
 
 

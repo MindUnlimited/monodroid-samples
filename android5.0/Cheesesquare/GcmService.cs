@@ -129,9 +129,10 @@ namespace Cheesesquare
             //Create notification
             var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
 
-            //update db and retrieve item link
-            PublicFields.UpdateDatabase();
-            PublicFields.MakeTree();
+            ////update db and retrieve item link
+            //await PublicFields.Database.SyncAsync();
+            //PublicFields.MakeTree();
+
             var itemLinks = await PublicFields.Database.GetItemLinks();
             var myItemLinks = from itl in itemLinks where itl.OwnedBy == PublicFields.Database.defGroup.id select itl;
 

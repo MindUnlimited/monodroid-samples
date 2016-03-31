@@ -120,10 +120,6 @@ namespace Cheesesquare
             itemChanged = false;
             databaseUpdated = false;
 
-            itemID = Intent.GetStringExtra(ITEM_ID);
-            var test = PublicFields.ItemTree.Descendants();
-            item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
-
             drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout_detail);
 
             var toolbar = FindViewById<V7Toolbar>(Resource.Id.toolbar);
@@ -134,36 +130,13 @@ namespace Cheesesquare
                 setupDrawerContent(navigationView);
 
             userName = navigationView.GetHeaderView(0).FindViewById<TextView>(Resource.Id.username_nav);
-            userName.Text = PublicFields.Database.userName;
 
             SupportActionBar.SetHomeAsUpIndicator(Resource.Drawable.ic_menu);
             SupportActionBar.SetDisplayHomeAsUpEnabled(true);
 
             collapsingToolbar = FindViewById<CollapsingToolbarLayout> (Resource.Id.collapsing_toolbar);
-            collapsingToolbar.SetTitle (item.Value.Name);
 
             txtDate = FindViewById<TextView>(Resource.Id.txtdate);
-            if (item.Value.EndDate != null)
-            {
-                //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
-                //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-                try
-                {
-                    long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
-                    new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
-
-                    if (timeInMilliseconds >= 0)
-                        txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
-                }
-                catch (ParseException e)
-                {
-                    e.PrintStackTrace();
-                }
-            }
-            else
-            {
-                txtDate.Text = "No due date";
-            }
 
             progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
@@ -171,19 +144,8 @@ namespace Cheesesquare
 
             importance = FindViewById<RatingBar>(Resource.Id.ratingbar);
             importance.RatingBarChange += Importance_RatingBarChange;
-            importance.Rating = item.Value.Importance;
 
             comment = FindViewById<TextView>(Resource.Id.comment_text);
-            if (string.IsNullOrEmpty(item.Value.Notes))
-            {
-                comment.Text = "No notes";
-            }
-            else
-            {
-                comment.Text = item.Value.Notes;
-            }
-
-
 
             statusIcon = FindViewById<ImageView>(Resource.Id.status_icon);
             status = FindViewById<TextView>(Resource.Id.status_text);
@@ -195,31 +157,6 @@ namespace Cheesesquare
             //statusIcon.Click += statusClick;
             //status.Click += statusClick;
 
-            switch (item.Value.Status)
-            {
-                case -1:
-                    status.Text = "Cancelled";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
-                    break;
-                case 0:
-                    status.Text = "Backlog";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
-                    break;
-                case 6:
-                    status.Text = "On Hold";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
-                    break;
-                case 7:
-                    status.Text = "Completed";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
-                    break;
-                default:
-                    status.Text = "Started";
-                    statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
-                    break;
-
-            }
-
             editFAB = FindViewById<FloatingActionButton>(Resource.Id.edit_fab);
             editFAB.Click += EditFAB_Click;
 
@@ -227,9 +164,6 @@ namespace Cheesesquare
             addItemFAB.Click += AddItemFAB_Click;
 
             viewPager = FindViewById<WrapContentHeightViewPager>(Resource.Id.viewpager_cards_detail);
-            setupViewPager(viewPager);
-
-            loadBackdrop();
         }
 
         private void statusClick(object sender, EventArgs e)
@@ -676,43 +610,93 @@ Intent intent)
         protected override void OnStart()
         {
             base.OnStart();
-            //txtDate = (TextView)FindViewById(Resource.Id.txtdate);
 
+            itemID = Intent.GetStringExtra(ITEM_ID);
+            item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
 
-            //-1: Abandoned(Cancelled)
-            //0: Backlog(Conceived = voor inbox, cq mind sweep)
-            //1: Planned
-            //Skip        2: Initiated
-            //Skip        3: < 25 % completed
-            //4: In progress (< 50 %)
-            //Skip        5: < 75 %
-            //6: On hold / Blocked
-            //7: Completed
+            if (item == null || item.Value == null)
+            {
+                RunOnUiThread(
+                    () =>
+                    {
+                        new Android.Support.V7.App.AlertDialog.Builder(this)
+                        .SetMessage("The item could not be found")
+                        .SetCancelable(false)
+                        .SetPositiveButton("OK", delegate
+                        {
+                            Finish();
+                        })
+                        .Show();
+                    }
+                );
+            }
+            else
+            {
+                userName.Text = PublicFields.Database.userName;
+                collapsingToolbar.SetTitle(item.Value.Name);
 
-            //switch (item.Value.Status)
-            //{
-            //    case -1:
-            //        status.Text = "Cancelled";
-            //        statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
-            //        break;
-            //    case 0:
-            //        status.Text = "Backlog";
-            //        statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
-            //        break;
-            //    case 6:
-            //        status.Text = "On Hold";
-            //        statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
-            //        break;
-            //    case 7:
-            //        status.Text = "Completed";
-            //        statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
-            //        break;
-            //    default:
-            //        status.Text = "Started";
-            //        statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
-            //        break;
+                importance.Rating = item.Value.Importance;
 
-            //}
+                if (item.Value.EndDate != null)
+                {
+                    //String givenDateString = "Tue Apr 23 16:08:28 GMT+05:30 2013";
+                    //SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");//new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+                    try
+                    {
+                        long timeInMilliseconds = (long)(TimeZoneInfo.ConvertTimeToUtc(item.Value.EndDate) -
+                        new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
+
+                        if (timeInMilliseconds >= 0)
+                            txtDate.Text = DateUtils.GetRelativeTimeSpanString(Application.Context, timeInMilliseconds);
+                    }
+                    catch (ParseException e)
+                    {
+                        e.PrintStackTrace();
+                    }
+                }
+                else
+                {
+                    txtDate.Text = "No due date";
+                }
+
+                if (string.IsNullOrEmpty(item.Value.Notes))
+                {
+                    comment.Text = "No notes";
+                }
+                else
+                {
+                    comment.Text = item.Value.Notes;
+                }
+
+                switch (item.Value.Status)
+                {
+                    case -1:
+                        status.Text = "Cancelled";
+                        statusIcon.SetImageResource(Resource.Drawable.ic_clear_black_24dp);
+                        break;
+                    case 0:
+                        status.Text = "Backlog";
+                        statusIcon.SetImageResource(Resource.Drawable.ic_inbox_black_24dp);
+                        break;
+                    case 6:
+                        status.Text = "On Hold";
+                        statusIcon.SetImageResource(Resource.Drawable.ic_block_black_24dp);
+                        break;
+                    case 7:
+                        status.Text = "Completed";
+                        statusIcon.SetImageResource(Resource.Drawable.ic_check_black_24dp);
+                        break;
+                    default:
+                        status.Text = "Started";
+                        statusIcon.SetImageResource(Resource.Drawable.ic_play_arrow_black_24dp);
+                        break;
+
+                }
+
+                setupViewPager(viewPager);
+
+                loadBackdrop();
+            }
         }
 
         public override void Finish()
@@ -735,9 +719,6 @@ Intent intent)
 
             if (item.Value.ImagePath != null)
             {
-                //Bitmap bmImg = BitmapFactory.DecodeFile(item.Value.ImagePath);
-                //imageView.SetImageBitmap(bmImg);
-
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.InJustDecodeBounds = true;
                 BitmapFactory.DecodeFile(item.Value.ImagePath, options);
@@ -748,8 +729,6 @@ Intent intent)
                 var sampledBitmap = PublicFields.DecodeSampledBitmapFromFile(item.Value.ImagePath, 500, 500);
 
                 imageView.SetImageBitmap(sampledBitmap);
-
-                //imageView.SetImageURI(item.Value.ImageUri);
             } 
             else
             {

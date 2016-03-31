@@ -514,13 +514,12 @@ namespace Cheesesquare
                 {
                     Log.Debug("DB", "Device not yet in db adding field");
                     await deviceTable.InsertAsync(device);
+                    await client.SyncContext.PushAsync();
                 }
                 else
                 {
                     Log.Error("DB", "Something went wrong, multiple devices in db with the same machine id and owner");
                 }
-
-                await client.SyncContext.PushAsync();
             }
             catch (Exception e)
             {
