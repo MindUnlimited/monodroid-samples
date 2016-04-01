@@ -164,6 +164,8 @@ namespace Cheesesquare
             addItemFAB.Click += AddItemFAB_Click;
 
             viewPager = FindViewById<WrapContentHeightViewPager>(Resource.Id.viewpager_cards_detail);
+
+            loadBackdrop();
         }
 
         private void statusClick(object sender, EventArgs e)
@@ -285,17 +287,36 @@ Intent intent)
                             Android.Net.Uri uri = intent.Data;
                             string ItemID = intent.GetStringExtra(CheeseDetailActivity.ITEM_ID);
                             string path = intent.GetStringExtra("path");
+                            int resourceID = intent.GetIntExtra("resourceID", 0);
+                            int resourceBackdropID = intent.GetIntExtra("resourceBackdropID", 0);
 
-                            int index = viewPager.CurrentItem;
-                            var adapter = (MyAdapter)viewPager.Adapter;
-                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
-                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+                            if (resourceID != 0)
+                            {
+                                int index = viewPager.CurrentItem;
+                                var adapter = (MyAdapter)viewPager.Adapter;
+                                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
-                            item.Value.ImagePath = path;
+                                var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+                                item.Value.ImageResource = resourceID;
+                                item.Value.ImageResourceBackdrop = resourceBackdropID;
 
-                            fragmentAdapter.UpdateValue(item);
-                            fragmentAdapter.ApplyChanges();
+                                fragmentAdapter.UpdateValue(item);
+                                fragmentAdapter.ApplyChanges();
+                            }
+                            else
+                            {
+                                int index = viewPager.CurrentItem;
+                                var adapter = (MyAdapter)viewPager.Adapter;
+                                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                                var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+                                item.Value.ImagePath = path;
+
+                                fragmentAdapter.UpdateValue(item);
+                                fragmentAdapter.ApplyChanges();
+                            }
                         }
                         break;
                     case
@@ -695,7 +716,7 @@ Intent intent)
 
                 setupViewPager(viewPager);
 
-                loadBackdrop();
+                
             }
         }
 
@@ -717,6 +738,8 @@ Intent intent)
         {            
             var imageView = FindViewById<ImageView> (Resource.Id.backdrop);
 
+            itemID = Intent.GetStringExtra(ITEM_ID);
+            item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == itemID);
             if (item.Value.ImagePath != null)
             {
                 BitmapFactory.Options options = new BitmapFactory.Options();
@@ -729,11 +752,15 @@ Intent intent)
                 var sampledBitmap = PublicFields.DecodeSampledBitmapFromFile(item.Value.ImagePath, 500, 500);
 
                 imageView.SetImageBitmap(sampledBitmap);
-            } 
+            }
+            else if (item.Value.ImageResourceBackdrop != 0)
+            {
+                imageView.SetImageResource(item.Value.ImageResourceBackdrop);
+            }
             else
             {
-                var r = Cheeses.GetRandomCheeseBackground();
-                imageView.SetImageResource(r);
+                //var r = Cheeses.GetRandomCheeseBackground();
+                //imageView.SetImageResource(r);
             }
         }
     }

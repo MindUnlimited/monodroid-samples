@@ -29,5 +29,7 @@
   <string name="refresh">Refresh Items</string>
   <string name="done">Accept</string>
   <string name="clear">Clear</string>
+  <string name="camera">Camera</string>
+  <string name="gallery">Gallery</string>
 
 </resources>

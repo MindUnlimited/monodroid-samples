@@ -449,10 +449,15 @@ namespace Cheesesquare
 
                 var context = fragment.Context;
 
-                var intentAbstraction = new Intent(parent, typeof(PickImageActivity));
-                intentAbstraction.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
+                //var intentAbstraction = new Intent(parent, typeof(PickImageActivity));
+                //intentAbstraction.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
 
-                parent.StartActivityForResult(intentAbstraction, PICKIMAGE);
+                //parent.StartActivityForResult(intentAbstraction, PICKIMAGE);
+
+                var intent = new Intent(parent, typeof(SelectImageActivity));
+                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
+
+                parent.StartActivityForResult(intent, PICKIMAGE);
             }
 
             public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
@@ -643,6 +648,10 @@ namespace Cheesesquare
 
                     h.ImageView.SetImageBitmap(sampledBitmap);
                     //h.ImageView.SetImageURI(item.Value.ImageUri);
+                }
+                else if(item.Value.ImageResource != 0)
+                {
+                    h.ImageView.SetImageResource(item.Value.ImageResource);
                 }
                 else
                 {

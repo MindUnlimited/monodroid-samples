@@ -1129,9 +1129,6 @@ namespace Cheesesquare
                         // else email them?
                     }
                 }
-
-
-                //await client.SyncContext.PushAsync();
             }
             catch (Exception e)
             {

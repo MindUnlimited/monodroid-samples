@@ -63,6 +63,42 @@ namespace Todo
             }
         }
 
+        [JsonIgnore]
+        private int _imageResource;
+
+        [JsonIgnore]
+        public int ImageResource
+        {
+            get { return _imageResource; }
+            set
+            {
+                // OnPropertyChanged should not be called if the property value
+                // does not change.
+                if (_imageResource == value)
+                    return;
+                _imageResource = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonIgnore]
+        private int _imageResourceBackdrop;
+
+        [JsonIgnore]
+        public int ImageResourceBackdrop
+        {
+            get { return _imageResourceBackdrop; }
+            set
+            {
+                // OnPropertyChanged should not be called if the property value
+                // does not change.
+                if (_imageResourceBackdrop == value)
+                    return;
+                _imageResourceBackdrop = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         [JsonIgnore]
         private String _ownedby;

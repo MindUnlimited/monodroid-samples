@@ -521,20 +521,42 @@ namespace Cheesesquare
                     case PICKIMAGE:
                         if (intent != null)
                         {
+
+                            
+
                             Android.Net.Uri uri = intent.Data;
                             string ItemID = intent.GetStringExtra(CheeseDetailActivity.ITEM_ID);
                             string path = intent.GetStringExtra("path");
+                            int resourceID = intent.GetIntExtra("resourceID", 0);
+                            int resourceBackdropID = intent.GetIntExtra("resourceBackdropID", 0);
 
-                            int index = viewPager.CurrentItem;
-                            var adapter = (MyAdapter)viewPager.Adapter;
-                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
-                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+                            if (resourceID != 0)
+                            {
+                                int index = viewPager.CurrentItem;
+                                var adapter = (MyAdapter)viewPager.Adapter;
+                                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
-                            var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
-                            item.Value.ImagePath = path;
+                                var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+                                item.Value.ImageResource = resourceID;
+                                item.Value.ImageResourceBackdrop = resourceBackdropID;
 
-                            fragmentAdapter.UpdateValue(item);
-                            fragmentAdapter.ApplyChanges();
+                                fragmentAdapter.UpdateValue(item);
+                                fragmentAdapter.ApplyChanges();
+                            }
+                            else
+                            {
+                                int index = viewPager.CurrentItem;
+                                var adapter = (MyAdapter)viewPager.Adapter;
+                                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+
+                                var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
+                                item.Value.ImagePath = path;
+
+                                fragmentAdapter.UpdateValue(item);
+                                fragmentAdapter.ApplyChanges();
+                            }
                         }
                         break;
                     case
