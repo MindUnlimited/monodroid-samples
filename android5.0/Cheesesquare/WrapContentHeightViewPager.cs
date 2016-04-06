@@ -17,11 +17,20 @@ namespace Cheesesquare
     [Register("com.sample.cheesesquare.WrapContentHeightViewPager")]
     public class WrapContentHeightViewPager : ViewPager
     {
+        private DisplayMetrics metrics;
+        private IWindowManager windowManager;
+
         public WrapContentHeightViewPager(Context context) : base(context)
         {
+            metrics = new DisplayMetrics();
+            windowManager = Context.GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
+            windowManager.DefaultDisplay.GetMetrics(metrics);
         }
         public WrapContentHeightViewPager(Context context, IAttributeSet attrs) : base(context, attrs)
         {
+            metrics = new DisplayMetrics();
+            windowManager = Context.GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
+            windowManager.DefaultDisplay.GetMetrics(metrics);
         }
 
         protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
@@ -36,8 +45,6 @@ namespace Cheesesquare
 
                 if (h > height) height = h;
             }
-
-            height += 666;
 
             heightMeasureSpec = MeasureSpec.MakeMeasureSpec(height, MeasureSpecMode.Exactly);
 

@@ -30,9 +30,9 @@ namespace Cheesesquare
 {
     public class DataObserver : RecyclerView.AdapterDataObserver
     {
-        private CheeseDetailActivity detailActivity;
+        private DetailActivity detailActivity;
 
-        public DataObserver(CheeseDetailActivity activity) : base()
+        public DataObserver(DetailActivity activity) : base()
         {
             detailActivity = activity;
         }
@@ -43,32 +43,11 @@ namespace Cheesesquare
             detailActivity.itemChanged = true;
             //CheckAdapterIsEmpty();
         }
-        //public override void OnItemRangeChanged(int positionStart, int itemCount)
-        //{
-
-        //}
-
-        //public override void OnItemRangeChanged(int positionStart, int itemCount, Java.Lang.Object payload)
-        //{
-
-        //}
-        //public override void OnItemRangeInserted(int positionStart, int itemCount)
-        //{
-
-        //}
-        //public override void OnItemRangeMoved(int fromPosition, int toPosition, int itemCount)
-        //{
-
-        //}
-        //public override void OnItemRangeRemoved(int positionStart, int itemCount)
-        //{
-
-        //}
     }
 
     [Activity (Label="Details", ScreenOrientation = ScreenOrientation.Portrait)]
     [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.cheesesquare.MainActivity")]
-    public class CheeseDetailActivity : AppCompatActivity
+    public class DetailActivity : AppCompatActivity
     {
         public const string EXTRA_NAME = "item_name";
         public const string ITEM_ID = "item_id";
@@ -77,7 +56,7 @@ namespace Cheesesquare
         private const int EDIT_ITEM = 104;
         private const int PICKIMAGE = 105;
 
-        private const string TAG = "CheeseActivity";
+        private const string TAG = "DetailActivity";
 
         //bool editmode;
 
@@ -264,7 +243,7 @@ namespace Cheesesquare
             var adapter = new MyAdapter(SupportFragmentManager);
 
             //adapter.AddFragment(new CheeseListFragmentDetail(item, dataObserver), item.Value.Name);
-            adapter.AddFragment(new CheeseListFragmentDetail(item), item.Value.Name);
+            adapter.AddFragment(new ListFragmentDetail(item), item.Value.Name);
             viewPager.Adapter = adapter;
         }
 
@@ -285,7 +264,7 @@ Intent intent)
                         if (intent != null)
                         {
                             Android.Net.Uri uri = intent.Data;
-                            string ItemID = intent.GetStringExtra(CheeseDetailActivity.ITEM_ID);
+                            string ItemID = intent.GetStringExtra(DetailActivity.ITEM_ID);
                             string path = intent.GetStringExtra("path");
                             int resourceID = intent.GetIntExtra("resourceID", 0);
                             int resourceBackdropID = intent.GetIntExtra("resourceBackdropID", 0);
@@ -294,7 +273,7 @@ Intent intent)
                             {
                                 int index = viewPager.CurrentItem;
                                 var adapter = (MyAdapter)viewPager.Adapter;
-                                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                                var currentFragment = (ListFragment)adapter.GetItem(index);
                                 var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
                                 var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
@@ -308,7 +287,7 @@ Intent intent)
                             {
                                 int index = viewPager.CurrentItem;
                                 var adapter = (MyAdapter)viewPager.Adapter;
-                                var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                                var currentFragment = (ListFragment)adapter.GetItem(index);
                                 var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
                                 var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
@@ -327,7 +306,7 @@ Intent intent)
                             Log.Debug("MainActivity", "Item changed");
                             int index = viewPager.CurrentItem;
                             var adapter = (MyAdapter)viewPager.Adapter;
-                            var currentFragment = (CheeseListFragment)adapter.GetItem(index);
+                            var currentFragment = (ListFragment)adapter.GetItem(index);
                             var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
 
@@ -487,19 +466,20 @@ Intent intent)
         void setupDrawerContent(NavigationView navigationView)
         {
             navigationView.NavigationItemSelected += (sender, e) => {
+                Intent intent;
                 switch (e.MenuItem.ItemId)
                 {
                     case Resource.Id.nav_home:
-                        //Intent intent = new Intent(this, typeof(MainActivity));
-                        //intent.AddFlags(ActivityFlags.ClearTop);
-                        //StartActivity(intent);
+                        intent = new Intent(this, typeof(MainActivity));
+                        intent.AddFlags(ActivityFlags.ClearTop);
+                        StartActivity(intent);
                         //NavigateUpTo(ParentActivityIntent);
                         drawerLayout.CloseDrawers();
                         Finish();
                         //NavUtils.NavigateUpFromSameTask(this);
                         break;
                     case Resource.Id.shared_items:
-                        Intent intent = new Intent(this, typeof(SharedItemsActivity));
+                        intent = new Intent(this, typeof(SharedItemsActivity));
                         intent.AddFlags(ActivityFlags.ClearTop);
                         drawerLayout.CloseDrawers();
                         StartActivity(intent);

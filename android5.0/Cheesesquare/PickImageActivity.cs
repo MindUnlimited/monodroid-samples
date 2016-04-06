@@ -126,7 +126,7 @@ namespace Cheesesquare
             base.OnCreate(savedInstanceState);
 
             // Create your application here
-            ItemID = Intent.GetStringExtra(CheeseDetailActivity.ITEM_ID);
+            ItemID = Intent.GetStringExtra(DetailActivity.ITEM_ID);
 
             openImageIntent();
 
@@ -220,7 +220,7 @@ namespace Cheesesquare
                         myIntent.SetData(selectedImageUri);
 
                         myIntent.PutExtra("path", path);
-                        myIntent.PutExtra(CheeseDetailActivity.ITEM_ID, ItemID);
+                        myIntent.PutExtra(DetailActivity.ITEM_ID, ItemID);
 
                         SetResult(Result.Ok, myIntent);
                         Finish();

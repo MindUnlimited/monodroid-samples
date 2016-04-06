@@ -19,13 +19,13 @@ using Android.Support.V4.View;
 
 namespace Cheesesquare
 {
-    public class CheeseListFragmentDetail : CheeseListFragment
+    public class ListFragmentDetail : ListFragment
     {
-        public CheeseListFragmentDetail(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver) : base(dom, DataObserver)
+        public ListFragmentDetail(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver) : base(dom, DataObserver)
         {
         }
 
-        public CheeseListFragmentDetail(Todo.TreeNode<Todo.Item> dom) : base(dom)
+        public ListFragmentDetail(Todo.TreeNode<Todo.Item> dom) : base(dom)
         {
         }
 
@@ -36,11 +36,10 @@ namespace Cheesesquare
             var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
 
             setupRecyclerView(rv);
-            
-            rv.SetLayoutManager(new RecyclerViewLinearLayoutManager(Context));
+
+            //rv.SetLayoutManager(new RecyclerViewLinearLayoutManager(Context));
             rv.NestedScrollingEnabled = false;
             rv.HasFixedSize = false;
-
 
             return rv;
         }

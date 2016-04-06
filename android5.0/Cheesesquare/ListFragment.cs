@@ -76,7 +76,7 @@ namespace Cheesesquare
         //}
     }
 
-    public class CheeseListFragment : Android.Support.V4.App.Fragment
+    public class ListFragment : Android.Support.V4.App.Fragment
     {
         public Todo.TreeNode<Todo.Item> domain;
 
@@ -86,13 +86,13 @@ namespace Cheesesquare
         public const int PICKIMAGE = 105;
         RecyclerView.AdapterDataObserver dataObserver;
 
-        public CheeseListFragment(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver)
+        public ListFragment(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver)
         {
             domain = dom;
             dataObserver = DataObserver;
         }
 
-        public CheeseListFragment(Todo.TreeNode<Todo.Item> dom)
+        public ListFragment(Todo.TreeNode<Todo.Item> dom)
         {
             domain = dom;
         }
@@ -103,6 +103,7 @@ namespace Cheesesquare
                 Resource.Layout.fragment_cheese_list, container, false);
             var rv = (ScrollForwardingRecyclerView)v;//v.JavaCast<ScrollForwardingRecyclerView>();
 
+
             setupRecyclerView(rv);
             return rv;
         }
@@ -112,6 +113,17 @@ namespace Cheesesquare
         protected void setupRecyclerView(RecyclerView recyclerView)
         {
             recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
+
+            // provide 16dp of padding at the top of the list, 100 dp at the bottom
+            DisplayMetrics metrics = new DisplayMetrics();
+            IWindowManager windowManager = Context.GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
+            windowManager.DefaultDisplay.GetMetrics(metrics);
+
+            int sixteenDPTop = (int)Math.Ceiling( 16 * metrics.Density);
+            int hundredDPBottom = (int)Math.Ceiling(100 * metrics.Density);
+            recyclerView.SetClipToPadding(false);
+            recyclerView.SetPadding(0, sixteenDPTop, 0, hundredDPBottom);
+
 
             itemRecyclerViewAdapter = new ItemRecyclerViewAdapter(Activity, domain.Children, this);
             recyclerView.SetAdapter(itemRecyclerViewAdapter);
@@ -133,7 +145,7 @@ namespace Cheesesquare
         {
             protected Todo.TreeNodeList<Todo.Item> items;
             protected Android.App.Activity parent;
-            protected CheeseListFragment fragment;
+            protected ListFragment fragment;
 
             //Create an Event so that our our clients can act when a user clicks
             //on each individual item.
@@ -308,7 +320,7 @@ namespace Cheesesquare
             }
 
 
-            public ItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, CheeseListFragment fragm)
+            public ItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, ListFragment fragm)
             {
                 parent = context;
                 fragment = fragm;
@@ -435,9 +447,9 @@ namespace Cheesesquare
                 var item = adapter.GetValueAt(e);
 
                 var context = fragment.Context;//h.View.Context;
-                var intent = new Intent(context, typeof(CheeseDetailActivity));
-                intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, item.Value.Name);
-                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
+                var intent = new Intent(context, typeof(DetailActivity));
+                intent.PutExtra(DetailActivity.EXTRA_NAME, item.Value.Name);
+                intent.PutExtra(DetailActivity.ITEM_ID, item.Value.id);
                 parent.StartActivityForResult(intent, ITEMDETAIL);
                 //context.StartActivity(intent);
             }
@@ -455,7 +467,7 @@ namespace Cheesesquare
                 //parent.StartActivityForResult(intentAbstraction, PICKIMAGE);
 
                 var intent = new Intent(parent, typeof(SelectImageActivity));
-                intent.PutExtra(CheeseDetailActivity.ITEM_ID, item.Value.id);
+                intent.PutExtra(DetailActivity.ITEM_ID, item.Value.id);
 
                 parent.StartActivityForResult(intent, PICKIMAGE);
             }
@@ -576,9 +588,9 @@ namespace Cheesesquare
                         {
                             Log.Debug("ListFragment", subtaskName.Text + " was clicked");
                             var context = h.View.Context;
-                            var intent = new Intent(context, typeof(CheeseDetailActivity));
-                            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
-                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.Value.id);
+                            var intent = new Intent(context, typeof(DetailActivity));
+                            intent.PutExtra(DetailActivity.EXTRA_NAME, subtaskName.Text);
+                            intent.PutExtra(DetailActivity.ITEM_ID, subitem.Value.id);
 
                             parent.StartActivityForResult(intent, ITEMDETAIL);
                             //context.StartActivityForResult(intent);
@@ -651,11 +663,52 @@ namespace Cheesesquare
                 }
                 else if(item.Value.ImageResource != 0)
                 {
+                    //h.ImageView.LayoutParameters = new GridView.LayoutParams(80, 80);
+                    //h.ImageView.SetScaleType(ImageView.ScaleType.CenterCrop);
+
                     h.ImageView.SetImageResource(item.Value.ImageResource);
                 }
                 else
                 {
-                    h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
+                    //h.ImageView.LayoutParameters = new GridView.LayoutParams(80, 80);
+                    //h.ImageView.SetScaleType(ImageView.ScaleType.CenterCrop);
+
+                    switch (item.Value.Type)
+                    {
+                        case 1:
+                            //domain
+                            break;
+                        case 2:
+                            // goal
+                            h.ImageView.SetImageResource(Resource.Drawable.Goal256);
+
+                            item.Value.ImageResource = Resource.Drawable.Goal256;
+                            item.Value.ImageResourceBackdrop = Resource.Drawable.Goal1024;
+                            break;
+                        case 3:
+                            // project
+                            h.ImageView.SetImageResource(Resource.Drawable.Project256);
+
+                            item.Value.ImageResource = Resource.Drawable.Project256;
+                            item.Value.ImageResourceBackdrop = Resource.Drawable.Project1024;
+                            break;
+                        case 4:
+                            // task
+                            h.ImageView.SetImageResource(Resource.Drawable.Task256);
+
+                            item.Value.ImageResource = Resource.Drawable.Task256;
+                            item.Value.ImageResourceBackdrop = Resource.Drawable.Task1024;
+                            break;
+                        default:
+                            // handled same as task
+                            h.ImageView.SetImageResource(Resource.Drawable.Task256);
+
+                            item.Value.ImageResource = Resource.Drawable.Task256;
+                            item.Value.ImageResourceBackdrop = Resource.Drawable.Task1024;
+                            break;
+                    }
+
+                    //h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
                 }
             } 
 

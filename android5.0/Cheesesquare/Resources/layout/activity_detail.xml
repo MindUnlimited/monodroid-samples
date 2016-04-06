@@ -190,8 +190,8 @@
 
               <ImageView
                 android:id="@+id/date_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@drawable/ic_event"
                 android:layout_alignParentLeft="true"
                 android:layout_alignBottom="@+id/txtdate"/>
@@ -227,8 +227,8 @@
 
               <ImageView
                 android:id="@+id/comment_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@drawable/ic_insert_comment_black_24dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignBottom="@+id/comment_text"/>
@@ -253,8 +253,8 @@
 
               <ImageView
                 android:id="@+id/status_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:src="@drawable/ic_insert_comment_black_24dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignBottom="@+id/status_text"/>
@@ -302,7 +302,7 @@
       android:layout_height="wrap_content"
       android:src="@drawable/ic_add_white_24dp"
       android:layout_margin="@dimen/fab_margin"
-      app:layout_anchor="@id/main_content"
+      app:layout_anchor="@id/nestedscrollview"
       app:layout_anchorGravity="bottom|right|end"
       android:clickable="true"/>
 

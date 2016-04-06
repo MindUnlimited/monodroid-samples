@@ -20,16 +20,16 @@ using Todo;
 
 namespace Cheesesquare
 {
-    public class CheeseListFragmentSharedItems : CheeseListFragment
+    public class ListFragmentSharedItems : ListFragment
     {
         public SharedItemRecyclerViewAdapter sharedItemRecyclerViewAdapter;
         RecyclerView.AdapterDataObserver dataObserver;
 
-        public CheeseListFragmentSharedItems(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver) : base(dom, DataObserver)
+        public ListFragmentSharedItems(Todo.TreeNode<Todo.Item> dom, RecyclerView.AdapterDataObserver DataObserver) : base(dom, DataObserver)
         {
         }
 
-        public CheeseListFragmentSharedItems(Todo.TreeNode<Todo.Item> dom) : base(dom)
+        public ListFragmentSharedItems(Todo.TreeNode<Todo.Item> dom) : base(dom)
         {
         }
 
@@ -57,7 +57,7 @@ namespace Cheesesquare
         {
             private Todo.TreeNodeList<Todo.Item> items;
             protected Android.App.Activity parent;
-            private CheeseListFragment fragment;
+            private ListFragment fragment;
 
             //Create an Event so that our our clients can act when a user clicks
             //on each individual item.
@@ -175,7 +175,7 @@ namespace Cheesesquare
             }
 
 
-            public SharedItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, CheeseListFragment fragm)
+            public SharedItemRecyclerViewAdapter(Android.App.Activity context, Todo.TreeNodeList<Todo.Item> items, ListFragment fragm)
             {
                 parent = context;
                 fragment = fragm;
@@ -421,9 +421,9 @@ namespace Cheesesquare
                         {
                             Log.Debug("ListFragment", subtaskName.Text + " was clicked");
                             var context = h.View.Context;
-                            var intent = new Intent(context, typeof(CheeseDetailActivity));
-                            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, subtaskName.Text);
-                            intent.PutExtra(CheeseDetailActivity.ITEM_ID, subitem.Value.id);
+                            var intent = new Intent(context, typeof(DetailActivity));
+                            intent.PutExtra(DetailActivity.EXTRA_NAME, subtaskName.Text);
+                            intent.PutExtra(DetailActivity.ITEM_ID, subitem.Value.id);
 
                             parent.StartActivityForResult(intent, ITEMDETAIL);
                             //context.StartActivityForResult(intent);

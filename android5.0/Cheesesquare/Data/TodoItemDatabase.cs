@@ -921,7 +921,7 @@ namespace Cheesesquare
         {
             try
             {
-                await SyncAsync();
+                //await SyncAsync();
 
                 var usr = client.CurrentUser;
                 JObject userObject = (JObject) await client.InvokeApiAsync("userInfo", HttpMethod.Get, null);
@@ -1046,7 +1046,7 @@ namespace Cheesesquare
                         Debugger.Break();
                     }
 
-                    await SyncAsync(); // offline sync
+                    //await SyncAsync(); // offline sync
                     //adapter.Clear();
                 }
 

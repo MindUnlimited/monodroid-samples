@@ -74,10 +74,10 @@ namespace Cheesesquare
             Todo.TreeNode<Todo.Item> root = new TreeNode<Item>(null);
             root.Children.AddRange(sharedItemsTreeNode);
 
-            var adapter = new CheeseDetailActivity.MyAdapter(SupportFragmentManager);
+            var adapter = new DetailActivity.MyAdapter(SupportFragmentManager);
 
             //adapter.AddFragment(new CheeseListFragmentDetail(item, dataObserver), item.Value.Name);
-            adapter.AddFragment(new CheeseListFragmentSharedItems(root), "Shared Items");
+            adapter.AddFragment(new ListFragmentSharedItems(root), "Shared Items");
             viewPager.Adapter = adapter;
 
             navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_shared);

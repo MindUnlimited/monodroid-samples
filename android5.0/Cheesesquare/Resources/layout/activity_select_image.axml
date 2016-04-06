@@ -20,8 +20,10 @@
     </android.support.design.widget.AppBarLayout>
     <GridView
         android:id="@+id/gridview"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:paddingTop="5dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:columnWidth="90dp"
         android:numColumns="auto_fit"
         android:verticalSpacing="10dp"

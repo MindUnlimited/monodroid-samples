@@ -39,6 +39,14 @@ namespace Cheesesquare
 
             if (providerIntent != null)
             {
+                SetContentView(Resource.Layout.activity_login);
+                facebookButton = FindViewById<Button>(Resource.Id.facebook_button);
+                facebookButton.Visibility = ViewStates.Invisible;
+                googleButton = FindViewById<Button>(Resource.Id.google_button);
+                googleButton.Visibility = ViewStates.Invisible;
+                microsoftButton = FindViewById<Button>(Resource.Id.microsoft_button);
+                microsoftButton.Visibility = ViewStates.Invisible;
+
                 provider = JsonConvert.DeserializeObject<MobileServiceAuthenticationProvider>(providerIntent);
                 if (providerIntent != null)
                 {
@@ -210,8 +218,7 @@ namespace Cheesesquare
 
                 await PublicFields.Database.InitLocalStoreAsync();
                 await PublicFields.Database.newUser(PublicFields.Database.mobileServiceUser.UserId, provider);
-                await PublicFields.Database.SyncAsync(); // pull database tables
-
+                PublicFields.Database.SyncAsync();
 
                 var parameters = new Dictionary<string, string>
                 {

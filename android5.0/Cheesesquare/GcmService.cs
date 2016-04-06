@@ -123,8 +123,8 @@ namespace Cheesesquare
         public async void createNotification(string title, string desc, Dictionary<string,string> descDictionary)
         {
             //item_ownedby
-            var name = descDictionary[CheeseDetailActivity.EXTRA_NAME];
-            var itemID = descDictionary[CheeseDetailActivity.ITEM_ID];
+            var name = descDictionary[DetailActivity.EXTRA_NAME];
+            var itemID = descDictionary[DetailActivity.ITEM_ID];
 
             //Create notification
             var notificationManager = GetSystemService(Context.NotificationService) as NotificationManager;
@@ -169,9 +169,9 @@ namespace Cheesesquare
             //}
 
             //Create an intent to show UI
-            intent = new Intent(this, typeof(CheeseDetailActivity));
-            intent.PutExtra(CheeseDetailActivity.EXTRA_NAME, name);
-            intent.PutExtra(CheeseDetailActivity.ITEM_ID, itemID);
+            intent = new Intent(this, typeof(DetailActivity));
+            intent.PutExtra(DetailActivity.EXTRA_NAME, name);
+            intent.PutExtra(DetailActivity.ITEM_ID, itemID);
 
             //Create the notification
             var notification = new Notification(Android.Resource.Drawable.SymActionEmail, title);
