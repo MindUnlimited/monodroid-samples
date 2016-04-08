@@ -170,7 +170,7 @@ namespace Cheesesquare
     //    }
     //}
 
-    [Activity(Label = "SelectContactsActivity")]
+    [Activity(Label = "Select a person or group")]
     public class SelectContactsActivity : AppCompatActivity
     {
         private RecyclerView contactsRecyclerView;
@@ -592,26 +592,7 @@ Intent intent)
             var roundedThumbBitmap = RoundedBitmapDrawableFactory.Create(Application.Context.Resources, contact.Thumbnail);
             roundedThumbBitmap.Circular = true;
             h.ImageView.SetImageDrawable(roundedThumbBitmap);
-
-            //h.View.Click += View_Click;
-
-            //h.View.Click += (sender, e) =>
-            //{
-            //    Log.Debug("SelectContactsActivity", contact.ToString());
-            //    h.View.SetBackgroundColor(Color.Aqua);
-            //};
         }
-
-        //private void View_Click(object sender, EventArgs e)
-        //{
-        //    var view = sender as View;
-
-        //    int position = _recyclerview.GetChildLayoutPosition(view);
-        //    var contact = GetValueAt(position);
-        //    Log.Debug("SelectContactsActivity", contact.ToString());
-
-        //    //view.SetBackgroundColor(Color.AliceBlue);
-        //}
 
         public override RecyclerView.ViewHolder OnCreateViewHolder(ViewGroup parent, int viewType)
         {

@@ -256,7 +256,11 @@ Intent intent)
             if (resultCode == Result.Ok)
             {
                 List<TreeNode<Todo.Item>> allItemsList = PublicFields.ItemTree.Descendants().ToList();
-                //item = PublicFields.ItemTree.Descendants().First(node => node.Value.id == itemID);
+
+                int index = viewPager.CurrentItem;
+                var adapter = (MyAdapter)viewPager.Adapter;
+                var currentFragment = (ListFragment)adapter.GetItem(index);
+                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
 
                 switch (requestCode)
                 {
@@ -271,11 +275,6 @@ Intent intent)
 
                             if (resourceID != 0)
                             {
-                                int index = viewPager.CurrentItem;
-                                var adapter = (MyAdapter)viewPager.Adapter;
-                                var currentFragment = (ListFragment)adapter.GetItem(index);
-                                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
-
                                 var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
                                 item.Value.ImageResource = resourceID;
                                 item.Value.ImageResourceBackdrop = resourceBackdropID;
@@ -285,11 +284,6 @@ Intent intent)
                             }
                             else
                             {
-                                int index = viewPager.CurrentItem;
-                                var adapter = (MyAdapter)viewPager.Adapter;
-                                var currentFragment = (ListFragment)adapter.GetItem(index);
-                                var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
-
                                 var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
                                 item.Value.ImagePath = path;
 
@@ -304,11 +298,6 @@ Intent intent)
                         {
                             string ItemID = intent.GetStringExtra("itemID");
                             Log.Debug("MainActivity", "Item changed");
-                            int index = viewPager.CurrentItem;
-                            var adapter = (MyAdapter)viewPager.Adapter;
-                            var currentFragment = (ListFragment)adapter.GetItem(index);
-                            var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
-
 
                             var item = PublicFields.ItemTree.Root.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
 

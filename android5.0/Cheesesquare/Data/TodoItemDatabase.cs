@@ -64,66 +64,200 @@ namespace Cheesesquare
 
                 if (error != null)
                 {
-                    //var localItem = operation.Item.ToObject<ToDoItem>();
                     var serverValue = error.Value;
-                    //if (serverValue == null) // 409 doesn't return the server item
-                    //{
-                    //    serverValue = await operation.Table.LookupAsync(localItem.Id) as JObject;
-                    //}
 
-                    //var serverItem = serverValue.ToObject<ToDoItem>();
+                    switch (operation.Table.TableName)
+                    {
+                        case "Device":
+                            var localDevice = operation.Item.ToObject<Device>();
+                            if (serverValue == null) // 409 doesn't return the server item
+                            {
+                                serverValue = await operation.Table.LookupAsync(localDevice.id) as JObject;
+                            }
 
-                    //if (serverItem.Complete == localItem.Complete &&
-                    //    serverItem.Text == localItem.Text)
-                    //{
-                    //    // items are same so we can ignore the conflict
-                    //    return serverValue;
-                    //}
+                            var serverDevice = serverValue.ToObject<Device>();
 
-                    return (JObject)serverValue;
+                            if (localDevice.Equals(serverDevice))
+                            {
+                                // items are same so we can ignore the conflict
+                                return serverValue;
+                            }
+                            else if (localDevice.UpdatedAt.CompareTo(serverDevice.UpdatedAt) == 1) // local is newer
+                            {
+                                // Overwrite the server version and try the operation again by continuing the loop
+                                operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
+                                if (error is MobileServiceConflictException) // change operation from Insert to Update
+                                {
+                                    tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
+                                }
+                                Log.Info("Database", "there was a conflict between the local and server version, local version was taken as it is newer");
+                                break;
+                            }
+                            else // otherwise take server version
+                            {
+                                Log.Info("Database", "there was a conflict between the local and server version, server version was taken as it is newer");
+                                return (JObject)serverValue;
+                            }
+                        case "Group":
+                            var localGroup = operation.Item.ToObject<Device>();
+                            if (serverValue == null) // 409 doesn't return the server item
+                            {
+                                serverValue = await operation.Table.LookupAsync(localGroup.id) as JObject;
+                            }
 
-                    //int command = await ShowConflictDialog(localItem, serverValue);
+                            var serverGroup = serverValue.ToObject<Device>();
 
-                    //if (command == 1)
-                    //{
-                    //    // Overwrite the server version and try the operation again by continuing the loop
-                    //    operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
-                    //    if (error is MobileServiceConflictException) // change operation from Insert to Update
-                    //    {
-                    //        tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
-                    //    }
-                    //    continue;
-                    //}
-                    //else if (command == 2)
-                    //{
-                    //    return (JObject)serverValue;
-                    //}
-                    //else
-                    //{
-                    //    operation.AbortPush();
-                    //}
+                            if (localGroup.Equals(serverGroup))
+                            {
+                                // items are same so we can ignore the conflict
+                                return serverValue;
+                            }
+                            else if (localGroup.UpdatedAt.CompareTo(serverGroup.UpdatedAt) == 1) // local is newer
+                            {
+                                // Overwrite the server version and try the operation again by continuing the loop
+                                operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
+                                if (error is MobileServiceConflictException) // change operation from Insert to Update
+                                {
+                                    tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
+                                }
+                                Log.Info("Database", "there was a conflict between the local and server version, local version was taken as it is newer");
+                                break;
+                            }
+                            else // otherwise take server version
+                            {
+                                Log.Info("Database", "there was a conflict between the local and server version, server version was taken as it is newer");
+                                return (JObject)serverValue;
+                            }
+                        case "GroupGroupMembership":
+                            var localGGM = operation.Item.ToObject<Device>();
+                            if (serverValue == null) // 409 doesn't return the server item
+                            {
+                                serverValue = await operation.Table.LookupAsync(localGGM.id) as JObject;
+                            }
+
+                            var serverGGM = serverValue.ToObject<Device>();
+
+                            if (localGGM.Equals(serverGGM))
+                            {
+                                // items are same so we can ignore the conflict
+                                return serverValue;
+                            }
+                            else if (localGGM.UpdatedAt.CompareTo(serverGGM.UpdatedAt) == 1) // local is newer
+                            {
+                                // Overwrite the server version and try the operation again by continuing the loop
+                                operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
+                                if (error is MobileServiceConflictException) // change operation from Insert to Update
+                                {
+                                    tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
+                                }
+                                Log.Info("Database", "there was a conflict between the local and server version, local version was taken as it is newer");
+                                break;
+                            }
+                            else // otherwise take server version
+                            {
+                                Log.Info("Database", "there was a conflict between the local and server version, server version was taken as it is newer");
+                                return (JObject)serverValue;
+                            }
+                        case "Item":
+                            var localItem = operation.Item.ToObject<Device>();
+                            if (serverValue == null) // 409 doesn't return the server item
+                            {
+                                serverValue = await operation.Table.LookupAsync(localItem.id) as JObject;
+                            }
+
+                            var serverItem = serverValue.ToObject<Device>();
+
+                            if (localItem.Equals(serverItem))
+                            {
+                                // items are same so we can ignore the conflict
+                                return serverValue;
+                            }
+                            else if (localItem.UpdatedAt.CompareTo(serverItem.UpdatedAt) == 1) // local is newer
+                            {
+                                // Overwrite the server version and try the operation again by continuing the loop
+                                operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
+                                if (error is MobileServiceConflictException) // change operation from Insert to Update
+                                {
+                                    tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
+                                }
+                                Log.Info("Database", "there was a conflict between the local and server version, local version was taken as it is newer");
+                                break;
+                            }
+                            else // otherwise take server version
+                            {
+                                Log.Info("Database", "there was a conflict between the local and server version, server version was taken as it is newer");
+                                return (JObject)serverValue;
+                            }
+                        case "User":
+                            var localUser = operation.Item.ToObject<Device>();
+                            if (serverValue == null) // 409 doesn't return the server item
+                            {
+                                serverValue = await operation.Table.LookupAsync(localUser.id) as JObject;
+                            }
+
+                            var serverUser = serverValue.ToObject<Device>();
+
+                            if (localUser.Equals(serverUser))
+                            {
+                                // items are same so we can ignore the conflict
+                                return serverValue;
+                            }
+                            else if (localUser.UpdatedAt.CompareTo(serverUser.UpdatedAt) == 1) // local is newer
+                            {
+                                // Overwrite the server version and try the operation again by continuing the loop
+                                operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
+                                if (error is MobileServiceConflictException) // change operation from Insert to Update
+                                {
+                                    tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
+                                }
+                                Log.Info("Database", "there was a conflict between the local and server version, local version was taken as it is newer");
+                                break;
+                            }
+                            else // otherwise take server version
+                            {
+                                Log.Info("Database", "there was a conflict between the local and server version, server version was taken as it is newer");
+                                return (JObject)serverValue;
+                            }
+                        case "UserGroupMembership":
+                            var localUGM = operation.Item.ToObject<Device>();
+                            if (serverValue == null) // 409 doesn't return the server item
+                            {
+                                serverValue = await operation.Table.LookupAsync(localUGM.id) as JObject;
+                            }
+
+                            var serverUGM = serverValue.ToObject<Device>();
+
+                            if (localUGM.Equals(serverUGM))
+                            {
+                                // items are same so we can ignore the conflict
+                                return serverValue;
+                            }
+                            else if (localUGM.UpdatedAt.CompareTo(serverUGM.UpdatedAt) == 1) // local is newer
+                            {
+                                // Overwrite the server version and try the operation again by continuing the loop
+                                operation.Item[MobileServiceSystemColumns.Version] = serverValue[MobileServiceSystemColumns.Version];
+                                if (error is MobileServiceConflictException) // change operation from Insert to Update
+                                {
+                                    tryOperation = async () => await operation.Table.UpdateAsync(operation.Item) as JObject;
+                                }
+                                Log.Info("Database", "there was a conflict between the local and server version, local version was taken as it is newer");
+                                break;
+                            }
+                            else // otherwise take server version
+                            {
+                                Log.Info("Database", "there was a conflict between the local and server version, server version was taken as it is newer");
+                                return (JObject)serverValue;
+                            }
+                        default:
+                            Log.Error("Database", string.Format("this table name {0} is not recognized!", operation.Table.TableName));
+                            operation.AbortPush();
+                            break;
+                    }
                 }
             } while (error != null);
 
             return null;
         }
-
-        //private async Task<int> ShowConflictDialog(ToDoItem localItem, JObject serverValue)
-        //{
-        //    var dialog = new UIAlertView("Conflict between local and server versions",
-        //            "How do you want to resolve this conflict?\n\n" + "Local item: \n" + localItem +
-        //            "\n\nServer item:\n" + serverValue.ToObject<ToDoItem>(), null, "Cancel", LOCAL_VERSION, SERVER_VERSION);
-
-        //    var clickTask = new TaskCompletionSource<int>();
-        //    dialog.Clicked += (sender, e) =>
-        //    {
-        //        clickTask.SetResult(e.ButtonIndex);
-        //    };
-
-        //    dialog.Show();
-
-        //    return await clickTask.Task;
-        //}
     }
 
     public class Database 

@@ -16,6 +16,7 @@ using Java.Util;
 using Java.IO;
 using Android.Content.PM;
 using Android.Provider;
+using Android.Graphics.Drawables;
 
 namespace Cheesesquare
 {
@@ -242,8 +243,10 @@ namespace Cheesesquare
             else
             {
                 imageView = (ImageView)convertView;
+                imageView.LayoutParameters = new GridView.LayoutParams(250, 250);
+                imageView.SetScaleType(ImageView.ScaleType.CenterCrop);
+                imageView.SetPadding(8, 8, 8, 8);
             }
-
             imageView.SetImageResource(mThumbIds[position]);
             return imageView;
         }

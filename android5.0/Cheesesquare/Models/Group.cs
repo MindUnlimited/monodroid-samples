@@ -6,7 +6,7 @@ using Microsoft.WindowsAzure.MobileServices;
 
 namespace Todo
 {
-    public class Group
+    public class Group : IEquatable<Group>
     {
         //public string ID { get; set; }
 
@@ -35,9 +35,36 @@ namespace Todo
         [Version]
         public string Version { get; set; }
 
+        [UpdatedAt]
+        public DateTime UpdatedAt { get; set; }
+
         public override string ToString()
         {
             return Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj as Group);
+        }
+
+        public bool Equals(Group other)
+        {
+            if (other == null)
+                return false;
+
+            return
+            (
+                object.ReferenceEquals(this.id, other.id) ||
+                this.id != null &&
+                this.id.Equals(other.id)
+            ) &&
+            (
+                object.ReferenceEquals(this.Name, other.Name) ||
+                this.Name != null &&
+                this.Name.Equals(other.Name)
+            ) &&
+            this.isCoach.Equals(other.isCoach);
         }
     }
 }

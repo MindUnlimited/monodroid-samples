@@ -47,7 +47,7 @@ namespace Cheesesquare
             return rv;
         }
 
-        protected new void setupRecyclerView(RecyclerView recyclerView)
+        protected void setupRecyclerView(RecyclerView recyclerView)
         {
             recyclerView.SetLayoutManager(new LinearLayoutManager(recyclerView.Context));
 
