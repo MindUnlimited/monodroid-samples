@@ -49,10 +49,10 @@ namespace Cheesesquare
             var defGroup = await PublicFields.Database.getDefaultGroup(PublicFields.Database.defUser); 
             groups = groups.Where(gr => gr.id != defGroup.id).ToList(); // don't show your own def group
 
-            var adapter = new DetailActivity.MyAdapter(SupportFragmentManager);
-            adapter.AddFragment(new ListFragmentGroups(groups), "Shared Items");
+            //var adapter = new DetailActivity.MyAdapter(SupportFragmentManager);
+            //adapter.AddFragment(new ListFragmentGroups(groups), "Shared Items");
 
-            viewPager.Adapter = adapter;
+            //viewPager.Adapter = adapter;
 
             navigationView = FindViewById<NavigationView>(Resource.Id.nav_view_groups);
             navigationView.SetNavigationItemSelectedListener(this);

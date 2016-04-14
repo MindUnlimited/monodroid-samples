@@ -273,11 +273,18 @@
 
         </android.support.v7.widget.CardView>
 
-        <!--<android.support.v4.view.ViewPager-->
+        <!--<android.support.v4.view.ViewPager--><!--
         <com.sample.cheesesquare.WrapContentHeightViewPager
             android:id="@+id/viewpager_cards_detail"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"/>-->
+
+        <com.sample.cheesesquare.ScrollForwardingRecyclerView
+        android:id="@+id/recyclerview_detail"
+        android:background="#E0E0E0"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
       </LinearLayout>
 

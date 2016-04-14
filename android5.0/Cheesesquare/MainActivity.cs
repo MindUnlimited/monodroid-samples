@@ -165,7 +165,7 @@ namespace Cheesesquare
                 if (adapter != null && index >= 0)
                 {
                     var currentFragment = (ListFragment)adapter.GetItem(index);
-                    var fragmentAdapter = currentFragment.itemRecyclerViewAdapter;
+                    var fragmentAdapter = currentFragment?.itemRecyclerViewAdapter;
 
                     if (fragmentAdapter != null)
                     {
@@ -815,7 +815,10 @@ namespace Cheesesquare
                 
             public override V4Fragment GetItem(int position) 
             {
-                return fragments [position];
+                if (fragments.Count > position)
+                    return fragments[position];
+                else
+                    return null;
             }
 
             public override int Count {

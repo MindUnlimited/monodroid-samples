@@ -179,6 +179,7 @@ namespace Cheesesquare
                 public ImageView ImageView { get; set; }
 
                 public TextView Status { get; set; }
+                public TextView Progress { get; set; }
                 public TextView Importance { get; set; }
                 public TextView DueDate { get; set; }
 
@@ -198,6 +199,7 @@ namespace Cheesesquare
                     TextView = view.FindViewById<TextView>(Resource.Id.task_title);
                     ImageView = view.FindViewById<ImageView>(Resource.Id.imageView);
                     Status = view.FindViewById<TextView>(Resource.Id.status_task);
+                    Progress = view.FindViewById<TextView>(Resource.Id.progress_task);
                     Importance = view.FindViewById<TextView>(Resource.Id.importance_task);
                     DueDate = view.FindViewById<TextView>(Resource.Id.due_date_task);
                     AmountOfSubTasks = view.FindViewById<TextView>(Resource.Id.amountOfSubTasks);
@@ -535,6 +537,15 @@ namespace Cheesesquare
                         h.Status.Text = "Started";
                         break;
 
+                }
+
+                if (item.AmountOfChildren != 0)
+                {
+                    h.Progress.Text = string.Format("{0}%", (item.AmountOfChildrenCompleted / item.AmountOfChildren * 100));
+                }
+                else // no children
+                {
+                    h.Progress.Text = item.Value.Status == 7 ? "100%" : "0%";
                 }
 
                 if (item.Value.EndDate != null)
