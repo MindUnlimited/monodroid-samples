@@ -19,9 +19,9 @@ using System.Collections.ObjectModel;
 using Android.App;
 using Todo;
 using Android.Util;
-using Cheesesquare.Models;
+using MindSet.Models;
 
-namespace Cheesesquare
+namespace MindSet
 {
     class SyncHandler : IMobileServiceSyncHandler
     {

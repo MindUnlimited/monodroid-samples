@@ -18,9 +18,9 @@ using Java.Util;
 using Android.Support.V4.View;
 using Android.Graphics;
 
-namespace Cheesesquare
+namespace MindSet
 {
-    [Register("com.sample.cheesesquare.ScrollForwardingRecyclerView")]
+    [Register("com.sample.mindset.ScrollForwardingRecyclerView")]
     public class ScrollForwardingRecyclerView : RecyclerView//, GestureDetector.IOnGestureListener
     {
         //protected GestureDetectorCompat mDetector;
@@ -518,6 +518,24 @@ namespace Cheesesquare
 
                 var item = items[position];
 
+                if (item.AmountOfChildren != 0)
+                {
+                    h.Progress.Text = string.Format("{0}%", (item.AmountOfChildrenCompleted / item.AmountOfChildren * 100));
+                }
+                else // no children
+                {
+                    h.Progress.Text = item.Value.Status == 7 ? "100%" : "0%";
+                }
+
+                if (h.Progress.Text == "100%") // completed
+                    item.Value.Status = 7;
+                else
+                {
+                    if(item.Value.Status == 7) // status is completed but not all the subitems have been completed
+                    {
+                        item.Value.Status = 2; // status is Started
+                    }
+                }
 
                 switch (item.Value.Status)
                 {
@@ -537,15 +555,6 @@ namespace Cheesesquare
                         h.Status.Text = "Started";
                         break;
 
-                }
-
-                if (item.AmountOfChildren != 0)
-                {
-                    h.Progress.Text = string.Format("{0}%", (item.AmountOfChildrenCompleted / item.AmountOfChildren * 100));
-                }
-                else // no children
-                {
-                    h.Progress.Text = item.Value.Status == 7 ? "100%" : "0%";
                 }
 
                 if (item.Value.EndDate != null)

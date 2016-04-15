@@ -18,7 +18,7 @@ using Java.Util;
 using Android.Support.V4.View;
 using Todo;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public class ListFragmentGroups : Android.Support.V4.App.Fragment
     {

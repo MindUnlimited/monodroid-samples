@@ -13,7 +13,7 @@ using Todo;
 using Android.Util;
 using Android.Graphics;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public static class PublicFields
     {

@@ -27,7 +27,7 @@ using Newtonsoft.Json.Linq;
 using Todo;
 using System.Threading.Tasks;
 
-namespace Cheesesquare
+namespace MindSet
 {
 
     public static class CircleBitmap

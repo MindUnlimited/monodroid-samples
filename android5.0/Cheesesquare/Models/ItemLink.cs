@@ -12,7 +12,7 @@ using Android.Widget;
 using Microsoft.WindowsAzure.MobileServices;
 using Newtonsoft.Json;
 
-namespace Cheesesquare.Models
+namespace MindSet.Models
 {
     public class ItemLink
     {

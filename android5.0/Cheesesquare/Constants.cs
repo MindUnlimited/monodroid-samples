@@ -10,7 +10,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public static class Constants
     {

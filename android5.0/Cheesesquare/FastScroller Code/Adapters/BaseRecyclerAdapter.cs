@@ -1,6 +1,6 @@
 using Android.Support.V7.Widget;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public abstract class BaseRecyclerAdapter : RecyclerView.Adapter
     {

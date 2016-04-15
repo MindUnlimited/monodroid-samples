@@ -15,7 +15,7 @@ using Android.Content.Res;
 using Android.Support.V4.Content;
 using Android.Graphics;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public class DividerItemDecoration : RecyclerView.ItemDecoration
     {

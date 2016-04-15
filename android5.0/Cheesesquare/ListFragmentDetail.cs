@@ -17,7 +17,7 @@ using Java.Text;
 using Java.Util;
 using Android.Support.V4.View;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public class ListFragmentDetail : ListFragment
     {

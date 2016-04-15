@@ -5,7 +5,7 @@ using Android.Widget;
 
 using Android.Support.V7.Widget;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public class LargeAdapter : BaseRecyclerAdapter
     {

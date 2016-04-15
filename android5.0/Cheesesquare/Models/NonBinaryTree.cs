@@ -4,7 +4,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Microsoft.WindowsAzure.MobileServices;
 using Android.Util;
-using Cheesesquare;
+using MindSet;
 using System.Threading.Tasks;
 
 namespace Todo

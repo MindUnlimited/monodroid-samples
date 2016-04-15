@@ -4,7 +4,7 @@ using Android.App;
 using Android.Graphics.Drawables;
 using Android.Graphics;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public static class Cheeses
     {

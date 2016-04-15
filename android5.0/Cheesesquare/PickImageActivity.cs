@@ -16,7 +16,7 @@ using Android.Content.PM;
 using Android.Provider;
 using Java.Util;
 
-namespace Cheesesquare
+namespace MindSet
 {
     [Activity(Label = "PickImageActivity")]
     public class PickImageActivity : Activity

@@ -19,7 +19,7 @@ using Todo;
 using System.Net.Http;
 using Newtonsoft.Json;
 
-namespace Cheesesquare
+namespace MindSet
 {
     [Activity(Label = "LoginActivity")]
     public class LoginActivity : Activity

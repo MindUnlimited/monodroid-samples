@@ -13,7 +13,7 @@ using Android.Support.V7.App;
 using V7Toolbar = Android.Support.V7.Widget.Toolbar;
 using Android.Util;
 
-namespace Cheesesquare
+namespace MindSet
 {
     [Activity(Label = "Group")]
     class DefineGroupActivity : AppCompatActivity

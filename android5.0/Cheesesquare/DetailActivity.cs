@@ -21,13 +21,13 @@ using Android.Text.Format;
 using Android.Net;
 using Java.Lang.Reflect;
 using Todo;
-using Cheesesquare.Models;
+using MindSet.Models;
 using System.Threading.Tasks;
 using Android.Content.PM;
 using Android.Graphics;
 using Android.Runtime;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public class DataObserver : RecyclerView.AdapterDataObserver
     {
@@ -421,6 +421,24 @@ namespace Cheesesquare
 
             var item = items[position];
 
+            if (item.AmountOfChildren != 0)
+            {
+                h.Progress.Text = string.Format("{0}%", (item.AmountOfChildrenCompleted / item.AmountOfChildren * 100));
+            }
+            else // no children
+            {
+                h.Progress.Text = item.Value.Status == 7 ? "100%" : "0%";
+            }
+
+            if (h.Progress.Text == "100%") // completed
+                item.Value.Status = 7;
+            else
+            {
+                if (item.Value.Status == 7) // status is completed but not all the subitems have been completed
+                {
+                    item.Value.Status = 2; // status is Started
+                }
+            }
 
             switch (item.Value.Status)
             {
@@ -439,17 +457,8 @@ namespace Cheesesquare
                 default:
                     h.Status.Text = "Started";
                     break;
-
             }
 
-            if (item.AmountOfChildren != 0)
-            {
-                h.Progress.Text = string.Format("{0}%", (item.AmountOfChildrenCompleted / item.AmountOfChildren * 100));
-            }
-            else // no children
-            {
-                h.Progress.Text = item.Value.Status == 7 ? "100%" : "0%";
-            }
 
             if (item.Value.EndDate != null)
             {
@@ -633,7 +642,7 @@ namespace Cheesesquare
     }
 
     [Activity (Label="Details", ScreenOrientation = ScreenOrientation.Portrait)]
-    [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.cheesesquare.MainActivity")]
+    [MetaData("android.support.PARENT_ACTIVITY", Value = "com.sample.mindset.MainActivity")]
     public class DetailActivity : AppCompatActivity
     {
         public const string EXTRA_NAME = "item_name";
@@ -708,6 +717,10 @@ namespace Cheesesquare
             txtDate = FindViewById<TextView>(Resource.Id.txtdate);
 
             progressSlider = FindViewById<SeekBar>(Resource.Id.progressSlider);
+            progressSlider.Touch += (o, e) =>
+            {
+                return;
+            };
             progressPercentText = FindViewById<TextView>(Resource.Id.progressPercentText);
             progressSlider.ProgressChanged += ProgressSlider_ProgressChanged;
 
@@ -1146,7 +1159,7 @@ Intent intent)
 
         private void ProgressSlider_ProgressChanged(object sender, SeekBar.ProgressChangedEventArgs e)
         {
-            progressPercentText.Text = string.Format("{0}%", progressSlider.Progress * 25);
+            progressPercentText.Text = string.Format("{0}%", progressSlider.Progress);
         }
 
         protected void setupRecyclerView()
@@ -1199,6 +1212,15 @@ Intent intent)
                 collapsingToolbar.SetTitle(item.Value.Name);
 
                 importance.Rating = item.Value.Importance;
+
+                if (item.AmountOfChildren != 0)
+                {
+                    progressSlider.Progress = (item.AmountOfChildrenCompleted / item.AmountOfChildren * 100);
+                }
+                else // no children
+                {
+                    progressSlider.Progress = item.Value.Status == 7 ? 100 : 0;
+                }
 
                 if (item.Value.EndDate != null)
                 {
@@ -1256,7 +1278,6 @@ Intent intent)
 
                 }
 
-                //setupViewPager(viewPager);
                 setupRecyclerView();
                 
             }
@@ -1264,8 +1285,6 @@ Intent intent)
 
         public override void Finish()
         {
-            //itemChanged = true;
-
             Intent returnIntent = new Intent();
             returnIntent.PutExtra("itemChanged", itemChanged);// ("passed_item", itemYouJustCreated);
             returnIntent.PutExtra("databaseUpdated", databaseUpdated);
@@ -1298,11 +1317,6 @@ Intent intent)
             else if (item.Value.ImageResourceBackdrop != 0)
             {
                 imageView.SetImageResource(item.Value.ImageResourceBackdrop);
-            }
-            else
-            {
-                //var r = Cheeses.GetRandomCheeseBackground();
-                //imageView.SetImageResource(r);
             }
         }
 

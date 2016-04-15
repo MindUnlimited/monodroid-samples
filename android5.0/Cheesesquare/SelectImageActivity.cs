@@ -18,7 +18,7 @@ using Android.Content.PM;
 using Android.Provider;
 using Android.Graphics.Drawables;
 
-namespace Cheesesquare
+namespace MindSet
 {
     [Activity(Label = "Select Image")]
     public class SelectImageActivity : AppCompatActivity

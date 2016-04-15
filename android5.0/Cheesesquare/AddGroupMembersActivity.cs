@@ -18,7 +18,7 @@ using Java.Lang;
 using Android.Provider;
 using Android.Support.V4.Graphics.Drawable;
 
-namespace Cheesesquare
+namespace MindSet
 {
 
 

@@ -25,7 +25,7 @@ using System.Linq;
 [assembly: UsesPermission(Name = "android.permission.INTERNET")]
 [assembly: UsesPermission(Name = "android.permission.WAKE_LOCK")]
 
-namespace Cheesesquare
+namespace MindSet
 {
     //You must subclass this!
     [BroadcastReceiver(Permission = Gcm.Client.Constants.PERMISSION_GCM_INTENTS)]

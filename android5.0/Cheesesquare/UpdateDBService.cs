@@ -10,10 +10,10 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 
-namespace Cheesesquare
+namespace MindSet
 {
     [Service]
-    [IntentFilter(new String[] { "com.sample.cheesesqaure.UpdateDBService" })]
+    [IntentFilter(new String[] { "com.sample.mindset.UpdateDBService" })]
     public class UpdateDBService : IntentService
     {
         public const string DBUpdatedAction = "DBUpdated";

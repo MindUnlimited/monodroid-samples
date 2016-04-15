@@ -47,7 +47,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:background="#D1D1D1" />
-        <Cheesesquare.FastScroller
+        <MindSet.FastScroller
             android:id="@+id/fastscroller"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"

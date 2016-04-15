@@ -11,7 +11,7 @@ using Android.Views;
 using Android.Widget;
 using Android.Support.V7.Widget;
 
-namespace Cheesesquare
+namespace MindSet
 {
     class RecyclerViewLinearLayoutManager : LinearLayoutManager
     {

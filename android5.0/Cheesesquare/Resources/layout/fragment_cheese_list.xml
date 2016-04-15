@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 <!--android:background="#D1C4E9"-->
-<com.sample.cheesesquare.ScrollForwardingRecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.sample.mindset.ScrollForwardingRecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/recyclerview"
         android:background="#E0E0E0"

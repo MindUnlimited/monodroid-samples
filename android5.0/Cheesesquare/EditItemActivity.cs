@@ -20,7 +20,7 @@ using Android.Text.Format;
 using Android.Net;
 using Android.Content.PM;
 
-namespace Cheesesquare
+namespace MindSet
 {
     //public class SubTaskArrayAdapter : ArrayAdapter<>
 

@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Microsoft.WindowsAzure.MobileServices;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Cheesesquare.Models;
+using MindSet.Models;
 
 namespace Todo
 {

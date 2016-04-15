@@ -13,7 +13,7 @@ using Java.Util;
 using Android.Text.Format;
 using Android.Net;
 
-namespace Cheesesquare
+namespace MindSet
 {
     public class DateDialog : DialogFragment, DatePickerDialog.IOnDateSetListener
     {

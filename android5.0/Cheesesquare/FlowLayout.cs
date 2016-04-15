@@ -12,9 +12,9 @@ using Android.Widget;
 using Android.Util;
 
 
-namespace Cheesesquare
+namespace MindSet
 {
-    [Register("com.sample.cheesesquare.FlowLayout")]
+    [Register("com.sample.mindset.FlowLayout")]
     public class FlowLayout : ViewGroup
     {
 

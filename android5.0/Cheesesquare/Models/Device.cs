@@ -11,7 +11,7 @@ using Android.Views;
 using Android.Widget;
 using Microsoft.WindowsAzure.MobileServices;
 
-namespace Cheesesquare.Models
+namespace MindSet.Models
 {
     public class Device : IEquatable<Device>
     {

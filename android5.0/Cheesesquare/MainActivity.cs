@@ -19,16 +19,16 @@ using Android.Preferences;
 using Newtonsoft.Json;
 using System.Linq;
 using Todo;
-using Cheesesquare.Models;
+using MindSet.Models;
 using Gcm.Client;
 using Android.Content.PM;
 using Android.Database;
 using Android.Provider;
 using Android.Graphics;
 
-namespace Cheesesquare
+namespace MindSet
 {
-    [Activity(Name = "com.sample.cheesesquare.MainActivity", Label = "MindSet", MainLauncher = true, ScreenOrientation = ScreenOrientation.Portrait, LaunchMode = LaunchMode.SingleTop)]
+    [Activity(Name = "com.sample.mindset.MainActivity", Label = "MindSet", MainLauncher = true, ScreenOrientation = ScreenOrientation.Portrait, LaunchMode = LaunchMode.SingleTop)]
     public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
     {
         public static MainActivity instance;
@@ -180,6 +180,8 @@ namespace Cheesesquare
             if(navigationView != null)
                 navigationView.SetCheckedItem(Resource.Id.nav_home);
 
+            DebugSharedItemRetrievalProblems();
+
             //else
             //{
             //    var loginpage = new NavigationPage(new Views.SelectLoginProviderPage());
@@ -188,6 +190,21 @@ namespace Cheesesquare
             //await Todo.App.selectedDomainPage.Refresh();
 
             //RequestedOrientation = ScreenOrientation.Portrait;
+        }
+
+        public void DebugSharedItemRetrievalProblems()
+        {
+            var allItems = PublicFields.Database.GetItems();
+            var allItemsResult = allItems.Result;
+
+            var test = PublicFields.Database.GetItem("2cb157ed-f525-4b19-b378-1963a257056e"); // shared item
+            var result = test.Result;
+
+            var testCapitalized = PublicFields.Database.GetItem("2cb157ed-f525-4b19-b378-1963a257056e".ToUpper()); // shared item
+            var resultCapitalized = test.Result;
+
+            var test2 = PublicFields.Database.GetItem("ea9ff1e8-23e8-4e2f-b613-55430e2684b0"); // my own item (google account)
+            var result2 = test2.Result;
         }
 
         public override void OnBackPressed()

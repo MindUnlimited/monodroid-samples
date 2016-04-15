@@ -12,9 +12,9 @@ using Android.Widget;
 using Android.Support.V4.View;
 using Android.Util;
 
-namespace Cheesesquare
+namespace MindSet
 {
-    [Register("com.sample.cheesesquare.WrapContentHeightViewPager")]
+    [Register("com.sample.mindset.WrapContentHeightViewPager")]
     public class WrapContentHeightViewPager : ViewPager
     {
         private DisplayMetrics metrics;
