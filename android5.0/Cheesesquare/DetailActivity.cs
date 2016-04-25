@@ -584,6 +584,40 @@ namespace MindSet
                 h.ImageView.SetImageBitmap(sampledBitmap);
                 //h.ImageView.SetImageURI(item.Value.ImageUri);
             }
+            else if(!string.IsNullOrEmpty(item.Value.ResourceUrl))
+            {
+                switch (item.Value.ResourceUrl)
+                {
+                    case "Goal":
+                        // goal
+                        h.ImageView.SetImageResource(Resource.Drawable.Goal256);
+
+                        item.Value.ImageResource = Resource.Drawable.Goal256;
+                        item.Value.ImageResourceBackdrop = Resource.Drawable.Goal1024;
+                        break;
+                    case "Project":
+                        // project
+                        h.ImageView.SetImageResource(Resource.Drawable.Project256);
+
+                        item.Value.ImageResource = Resource.Drawable.Project256;
+                        item.Value.ImageResourceBackdrop = Resource.Drawable.Project1024;
+                        break;
+                    case "Task":
+                        // task
+                        h.ImageView.SetImageResource(Resource.Drawable.Task256);
+
+                        item.Value.ImageResource = Resource.Drawable.Task256;
+                        item.Value.ImageResourceBackdrop = Resource.Drawable.Task1024;
+                        break;
+                    default:
+                        // handled same as task
+                        h.ImageView.SetImageResource(Resource.Drawable.Task256);
+
+                        item.Value.ImageResource = Resource.Drawable.Task256;
+                        item.Value.ImageResourceBackdrop = Resource.Drawable.Task1024;
+                        break;
+                }
+            }
             else if (item.Value.ImageResource != 0)
             {
                 //h.ImageView.LayoutParameters = new GridView.LayoutParams(80, 80);
@@ -843,6 +877,31 @@ Intent intent)
                                 var item = PublicFields.ItemTree.Descendants().FirstOrDefault(node => node.Value.id == ItemID);
                                 item.Value.ImageResource = resourceID;
                                 item.Value.ImageResourceBackdrop = resourceBackdropID;
+
+                                switch (resourceID)
+                                {
+                                    case 1:
+                                        //domain
+                                        break;
+                                    case Resource.Drawable.Goal256:
+                                        // goal
+                                        item.Value.ResourceUrl = "Goal";
+                                        break;
+                                    case Resource.Drawable.Project256:
+                                        // project
+                                        item.Value.ResourceUrl = "Project";
+                                        break;
+                                    case Resource.Drawable.Task256:
+                                        // task
+                                        item.Value.ResourceUrl = "Task";
+                                        break;
+                                    default:
+                                        // handled same as task
+                                        item.Value.ResourceUrl = "";
+                                        break;
+                                }
+
+                                await PublicFields.Database.SaveItem(item.Value);
 
                                 //fragmentAdapter.UpdateValue(item);
                                 //fragmentAdapter.ApplyChanges();

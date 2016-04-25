@@ -180,6 +180,7 @@ namespace MindSet
             notification.Flags = NotificationFlags.AutoCancel;
 
             var notificationTitle = "A new item has been added";
+
             //Set the notification info
             //we use the pending intent, passing our ui intent over, which will get called
             //when the notification is tapped.

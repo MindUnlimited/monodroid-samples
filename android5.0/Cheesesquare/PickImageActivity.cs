@@ -15,11 +15,12 @@ using Java.IO;
 using Android.Content.PM;
 using Android.Provider;
 using Java.Util;
+using Android.Support.V7.App;
 
 namespace MindSet
 {
     [Activity(Label = "PickImageActivity")]
-    public class PickImageActivity : Activity
+    public class PickImageActivity : AppCompatActivity
     {
         private Android.Net.Uri outputFileUri;
 

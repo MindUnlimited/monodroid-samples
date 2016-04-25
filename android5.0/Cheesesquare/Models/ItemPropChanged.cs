@@ -485,6 +485,9 @@ namespace Todo
         //[JsonIgnore]
         //public List<Todo.Item> SubItems { get; set; }
 
+        public string ResourceUrl { get; set; }
+
+
         [Version]
         public string Version { get; set; }
 

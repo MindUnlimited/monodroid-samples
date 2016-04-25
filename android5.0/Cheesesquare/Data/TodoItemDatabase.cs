@@ -548,8 +548,19 @@ namespace MindSet
 
 	    private void CreateAndShowDialog(Exception exception, String title)
 	    {
-            Debug.WriteLine(exception.InnerException.Message);
-	    }
+            var exceptionMessage = exception?.InnerException?.Message;
+            if (exceptionMessage == null)
+            {
+                exceptionMessage = "an error has occured!";
+            }
+
+            Debug.WriteLine(exceptionMessage);
+
+            //new AlertDialog.Builder(Activity)
+            //.SetMessage(exceptionMessage)
+            //.SetCancelable(true)
+            //.Show();
+        }
 
         public async Task<Group> getDefaultGroup(User user)
         {
@@ -1274,36 +1285,41 @@ namespace MindSet
         {
             try
             {
-                // item is shared from another user
-                if(item.SharedLink != null)
+                if(item != null)
                 {
-                    // retrieve shared item
-                    var sharedItem = await GetItem(item.id);
-
-                    // undo share specific changes
-                    item.Parent = sharedItem.Parent;
-                }
-
-                await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
-
-                // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
-                if (item.id != null)
-                {
-                    await itemTable.UpdateAsync(item);
-                }
-                else
-                {
-                    if(string.IsNullOrEmpty(item.CreatedBy))
+                    // item is shared from another user
+                    if (item.SharedLink != null)
                     {
-                        if (defGroup == null)
-                            defGroup = await getDefaultGroup(defUser);
+                        // retrieve shared item
+                        var sharedItem = await GetItem(item.id);
 
-                        item.CreatedBy = defGroup.id;
+                        if (sharedItem != null)
+                            // undo share specific changes
+                            item.Parent = sharedItem.Parent;
                     }
-                    await itemTable.InsertAsync(item);
-                }
 
-                await client.SyncContext.PushAsync();
+                    await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
+
+                    // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
+                    if (item.id != null)
+                    {
+                        await itemTable.UpdateAsync(item);
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(item.CreatedBy))
+                        {
+                            if (defGroup == null)
+                                defGroup = await getDefaultGroup(defUser);
+
+                            if(defGroup != null)
+                                item.CreatedBy = defGroup.id;
+                        }
+                        await itemTable.InsertAsync(item);
+                    }
+
+                    await client.SyncContext.PushAsync();
+                }
             }
             catch (Exception e)
             {
@@ -1317,17 +1333,20 @@ namespace MindSet
             {
                 await SyncAsync(); // offline sync, push and pull changes. Maybe results in conflict with the item to be saved
 
-                // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
-                if (itemLink.id != null)
+                if(itemLink != null)
                 {
-                    await itemLinkTable.UpdateAsync(itemLink);
-                }
-                else
-                {
-                    await itemLinkTable.InsertAsync(itemLink);
-                }
+                    // if id is not null then the item is already in the local db if it has version as well then it is also in the cloud
+                    if (itemLink.id != null)
+                    {
+                        await itemLinkTable.UpdateAsync(itemLink);
+                    }
+                    else
+                    {
+                        await itemLinkTable.InsertAsync(itemLink);
+                    }
 
-                await client.SyncContext.PushAsync();
+                    await client.SyncContext.PushAsync();
+                }
             }
             catch (Exception e)
             {

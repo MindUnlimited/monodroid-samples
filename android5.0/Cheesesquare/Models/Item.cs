@@ -55,6 +55,8 @@ namespace Todo
 
         public string DependentOn { get; set; }
 
+        public string ResourceUrl { get; set; }
+
         [Version]
         public string Version { get; set; }
 

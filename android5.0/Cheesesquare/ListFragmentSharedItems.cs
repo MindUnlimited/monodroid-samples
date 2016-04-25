@@ -458,7 +458,6 @@ namespace MindSet
 
                 h.TextView.Text = item.Value.Name;
                 h.Importance.Text = string.Format("{0} stars", item.Value.Importance) ?? "0 stars";
-                h.ImageView.SetImageDrawable(Cheeses.GetRandomCheeseDrawable(parent));
             }
 
             public override int ItemCount

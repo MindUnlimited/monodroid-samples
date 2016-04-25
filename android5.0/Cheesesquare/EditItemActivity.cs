@@ -408,6 +408,12 @@ namespace MindSet
             base.Finish();
         }
 
+        public override void OnBackPressed()
+        {
+            Finish();
+            base.OnBackPressed();
+        }
+
         public override bool OnOptionsItemSelected(IMenuItem menuItem)
         {
             switch (menuItem.ItemId)

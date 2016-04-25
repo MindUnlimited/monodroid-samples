@@ -18,11 +18,12 @@ using Android.Preferences;
 using Todo;
 using System.Net.Http;
 using Newtonsoft.Json;
+using Android.Support.V7.App;
 
 namespace MindSet
 {
     [Activity(Label = "LoginActivity")]
-    public class LoginActivity : Activity
+    public class LoginActivity : AppCompatActivity
     {
         private Button facebookButton;
         private Button googleButton;

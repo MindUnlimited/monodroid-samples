@@ -33,6 +33,7 @@ namespace MindSet
     {
         public static MainActivity instance;
 
+        FloatingActionButton FAB;
         DrawerLayout drawerLayout;
         ViewPager viewPager;
         TabLayout tabLayout;
@@ -84,13 +85,9 @@ namespace MindSet
 
             userName = navigationView.GetHeaderView(0).FindViewById<TextView>(Resource.Id.username_nav);
 
-            var fab = FindViewById<FloatingActionButton>(Resource.Id.fab);
-            fab.Click += (sender, e) =>                     
+            FAB = FindViewById<FloatingActionButton>(Resource.Id.fab);
+            FAB.Click += (sender, e) =>
             {
-                //Snackbar.Make (fab, "Here's a snackbar!", Snackbar.LengthLong).SetAction ("Action",
-                //    new ClickListener (v => {
-                //        Console.WriteLine ("Action handler");
-                //    })).Show ();
                 var intent = new Intent(this, typeof(EditItemActivity));
                 intent.PutExtra("newItem", true);
                 intent.PutExtra("newItem", true);
@@ -101,6 +98,8 @@ namespace MindSet
 
             viewPager = FindViewById<ViewPager>(Resource.Id.viewpager);
             tabLayout = FindViewById<TabLayout>(Resource.Id.tabs);
+
+            
 
             // not logged in
             if (PublicFields.Database.userID == null)
@@ -151,7 +150,6 @@ namespace MindSet
                 StartActivityForResult(loginIntent, LOGIN);
             }
 
-
         }
 
         protected override void OnStart()
@@ -177,7 +175,8 @@ namespace MindSet
                 }
             }
 
-            if(navigationView != null)
+
+            if (navigationView != null)
                 navigationView.SetCheckedItem(Resource.Id.nav_home);
 
             DebugSharedItemRetrievalProblems();
@@ -194,17 +193,17 @@ namespace MindSet
 
         public void DebugSharedItemRetrievalProblems()
         {
-            var allItems = PublicFields.Database.GetItems();
-            var allItemsResult = allItems.Result;
+            //var allItems = PublicFields.Database.GetItems();
+            //var allItemsResult = allItems.Result;
 
-            var test = PublicFields.Database.GetItem("2cb157ed-f525-4b19-b378-1963a257056e"); // shared item
-            var result = test.Result;
+            //var test = PublicFields.Database.GetItem("2cb157ed-f525-4b19-b378-1963a257056e"); // shared item
+            //var result = test.Result;
 
-            var testCapitalized = PublicFields.Database.GetItem("2cb157ed-f525-4b19-b378-1963a257056e".ToUpper()); // shared item
-            var resultCapitalized = test.Result;
+            //var testCapitalized = PublicFields.Database.GetItem("2cb157ed-f525-4b19-b378-1963a257056e".ToUpper()); // shared item
+            //var resultCapitalized = test.Result;
 
-            var test2 = PublicFields.Database.GetItem("ea9ff1e8-23e8-4e2f-b613-55430e2684b0"); // my own item (google account)
-            var result2 = test2.Result;
+            //var test2 = PublicFields.Database.GetItem("ea9ff1e8-23e8-4e2f-b613-55430e2684b0"); // my own item (google account)
+            //var result2 = test2.Result;
         }
 
         public override void OnBackPressed()
@@ -386,6 +385,8 @@ namespace MindSet
                 switch (requestCode)
                 {
                     case LOGIN:
+                        await PublicFields.Database.SyncAsync();
+
                         if (viewPager != null)
                             setupViewPager(viewPager);
 
@@ -420,8 +421,33 @@ namespace MindSet
                                 item.Value.ImageResource = resourceID;
                                 item.Value.ImageResourceBackdrop = resourceBackdropID;
 
+                                switch (resourceID)
+                                {
+                                    case 1:
+                                        //domain
+                                        break;
+                                    case Resource.Drawable.Goal256:
+                                        // goal
+                                        item.Value.ResourceUrl = "Goal";
+                                        break;
+                                    case Resource.Drawable.Project256:
+                                        // project
+                                        item.Value.ResourceUrl = "Project";
+                                        break;
+                                    case Resource.Drawable.Task256:
+                                        // task
+                                        item.Value.ResourceUrl = "Task";
+                                        break;
+                                    default:
+                                        // handled same as task
+                                        item.Value.ResourceUrl = "";
+                                        break;
+                                }
+
                                 fragmentAdapter.UpdateValue(item);
                                 fragmentAdapter.ApplyChanges();
+
+                                await PublicFields.Database.SaveItem(item.Value);
                             }
                             else
                             {
