@@ -108,6 +108,8 @@ namespace MindSet
             //Log.Info(MyBroadcastReceiver.TAG, msg.ToString());
 
             string messageText = intent.Extras.GetString("message");
+
+            Log.Info(MyBroadcastReceiver.TAG, "Creating notification");
             if (!string.IsNullOrEmpty(messageText))
             {
                 createNotification("New hub message!", messageText, descDictionary);
@@ -133,6 +135,7 @@ namespace MindSet
             //await PublicFields.Database.SyncAsync();
             //PublicFields.MakeTree();
 
+            Log.Info(MyBroadcastReceiver.TAG, "gathering the possible item links");
             var itemLinks = await PublicFields.Database.GetItemLinks();
             var myItemLinks = from itl in itemLinks where itl.OwnedBy == PublicFields.Database.defGroup.id select itl;
 
@@ -169,6 +172,7 @@ namespace MindSet
             //}
 
             //Create an intent to show UI
+            Log.Info(MyBroadcastReceiver.TAG, "creating the intent to show the notification");
             intent = new Intent(this, typeof(DetailActivity));
             intent.PutExtra(DetailActivity.EXTRA_NAME, name);
             intent.PutExtra(DetailActivity.ITEM_ID, itemID);
@@ -186,8 +190,8 @@ namespace MindSet
             //when the notification is tapped.
             //notification.SetLatestEventInfo(Application.Context, notificationTitle, name, PendingIntent.GetActivity(this, ITEMDETAIL, intent, 0));
 
-            
 
+            Log.Info(MyBroadcastReceiver.TAG, "building the notification");
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 
             if(intent != null)
@@ -201,6 +205,7 @@ namespace MindSet
                                   .SetAutoCancel(true).SetContentTitle(notificationTitle)
                                   .SetContentText(name).Build();
 
+            Log.Info(MyBroadcastReceiver.TAG, "showing the notification");
             //Show the notification
             //dialogNotify(title, desc);
             notificationManager.Notify(NOTIFY, notification);
